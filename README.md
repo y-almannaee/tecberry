@@ -1,1 +1,1 @@
-# peliter-controller
+# Raspberry Pi - Dockerized Peltier Controller

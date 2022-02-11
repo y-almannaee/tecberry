@@ -48,7 +48,7 @@ RUN /bin/bash -c 'cd nginx-1.21.6/ && ./configure \
 --with-stream \
 --with-stream_ssl_module \
 --with-http_slice_module \
---add-module=/nginx-rtmp-module && sudo mkdir /var/cache/nginx && make && sudo make install'
+--add-module=/nginx-rtmp-module && mkdir /var/cache/nginx && make && make install'
 
 RUN mkdir /etc/service/nginx
 COPY run-nginx.sh /etc/service/nginx/run

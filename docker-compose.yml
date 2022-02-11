@@ -1,0 +1,12 @@
+version: '3'
+services:
+    sharelatex:
+        restart: always
+        image: yalmannaee/peltier-controller
+        container_name: peltier_controller
+        network_mode: "host"
+        privileged: true
+        volumes:
+            - ~/app_data:/var/lib/peltier_controller
+        environment:
+            HOSTNAME: peltier_controller.duckdns.org

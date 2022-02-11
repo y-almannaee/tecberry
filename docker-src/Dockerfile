@@ -12,8 +12,8 @@ CMD ["/sbin/my_init"]
 # ...put your own build instructions here...
 RUN apt-get update && apt-get upgrade -y -o Dpkg::Options::="--force-confold"
 RUN apt-get update && /sbin/install_clean curl build-essential libpcre3 libpcre3-dev zlib1g zlib1g-dev libssl-dev libgd-dev libxml2 libxml2-dev uuid-dev git
-RUN git clone https://github.com/arut/nginx-rtmp-module && curl https://nginx.org/download/nginx-1.21.6.tar.gz -o nginx-1.21.6.tar.gz && tar xvf nginx-1.21.6.tar.gz && cd nginx-1.21.6/
-RUN /bin/bash -c './configure \
+RUN git clone https://github.com/arut/nginx-rtmp-module && curl https://nginx.org/download/nginx-1.21.6.tar.gz -o nginx-1.21.6.tar.gz && tar xvf nginx-1.21.6.tar.gz
+RUN /bin/bash -c 'cd nginx-1.21.6/ && ./configure \
 --prefix=/etc/nginx \
 --sbin-path=/usr/sbin/nginx \
 --conf-path=/etc/nginx/nginx.conf \

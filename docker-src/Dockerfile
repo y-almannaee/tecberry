@@ -52,7 +52,7 @@ RUN /bin/bash -c 'cd nginx-1.21.6/ && ./configure \
 
 RUN mkdir /etc/service/nginx
 COPY run-nginx.sh /etc/service/nginx/run
-RUN sudo useradd -r nginx && chmod +x /etc/service/memcached/run
+RUN adduser --system --no-create-home --shell /bin/false --group --disabled-login nginx && chmod +x /etc/service/nginx/run
 
 # Clean up APT when done.
 RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*

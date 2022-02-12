@@ -43,3 +43,15 @@ raspberrypi:~$ sudo pip3 install docker-compose
 - [ ] Create Nginx configurations for leader & follower
 - [ ] Create remote administration logic
 - [ ] Create configurable GPIO logic
+
+## Want to modify the project?
+
+If you would like to contribute to the project or simply modify the code to your liking you may do so by
+
+1. Open this repo on Github.com and press Fork
+2. In your repository you may `git clone your/repo` and work on it on your PC then `git push origin`, or you may edit it in the browser
+3. Once you are satisfied with the modified code, on Github.com:
+  1. press Settings &#8594; Secrets &#8594; Actions and create a secret titled `DOCKERHUB_TOKEN` and `DOCKERHUB_USERNAME` and populate these with the values you get from hub.docker.com
+  2.  press Actions &#8594; CI &#8594; Run Workflow (Enable workflow if it isn't already enabled)
+  3.  Once the workflow has finished running (usually takes ~20 mins) your Docker containers will be available on Dockerhub, you may follow the setup instructions above to set them up
+4. If you would like to contribute back to this project feel free to open a Pull Request with your modifications, we will get to it in a timely manner

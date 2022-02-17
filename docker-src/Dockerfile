@@ -26,8 +26,8 @@ RUN /bin/bash -c 'cd nginx-1.21.6/ && ./configure \
 --http-fastcgi-temp-path=/var/cache/nginx/fastcgi_temp \
 --http-uwsgi-temp-path=/var/cache/nginx/uwsgi_temp \
 --http-scgi-temp-path=/var/cache/nginx/scgi_temp \
---user=nginx \
---group=nginx \
+--user=www-data \
+--group=www-data \
 --with-http_ssl_module \
 --with-http_realip_module \
 --with-http_addition_module \
@@ -51,11 +51,18 @@ RUN /bin/bash -c 'cd nginx-1.21.6/ && ./configure \
 --add-module=/nginx-rtmp-module \
 --add-module=/ngx-fancyindex\
 --with-cc-opt='-O2 -flto -funsafe-math-optimizations -fstack-protector-strong -fstack-clash-protection -pipe --param=ssp-buffer-size=4 -Wp,-D_FORTIFY_SOURCE=2' \
-&& mkdir /var/cache/nginx && make && make install'
+&& mkdir /var/cache/nginx && make && make install && mkdir /etc/nginx && mkdir /etc/nginx/sites-enabled && mkdir /etc/nginx/certs'
+
+RUN mv /etc/nginx/nginx.conf /etc/nginx/nginx_default.conf
+COPY nginx-conf/nginx.conf /etc/nginx/nginx.conf
+COPY nginx-conf/main_server /etc/nginx/sites-enabled
+COPY nginx-conf/ffdhe2048.txt /etc/nginx/ffdhe2048.txt
+COPY nginx-conf/selfsigned.crt /etc/nginx/certs/certificate.crt
+COPY nginx-conf/selfsigned.key /etc/nginx/certs/certificate.key
 
 RUN mkdir /etc/service/nginx
 COPY run-nginx.sh /etc/service/nginx/run
-RUN adduser --system --no-create-home --shell /bin/false --group --disabled-login nginx && chmod +x /etc/service/nginx/run
+RUN adduser --system --no-create-home --shell /bin/false --group --disabled-login www-data && chmod +x /etc/service/nginx/run
 
 # Clean up APT when done.
 RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*

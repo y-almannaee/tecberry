@@ -51,7 +51,7 @@ RUN /bin/bash -c 'cd nginx-1.21.6/ && ./configure \
 --add-module=/nginx-rtmp-module \
 --add-module=/ngx-fancyindex \
 --with-cc-opt='-O2 -flto -funsafe-math-optimizations -fstack-protector-strong -fstack-clash-protection -pipe --param=ssp-buffer-size=4 -Wp,-D_FORTIFY_SOURCE=2' \
-&& cd /nginx-1.21.6 && make && make install && mkdir /etc/nginx && mkdir /etc/nginx/sites-enabled && mkdir /etc/nginx/certs && mkdir /var/cache/nginx && rm -r /etc/nginx/sites-enabled && mkdir /etc/nginx/sites-enabled'
+&& cd /nginx-1.21.6 && sleep 3 && make && make install && mkdir /etc/nginx && mkdir /etc/nginx/sites-enabled && mkdir /etc/nginx/certs && mkdir /var/cache/nginx && rm -r /etc/nginx/sites-enabled && mkdir /etc/nginx/sites-enabled'
 
 COPY nginx-conf/nginx.conf /etc/nginx/nginx.conf
 COPY nginx-conf/main_server /etc/nginx/sites-enabled

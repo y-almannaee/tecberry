@@ -53,7 +53,6 @@ RUN /bin/bash -c 'cd nginx-1.21.6/ && ./configure \
 --with-cc-opt='-O2 -flto -funsafe-math-optimizations -fstack-protector-strong -fstack-clash-protection -pipe --param=ssp-buffer-size=4 -Wp,-D_FORTIFY_SOURCE=2' \
 && mkdir /var/cache/nginx && make && make install && mkdir /etc/nginx && mkdir /etc/nginx/sites-enabled && mkdir /etc/nginx/certs'
 
-RUN [ -f /etc/nginx/nginx.conf ] && mv /etc/nginx/nginx.conf /etc/nginx/nginx_default.conf
 COPY nginx-conf/nginx.conf /etc/nginx/nginx.conf
 COPY nginx-conf/main_server /etc/nginx/sites-enabled
 COPY nginx-conf/ffdhe2048.txt /etc/nginx/ffdhe2048.txt

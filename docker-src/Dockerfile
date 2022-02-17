@@ -12,7 +12,7 @@ CMD ["/sbin/my_init"]
 # ...put your own build instructions here...
 RUN apt-get update && apt-get upgrade -y -o Dpkg::Options::="--force-confold"
 RUN apt-get update && /sbin/install_clean curl build-essential libpcre3 libpcre3-dev zlib1g zlib1g-dev libssl-dev libgd-dev libxml2 libxml2-dev uuid-dev git
-RUN git clone https://github.com/arut/nginx-rtmp-module && curl https://nginx.org/download/nginx-1.21.6.tar.gz -o nginx-1.21.6.tar.gz && tar xvf nginx-1.21.6.tar.gz
+RUN git clone --depth 1 https://github.com/arut/nginx-rtmp-module && git clone --depth 1 https://github.com/aperezdc/ngx-fancyindex && curl https://nginx.org/download/nginx-1.21.6.tar.gz -o nginx-1.21.6.tar.gz && tar xvf nginx-1.21.6.tar.gz
 RUN /bin/bash -c 'cd nginx-1.21.6/ && ./configure \
 --prefix=/etc/nginx \
 --sbin-path=/usr/sbin/nginx \
@@ -48,7 +48,9 @@ RUN /bin/bash -c 'cd nginx-1.21.6/ && ./configure \
 --with-stream \
 --with-stream_ssl_module \
 --with-http_slice_module \
---add-module=/nginx-rtmp-module && mkdir /var/cache/nginx && make && make install'
+--add-module=/nginx-rtmp-module \
+--add-module=/ngx-fancyindex\
+&& mkdir /var/cache/nginx && make && make install'
 
 RUN mkdir /etc/service/nginx
 COPY run-nginx.sh /etc/service/nginx/run

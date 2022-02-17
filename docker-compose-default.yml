@@ -1,6 +1,6 @@
 version: '3'
 services:
-    sharelatex:
+    controller:
         restart: always
         image: yalmannaee/peltier-controller
         container_name: peltier_controller

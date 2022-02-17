@@ -49,7 +49,7 @@ RUN /bin/bash -c 'cd nginx-1.21.6/ && ./configure \
 --with-stream_ssl_module \
 --with-http_slice_module \
 --add-module=/nginx-rtmp-module \
---add-module=/ngx-fancyindex\
+--add-module=/ngx-fancyindex \
 --with-cc-opt='-O2 -flto -funsafe-math-optimizations -fstack-protector-strong -fstack-clash-protection -pipe --param=ssp-buffer-size=4 -Wp,-D_FORTIFY_SOURCE=2' \
 && mkdir /var/cache/nginx && make && make install && mkdir /etc/nginx && mkdir /etc/nginx/sites-enabled && mkdir /etc/nginx/certs'
 

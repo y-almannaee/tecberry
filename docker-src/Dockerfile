@@ -13,7 +13,7 @@ CMD ["/sbin/my_init"]
 RUN apt-get update && apt-get upgrade -y -o Dpkg::Options::="--force-confold"
 RUN apt-get update && /sbin/install_clean curl build-essential libpcre3 libpcre3-dev zlib1g zlib1g-dev libssl-dev openssl libgd-dev libxml2 libxml2-dev uuid-dev git
 RUN git clone --depth 1 https://github.com/arut/nginx-rtmp-module && git clone --depth 1 https://github.com/aperezdc/ngx-fancyindex && curl https://nginx.org/download/nginx-1.21.6.tar.gz -o nginx-1.21.6.tar.gz && tar xvf nginx-1.21.6.tar.gz
-RUN /bin/bash -c 'cd nginx-1.21.6/ && ./configure \
+RUN /bin/bash -c "cd nginx-1.21.6/ && ./configure \
 --prefix=/etc/nginx \
 --sbin-path=/usr/sbin/nginx \
 --conf-path=/etc/nginx/nginx.conf \
@@ -50,8 +50,10 @@ RUN /bin/bash -c 'cd nginx-1.21.6/ && ./configure \
 --with-http_slice_module \
 --add-module=/nginx-rtmp-module \
 --add-module=/ngx-fancyindex \
---with-cc-opt='-O2 -flto -funsafe-math-optimizations -fstack-protector-strong -fstack-clash-protection -pipe --param=ssp-buffer-size=4 -Wp,-D_FORTIFY_SOURCE=2' \
-&& cd /nginx-1.21.6 && sleep 3 && make && make install && mkdir -p /etc/nginx/sites-enabled && mkdir -p /etc/nginx/certs && mkdir -p /var/cache/nginx && rm -r /etc/nginx/sites-enabled && mkdir -p /etc/nginx/sites-enabled'
+--with-cc-opt='-O2 -flto -funsafe-math-optimizations -fstack-protector-strong -fstack-clash-protection -pipe --param=ssp-buffer-size=4 -Wp,-D_FORTIFY_SOURCE=2'"
+RUN /bin/bash -c 'cd /nginx-1.21.6 && make && make install \
+&& mkdir -p /etc/nginx/sites-enabled && mkdir -p /etc/nginx/certs && mkdir -p /var/cache/nginx \
+&& rm -r /etc/nginx/sites-enabled && mkdir -p /etc/nginx/sites-enabled'
 
 COPY nginx-conf/nginx.conf /etc/nginx/nginx.conf
 COPY nginx-conf/main_server /etc/nginx/sites-enabled

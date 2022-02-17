@@ -51,7 +51,7 @@ RUN /bin/bash -c 'cd nginx-1.21.6/ && ./configure \
 --add-module=/nginx-rtmp-module \
 --add-module=/ngx-fancyindex \
 --with-cc-opt='-O2 -flto -funsafe-math-optimizations -fstack-protector-strong -fstack-clash-protection -pipe --param=ssp-buffer-size=4 -Wp,-D_FORTIFY_SOURCE=2' \
-&& mkdir /var/cache/nginx && make && make install && mkdir /etc/nginx && mkdir /etc/nginx/sites-enabled && mkdir /etc/nginx/certs'
+&& cd /nginx-1.21.6 && make && make install && mkdir /etc/nginx && mkdir /etc/nginx/sites-enabled && mkdir /etc/nginx/certs && mkdir /var/cache/nginx && rm -r /etc/nginx/sites-enabled && mkdir /etc/nginx/sites-enabled'
 
 COPY nginx-conf/nginx.conf /etc/nginx/nginx.conf
 COPY nginx-conf/main_server /etc/nginx/sites-enabled
@@ -61,6 +61,7 @@ COPY nginx-conf/selfsigned.key /etc/nginx/certs/certificate.key
 
 RUN mkdir /etc/service/nginx
 COPY run-nginx.sh /etc/service/nginx/run
+RUN chmod +x /etc/service/nginx/run
 # RUN adduser --system --no-create-home --shell /bin/false --group --disabled-login www-data && chmod +x /etc/service/nginx/run
 
 # Clean up APT when done.

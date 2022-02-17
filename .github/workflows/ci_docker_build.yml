@@ -51,7 +51,7 @@ jobs:
           #platforms: linux/amd64,linux/arm64,linux/arm/v7
           platforms: linux/arm/v7
           push: true
-          tags: yalmannaee/peltier-controller:latest
+          tags: ${{ github.repository_owner }}/peltier-controller:latest
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache-new
         # This ugly bit is necessary if you don't want your cache to grow forever

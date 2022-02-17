@@ -1,5 +1,5 @@
-![](https://github.com/y-almannaee/peltier-controller/html-src/assets/banner_light.png#gh-light-mode-only) 
-![](https://github.com/y-almannaee/peltier-controller/html-src/assets/banner_dark.png#gh-dark-mode-only) 
+![](/html-src/assets/banner_light.png#gh-light-mode-only) 
+![](/html-src/assets/banner_dark.png#gh-dark-mode-only) 
 
 # Raspberry Pi - Dockerized Peltier Controller
 

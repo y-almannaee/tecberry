@@ -1,7 +1,7 @@
 version: '3'
 services:
     letsencryptgo:
-        image: goacme/lego:latest
+        image: goacme/lego
         container_name: lego
         volumes:
             - shared_data:/var/lib

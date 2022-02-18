@@ -4,8 +4,8 @@ services:
         image: goacme/lego:latest
         container_name: lego
         environment:
-            DUCKDNS_TOKEN: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-        command: ["lego", "--email", "myemail@example.com", "--dns", "duckdns", "--domains", "peltier_controller.duckdns.org", "run"]
+            DUCKDNS_TOKEN: ${USER_DUCKDNS_TOKEN}
+        command: ["lego", "--email", "${USER_EMAIL}", "--dns", "duckdns", "--domains", "${USER_HOSTNAME}", "*.${USER_HOSTNAME}", "run"]
     controller:
         restart: always
         image: yalmannaee/peltier-controller:latest
@@ -15,6 +15,6 @@ services:
         volumes:
             - ~/app_data:/var/lib/peltier_controller
         environment:
-            HOSTNAME: peltier_controller.duckdns.org
+            HOSTNAME: "${USER_HOSTNAME}"
     # By default we assume you're using DuckDNS.org (https://www.duckdns.org)
     # as a hostname. The below issues an encryption certificate in that domain's name

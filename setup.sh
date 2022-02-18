@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # This is an install script, run it by invoking 
-# sh -xc "$(curl -fsSL https://raw.github.com/y-almannaee/peltier-controller/main/setup.sh)"
+# sh -c "$(curl -fsSL https://raw.github.com/y-almannaee/peltier-controller/main/setup.sh)"
 # on your Raspberry Pi!
 
 ESC=$(printf '\033') RESET="${ESC}[0m" BLACK="${ESC}[30m" RED="${ESC}[31m"
@@ -51,11 +51,11 @@ echo -e "\n"
 read -p 'Enter the email SSL certificates will be issued for (xxxx@xxxx.com): ' user_email
 echo -e "\n"
 
-[ "$UID" -eq 0 ] || exec sudo sh -c "apt install -y avahi-daemon git python3 python3-pip cron"
-[ "$UID" -eq 0 ] || exec sudo sh -c "$(curl -fsSL https://get.docker.com)"
-[ "$UID" -eq 0 ] || exec sudo sh -c "pip3 install docker-compose"
-[ "$UID" -eq 0 ] || exec sudo sh -c 'curl -o ${PWD}/docker-compose.yml "https://raw.githubusercontent.com/y-almannaee/peltier-controller/main/docker-compose-default.yml"'
-[ "$UID" -eq 0 ] || exec sudo sh -c "/usr/local/bin/docker-compose pull"
-[ "$UID" -eq 0 ] || exec sudo sh -c "export DUCKDNS_TOKEN=${user_duckdns_token};/usr/bin/docker run goacme/lego --accept-tos --path /home/pi/app_data/ --email ${user_email} --dns duckdns --domains ${user_hostname} --domains *.${user_hostname} run"
-[ "$UID" -eq 0 ] || exec sudo sh -c "echo 'USER_HOSTNAME=${user_hostname}\nUSER_EMAIL=${user_email}\nUSER_DUCKDNS_TOKEN=${user_duckdns_token}' > ${PWD}/.env"
-[ "$UID" -eq 0 ] || exec sudo sh -c "echo '44 4 * * * root /usr/local/bin/docker-compose up letsencryptgo' > /etc/cron.d/lego-renew"
+sudo sh -c "apt install -y avahi-daemon git python3 python3-pip cron"
+sudo sh -c "$(curl -fsSL https://get.docker.com)"
+sudo sh -c "pip3 install docker-compose"
+sudo sh -c 'curl -o ${PWD}/docker-compose.yml "https://raw.githubusercontent.com/y-almannaee/peltier-controller/main/docker-compose-default.yml"'
+sudo sh -c "/usr/local/bin/docker-compose pull"
+sudo sh -c "export DUCKDNS_TOKEN=${user_duckdns_token};/usr/bin/docker run goacme/lego --accept-tos --path /home/pi/app_data/ --email ${user_email} --dns duckdns --domains ${user_hostname} --domains *.${user_hostname} run"
+sudo sh -c "echo 'USER_HOSTNAME=${user_hostname}\nUSER_EMAIL=${user_email}\nUSER_DUCKDNS_TOKEN=${user_duckdns_token}' > ${PWD}/.env"
+sudo sh -c "echo '44 4 * * * root /usr/local/bin/docker-compose up letsencryptgo' > /etc/cron.d/lego-renew"

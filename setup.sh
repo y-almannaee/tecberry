@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # This is an install script, run it by invoking
-# sh -c "$(curl -fsSL https://raw.github.com/y-almannaee/peltier-controller/main/setup.sh)"
+# bash -c "$(curl -fsSL https://raw.github.com/y-almannaee/peltier-controller/main/setup.sh)"
 # on your Raspberry Pi!
 
 ESC=$(printf '\033') RESET="${ESC}[0m" BLACK="${ESC}[30m" RED="${ESC}[31m"
@@ -11,13 +11,13 @@ CYAN="${ESC}[36m" WHITE="${ESC}[37m" DEFAULT="${ESC}[39m"
 blue_print() { printf "${BLUE}%s${RESET}\n" "$1"; }
 red_print() { printf "${RED}%s${RESET}\n" "$1"; }
 
-echo  "$(red_print 'THIS SCRIPT UPGRADES YOUR RASPBERRY PI TO THE LATEST VERSION USING APT FULL-UPGRADE')
+echo "$(red_print 'THIS SCRIPT UPGRADES YOUR RASPBERRY PI TO THE LATEST VERSION USING APT FULL-UPGRADE')
 THIS ACTION MAY REMOVE PACKAGES, USE AT YOUR OWN RISK
 Press Ctrl+C to close
 "
 
 leader_or_follower() {
-	echo  "
+	echo "
 Is this Raspberry Pi a leader or follower?
 $(blue_print '1)') Leader
 $(blue_print '2)') Follower
@@ -54,7 +54,7 @@ Option (1/2): "
 }
 leader_or_follower
 
-echo  "
+echo "
 A hostname is required for us to display the control information and camera feed on a website.
 By default we use DuckDNS as it's a free and easy service. You may change this if you are technically savvy.
 
@@ -65,24 +65,24 @@ DuckDNS.org from a web browser and looking for the 'token:' field
 Entering these values constitutes accepting the LetsEncrypt TOS (https://letsencrypt.org/repository/) 
 "
 read -p "Enter the hostname (xxxxx.duckdns.org): " user_hostname
-echo -e "\n"
+echo "\n"
 read -p 'Enter the token (xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx): ' user_duckdns_token
-echo -e "\n"
+echo "\n"
 read -p 'Enter the email SSL certificates will be issued for (xxxx@xxxx.com): ' user_email
-echo -e "\n"
+echo ""
 
-sudo sh -c "apt update && apt full-upgrade -y && apt install -y avahi-daemon git python3 python3-pip cron"
+sudo bash -c "apt update && apt full-upgrade -y && apt install -y avahi-daemon git python3 python3-pip cron"
 if ! [ -x "$(command -v docker)" ]; then
-	sudo sh -c "$(curl -fsSL https://get.docker.com)"
+	sudo bash -c "$(curl -fsSL https://get.docker.com)"
 fi
-sudo sh -c "pip3 install --upgrade docker-compose"
-sudo sh -c 'echo $host_name | tee /etc/hostname'
-sudo sh -c $'sed -i -E \'s/^127.0.1.1.*/127.0.1.1\t\'"$host_name"\'/\' /etc/hosts'
-sudo sh -c "hostnamectl set-hostname $host_name"
-sudo sh -c "systemctl restart avahi-daemon"
-sudo sh -c "mv --backup=t ${PWD}/docker-compose.yml ${PWD}/docker-compose-old.yml"
-sudo sh -c 'curl "https://raw.githubusercontent.com/y-almannaee/peltier-controller/main/docker-compose-default.yml" > ${PWD}/docker-compose.yml'
-sudo sh -c "/usr/local/bin/docker-compose pull"
-sudo sh -c "export DUCKDNS_TOKEN=${user_duckdns_token};/usr/bin/docker run goacme/lego --accept-tos --path /home/pi/app_data/ --email ${user_email} --dns duckdns --domains ${user_hostname} --domains *.${user_hostname} run"
-sudo sh -c "echo 'USER_HOSTNAME=${user_hostname}\nUSER_EMAIL=${user_email}\nUSER_DUCKDNS_TOKEN=${user_duckdns_token}' > ${PWD}/.env"
-sudo sh -c "echo '44 4 * * * root /usr/local/bin/docker-compose up letsencryptgo' > /etc/cron.d/lego-renew"
+sudo bash -c "pip3 install --upgrade docker-compose"
+sudo bash -c "echo ${host_name} | tee /etc/hostname"
+sudo bash -c "echo 127.0.1.1 ${host_name} >> /etc/hosts"
+sudo bash -c "hostnamectl set-hostname ${host_name}"
+sudo bash -c "systemctl restart avahi-daemon"
+sudo bash -c "mv --backup=t ${PWD}/docker-compose.yml ${PWD}/docker-compose-old.yml"
+sudo bash -c "curl \"https://raw.githubusercontent.com/y-almannaee/peltier-controller/main/docker-compose-default.yml\" > ${PWD}/docker-compose.yml"
+sudo bash -c "/usr/local/bin/docker-compose pull"
+sudo bash -c "export DUCKDNS_TOKEN=${user_duckdns_token};/usr/bin/docker run goacme/lego --accept-tos --path /home/pi/app_data/ --email ${user_email} --dns duckdns --domains ${user_hostname} --domains *.${user_hostname} run"
+sudo bash -c "echo 'USER_HOSTNAME=${user_hostname}\nUSER_EMAIL=${user_email}\nUSER_DUCKDNS_TOKEN=${user_duckdns_token}' > ${PWD}/.env"
+sudo bash -c "echo '44 4 * * * root /usr/local/bin/docker-compose up letsencryptgo' > /etc/cron.d/lego-renew"

@@ -4,7 +4,7 @@ services:
         image: goacme/lego
         container_name: lego
         volumes:
-            - /home/pi/app_data:/var/lib
+            - ./app_data:/var/lib
         environment:
             DUCKDNS_TOKEN: ${USER_DUCKDNS_TOKEN}
         command: ["lego", "--accept-tos", "--path", "/var/lib/", "--email", "${USER_EMAIL}", "--dns", "duckdns", "--domains", "${USER_HOSTNAME}", "--domains", "*.${USER_HOSTNAME}", "renew"]
@@ -16,9 +16,9 @@ services:
             - "80:80"
             - "443:443"
         devices:
-            - "/dev/gpiomem:/dev/gpiomem"
+            - /dev/gpiomem:/dev/gpiomem
         volumes:
-            - /home/pi/app_data:/var/lib/peltier_controller
+            - ./app_data:/var/lib/peltier_controller
         environment:
             HOSTNAME: "${USER_HOSTNAME}"
     # By default we assume you're using DuckDNS.org (https://www.duckdns.org)

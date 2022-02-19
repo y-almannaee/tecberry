@@ -7,7 +7,7 @@ services:
             - ./app_data:/var/lib
         environment:
             DUCKDNS_TOKEN: ${USER_DUCKDNS_TOKEN}
-        command: ["lego", "--accept-tos", "--path", "/var/lib/", "--email", "${USER_EMAIL}", "--dns", "duckdns", "--domains", "${USER_HOSTNAME}", "--domains", "*.${USER_HOSTNAME}", "renew"]
+        command: ["--accept-tos", "--path", "/var/lib/", "--email", "${USER_EMAIL}", "--dns", "duckdns", "--domains", "${USER_HOSTNAME}", "--domains", "*.${USER_HOSTNAME}", "renew"]
     controller:
         restart: always
         image: yalmannaee/peltier-controller:latest

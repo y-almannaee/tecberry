@@ -27,13 +27,23 @@ Option (1/2): "
 	case $ans in
 	1)
 		if ping -c 1 -W 1 "rpileader.local"; then
-			echo "$(red_print 'Another Leader Pi was found on the network. Terminating.')"
-			exit 1
+			echo "$(red_print 'Another Leader Pi was found on the network.') Continue anyway (may mess things up)? (y/N)"
+			read -r anstwo
 		else
+			anstwo=Y
+		fi
+		case $anstwo in
+		y) ;&
+		Y)
 			echo "Set mdns name to rpileader.local"
 			host_name="rpileader"
 			return 0
-		fi
+			;;
+		*) 
+		echo "Terminating..."
+		exit 1
+		;;
+		esac
 		;;
 	2)
 		for i in {1..5}; do

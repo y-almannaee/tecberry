@@ -21,8 +21,9 @@ leader_or_follower() {
 Is this Raspberry Pi a leader or follower?
 $(blue_print '1)') Leader
 $(blue_print '2)') Follower
+$(blue_print '3)') Skip mDNS setup
 
-Option (1/2): "
+Option (1/2/3): "
 	read -r ans
 	case $ans in
 	1)
@@ -45,6 +46,9 @@ Option (1/2): "
 				return 0
 			fi
 		done
+		;;
+	3)
+		return 0
 		;;
 	*)
 		echo "Invalid choice. Enter 1 or 2."

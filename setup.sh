@@ -86,5 +86,5 @@ sudo bash -c "mv --backup=t ${PWD}/docker-compose.yml ${PWD}/docker-compose-old.
 sudo bash -c "curl \"https://raw.githubusercontent.com/y-almannaee/peltier-controller/main/docker-compose-default.yml\" > ${PWD}/docker-compose.yml"
 sudo bash -c "mkdir -p ${PWD}/app_data; chown -r pi:pi ${PWD}/app_data ${PWD}/docker-compose.yml ${PWD}/.env"
 sudo bash -c "/usr/local/bin/docker-compose pull"
-sudo bash -c "export DUCKDNS_TOKEN=${user_duckdns_token};/usr/bin/docker run -e DUCKDNS_TOKEN goacme/lego --accept-tos --path ${PWD}/app_data/ --email ${user_email} --dns duckdns --domains ${user_hostname} --domains *.${user_hostname} run"
+sudo bash -c "export DUCKDNS_TOKEN=${user_duckdns_token};/usr/bin/docker run -e DUCKDNS_TOKEN -v ${PWD}/app_data:/var/lib goacme/lego --accept-tos --path /var/lib/ --email ${user_email} --dns duckdns --domains ${user_hostname} --domains *.${user_hostname} run"
 sudo bash -c "echo '44 4 * * * root /usr/local/bin/docker-compose up letsencryptgo' > /etc/cron.d/lego-renew"

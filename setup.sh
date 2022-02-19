@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# This is an install script, run it by invoking 
+# This is an install script, run it by invoking
 # sh -c "$(curl -fsSL https://raw.github.com/y-almannaee/peltier-controller/main/setup.sh)"
 # on your Raspberry Pi!
 
@@ -26,12 +26,28 @@ Option (1/2): "
 	read -r ans
 	case $ans in
 	1)
-		LEADER=1
+		if ping -c 1 -W 1 "rpileader.local"; then
+			echo "$(red_print 'Another Leader Pi was found on the network. Terminating.')"
+			exit 1
+		else
+			echo "Set mdns name to rpileader.local"
+			host_name="rpileader"
+			return 0
+		fi
 		;;
 	2)
-		LEADER=0
+		for i in {1..5}; do
+			if ping -c 1 -W 1 "rpifollower${i}.local"; then
+				echo "Found a Follower Pi number ${i}"
+			else
+				echo "Set mdns name to rpifollower${i}.local"
+				host_name="rpifollower${i}"
+				return 0
+			fi
+		done
 		;;
 	*)
+		echo "Invalid choice. Enter 1 or 2."
 		leader_or_follower
 		;;
 	esac
@@ -39,8 +55,9 @@ Option (1/2): "
 leader_or_follower
 
 echo -e "
-A hostname is required for us to display the control information and camera feed.
-By default this runs on DuckDNS. You may change this later by editing the docker-compose.yml file.
+A hostname is required for us to display the control information and camera feed on a website.
+By default we use DuckDNS as it's a free and easy service. You may change this if you are technically savvy.
+
 A hostname may look like peltier.duckdns.org. You may register one at DuckDNS.org.
 A token will be of the form xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx, and you may find it by logging in to
 DuckDNS.org from a web browser and looking for the 'token:' field
@@ -56,10 +73,15 @@ echo -e "\n"
 
 sudo sh -c "apt update && apt full-upgrade -y && apt install -y avahi-daemon git python3 python3-pip cron"
 if ! [ -x "$(command -v docker)" ]; then
-    sudo sh -c "$(curl -fsSL https://get.docker.com)"
+	sudo sh -c "$(curl -fsSL https://get.docker.com)"
 fi
 sudo sh -c "pip3 install --upgrade docker-compose"
-sudo sh -c 'curl -o ${PWD}/docker-compose.yml "https://raw.githubusercontent.com/y-almannaee/peltier-controller/main/docker-compose-default.yml"'
+sudo sh -c 'echo $host_name | tee /etc/hostname'
+sudo sh -c $'sed -i -E \'s/^127.0.1.1.*/127.0.1.1\t\'"$host_name"\'/\' /etc/hosts'
+sudo sh -c "hostnamectl set-hostname $host_name"
+sudo sh -c "systemctl restart avahi-daemon"
+sudo sh -c "mv --backup=t ${PWD}/docker-compose.yml ${PWD}/docker-compose-old.yml"
+sudo sh -c 'curl "https://raw.githubusercontent.com/y-almannaee/peltier-controller/main/docker-compose-default.yml" > ${PWD}/docker-compose.yml'
 sudo sh -c "/usr/local/bin/docker-compose pull"
 sudo sh -c "export DUCKDNS_TOKEN=${user_duckdns_token};/usr/bin/docker run goacme/lego --accept-tos --path /home/pi/app_data/ --email ${user_email} --dns duckdns --domains ${user_hostname} --domains *.${user_hostname} run"
 sudo sh -c "echo 'USER_HOSTNAME=${user_hostname}\nUSER_EMAIL=${user_email}\nUSER_DUCKDNS_TOKEN=${user_duckdns_token}' > ${PWD}/.env"

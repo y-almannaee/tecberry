@@ -4,7 +4,7 @@ services:
         image: goacme/lego
         container_name: lego
         volumes:
-            - shared_data:/var/lib
+            - /home/pi/app_data:/var/lib
         environment:
             DUCKDNS_TOKEN: ${USER_DUCKDNS_TOKEN}
         command: ["lego", "--accept-tos", "--path", "/var/lib/", "--email", "${USER_EMAIL}", "--dns", "duckdns", "--domains", "${USER_HOSTNAME}", "--domains", "*.${USER_HOSTNAME}", "renew"]
@@ -18,11 +18,8 @@ services:
         devices:
             - "/dev/gpiomem:/dev/gpiomem"
         volumes:
-            - shared_data:/var/lib/peltier_controller
+            - /home/pi/app_data:/var/lib/peltier_controller
         environment:
             HOSTNAME: "${USER_HOSTNAME}"
     # By default we assume you're using DuckDNS.org (https://www.duckdns.org)
     # as a hostname. The letsencryptgo service issues an encryption certificate in that domain's name
-
-volumes:
-    shared_data: "~/app_data"

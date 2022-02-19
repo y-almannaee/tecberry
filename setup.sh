@@ -11,10 +11,13 @@ CYAN="${ESC}[36m" WHITE="${ESC}[37m" DEFAULT="${ESC}[39m"
 blue_print() { printf "${BLUE}%s${RESET}\n" "$1"; }
 red_print() { printf "${RED}%s${RESET}\n" "$1"; }
 
-echo -ne "Press Ctrl+C to close"
+echo -e "$(red_print 'THIS SCRIPT UPGRADES YOUR RASPBERRY PI TO THE LATEST VERSION USING APT FULL-UPGRADE')
+THIS ACTION MAY REMOVE PACKAGES, USE AT YOUR OWN RISK
+Press Ctrl+C to close
+"
 
 leader_or_follower() {
-	echo -ne "
+	echo -e "
 Is this Raspberry Pi a leader or follower?
 $(blue_print '1)') Leader
 $(blue_print '2)') Follower
@@ -35,7 +38,7 @@ Option (1/2): "
 }
 leader_or_follower
 
-echo -ne "
+echo -e "
 A hostname is required for us to display the control information and camera feed.
 By default this runs on DuckDNS. You may change this later by editing the docker-compose.yml file.
 A hostname may look like peltier.duckdns.org. You may register one at DuckDNS.org.
@@ -51,9 +54,8 @@ echo -e "\n"
 read -p 'Enter the email SSL certificates will be issued for (xxxx@xxxx.com): ' user_email
 echo -e "\n"
 
-sudo sh -c "apt install -y avahi-daemon git python3 python3-pip cron"
-if ! command -v docker &> /dev/null
-then
+sudo sh -c "apt update && apt full-upgrade -y && apt install -y avahi-daemon git python3 python3-pip cron"
+if ! [ -x "$(command -v docker)" ]; then
     sudo sh -c "$(curl -fsSL https://get.docker.com)"
 fi
 sudo sh -c "pip3 install --upgrade docker-compose"

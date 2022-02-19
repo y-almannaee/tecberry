@@ -11,13 +11,13 @@ CYAN="${ESC}[36m" WHITE="${ESC}[37m" DEFAULT="${ESC}[39m"
 blue_print() { printf "${BLUE}%s${RESET}\n" "$1"; }
 red_print() { printf "${RED}%s${RESET}\n" "$1"; }
 
-echo -e "$(red_print 'THIS SCRIPT UPGRADES YOUR RASPBERRY PI TO THE LATEST VERSION USING APT FULL-UPGRADE')
+echo  "$(red_print 'THIS SCRIPT UPGRADES YOUR RASPBERRY PI TO THE LATEST VERSION USING APT FULL-UPGRADE')
 THIS ACTION MAY REMOVE PACKAGES, USE AT YOUR OWN RISK
 Press Ctrl+C to close
 "
 
 leader_or_follower() {
-	echo -e "
+	echo  "
 Is this Raspberry Pi a leader or follower?
 $(blue_print '1)') Leader
 $(blue_print '2)') Follower
@@ -54,7 +54,7 @@ Option (1/2): "
 }
 leader_or_follower
 
-echo -e "
+echo  "
 A hostname is required for us to display the control information and camera feed on a website.
 By default we use DuckDNS as it's a free and easy service. You may change this if you are technically savvy.
 

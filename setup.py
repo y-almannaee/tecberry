@@ -27,7 +27,7 @@ def run_shell(cmd, success_state="", error_state=""):
 	except subprocess.CalledProcessError as error:
 		print(error_state)
 		traceback.print_exception(error)
-		return 1
+		return int(error.returncode)
 
 
 class con_colors:
@@ -75,6 +75,7 @@ while True:
 		continue
 	run_shell(f"hostnamectl set-hostname {host_name}")
 	run_shell(f"systemctl restart avahi-daemon")
+	break
 
 
 print(
@@ -99,10 +100,10 @@ user_email = input(
 with open(f"{os.getcwd()}/.env",'r') as file:
 	file.writelines([f"USER_HOSTNAME={user_hostname}",f"USER_EMAIL={user_email}",f"USER_DUCKDNS_TOKEN={user_duckdns_token}"])
 
-run_shell("apt update")
-run_shell("apt full-upgrade -y")
-run_shell("apt install -y avahi-daemon git python3 python3-pip cron nmap")
-if run_shell("command -v docker") is 1:
+run_shell("apt update",f"{con_colors.OKBLUE}Updated package lists")
+run_shell("apt full-upgrade -y",f"{con_colors.OKBLUE}Upgraded system")
+run_shell("apt install -y avahi-utils avahi-daemon git python3 python3-pip cron",f"{con_colors.OKBLUE}Installed prerequisite programs")
+if run_shell("command -v docker",f"{con_colors.OKBLUE}Installing Docker",f"{con_colors.OKBLUE}Docker is already installed, skipping") is 1:
 	run_shell("bash -c \"$(curl -fsSL https://get.docker.com)\"")
 pip_install("docker-compose")
 run_shell(f"mv --backup=t {os.getcwd()}/docker-compose.yml {os.getcwd()}/docker-compose-old.yml")

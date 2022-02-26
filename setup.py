@@ -144,7 +144,8 @@ def handle_hostname(choice):
 		)
 		raise SystemExit()
 
-os.system('clear')
+
+os.system("clear")
 
 print(
 	f"{con_colors.WARNING}Warning: this script upgrades your Raspberry Pi to the latest version using apt full-upgrade"
@@ -196,7 +197,7 @@ DuckDNS.org from a web browser and looking for the 'token:' field
 """
 )
 
-user_hostname=""
+user_hostname = ""
 while not user_hostname.endswith(".duckdns.org"):
 	user_hostname = input(
 		f"{con_colors.BOLD}Enter the hostname (xxxxx.duckdns.org):{con_colors.ENDC} "
@@ -304,3 +305,8 @@ print(
 print(
 	f"{con_colors.WARNING}Report any issues to {con_colors.ENDC}{con_colors.BOLD}https://github.com/y-almannaee/peltier-controller/issues{con_colors.ENDC}"
 )
+if not (len(sys.argv) == 2 and sys.argv[1] == "--no-rm"):
+	print(
+		f"{con_colors.GRAY}This script automatically removes itself to prevent running outdated commands. To prevent this behaviour pass --no-rm to the invoking interpreter."
+	)
+	os.remove(sys.argv[0])

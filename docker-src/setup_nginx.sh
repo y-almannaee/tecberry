@@ -12,5 +12,5 @@ sed -i -e 's@#INCLUDEOCSPSTAPLING@# OCSP stapling\
 	ssl_stapling_verify on;\
 \
 	# verify chain of trust of OCSP response using Root CA and Intermediate certs\
-	ssl_trusted_certificate /etc/nginx/certs/certificate.issuer.crt;@' -e 's/#INCLUDESERVERNAME/server_name '"$HOSTNAME'";/' /etc/nginx/sites-enabled/main_server
+	ssl_trusted_certificate /etc/nginx/certs/certificate.issuer.crt;@' -e 's/#INCLUDESERVERNAME/server_name '"$HOSTNAME"';/' /etc/nginx/sites-enabled/main_server
 sv start nginx

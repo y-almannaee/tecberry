@@ -252,6 +252,9 @@ if (
 	)
 	!= 0
 ):
+	print(
+		f"{con_colors.GRAY}We're installing Docker. This may take a while, and it may look like there's no progress at all. Please sit tight.{con_colors.ENDC}"
+	)
 	run_shell(
 		'bash -c "$(curl -fsSL https://get.docker.com)"',
 		f"{con_colors.OKCYAN}Successfully installed the Docker runtime",
@@ -289,9 +292,13 @@ if run_shell(
 	f"{con_colors.OKCYAN}Successfully ran the LetsEncrypt container, generated certificates were placed in the ./app_data folder",
 	f"{con_colors.WARNING}Unable to successfully run the LetsEncrypt container",
 	False,
-) != 0 and not os.path.exists(f"{os.getcwd()}/certificates"):
+) != 0 and not os.path.exists(f"{os.getcwd()}/app_data/certificates"):
 	print(
-		f"{con_colors.FAIL}Failure obtaining SSL certificates. Your web connections to this RaspberryPi will not be encrypted. Ensure that Docker is installed successfully. {failure_warning}{con_colors.ENDC}"
+		f"{con_colors.FAIL}Failure obtaining SSL certificates. Your web connections to this RaspberryPi will not be encrypted securely. Ensure that Docker is installed successfully. {failure_warning}{con_colors.ENDC}"
+	)
+else:
+	print(
+		f"{con_colors.OKCYAN}Certificates exist in ./app_data. If they are outdated they will be renewed when you run the docker-compose containers.{con_colors.ENDC}"
 	)
 
 with open("/etc/cron.d/lego-renew", "w") as file:

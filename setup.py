@@ -274,7 +274,7 @@ run_shell(
 	True,
 )
 run_shell(
-	f"/usr/bin/docker run -e DUCKDNS_TOKEN={user_duckdns_token} -v {os.getcwd()}/app_data:/var/lib goacme/lego --accept-tos --path /var/lib/ --email {user_email} --dns duckdns --domains {user_hostname} --domains *.{user_hostname} run",
+	f"/usr/bin/docker run --rm -e DUCKDNS_TOKEN={user_duckdns_token} -v {os.getcwd()}/app_data:/var/lib goacme/lego --accept-tos --path /var/lib/ --email {user_email} --dns duckdns --domains {user_hostname} --domains *.{user_hostname} run",
 	f"{con_colors.OKCYAN}Successfully ran the LetsEncrypt container, generated certificates were placed in the ./app_data folder",
 	f"{con_colors.FAIL}Unable to run the LetsEncrypt container. Ensure that Docker was downloaded successfully. {failure_warning}",
 	True,
@@ -289,7 +289,7 @@ with open("/etc/cron.d/lego-renew", "w") as file:
 	)
 
 print(
-	f"\n{con_colors.OKGREEN}Successfully finished setup. Run the containers using {con_colors.ENDC}{con_colors.BOLD}sudo docker-compose up{con_colors.ENDC}"
+	f"\n{con_colors.OKGREEN}Successfully finished setup. Run the containers using {con_colors.ENDC}{con_colors.BOLD}sudo docker-compose pull && sudo docker-compose up -d{con_colors.ENDC}"
 )
 print(
 	f"{con_colors.WARNING}Report any issues to {con_colors.ENDC}{con_colors.BOLD}https://github.com/y-almannaee/peltier-controller/issues{con_colors.ENDC}"

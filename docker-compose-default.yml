@@ -2,7 +2,6 @@ version: '3'
 services:
     letsencryptgo:
         image: goacme/lego
-        container_name: lego
         volumes:
             - ./app_data:/var/lib
         environment:
@@ -11,7 +10,6 @@ services:
     controller:
         restart: always
         image: yalmannaee/peltier-controller:latest
-        container_name: peltier_controller
         ports:
             - "80:80"
             - "443:443"

@@ -1,7 +1,7 @@
 #!/bin/python3
 
 # This is an install script, run it by invoking
-# curl -fsSL https://raw.github.com/y-almannaee/peltier-controller/main/setup.py | sudo python3 -
+# curl -fsSLO https://raw.github.com/y-almannaee/peltier-controller/main/setup.py && sudo python3 setup.py
 # on your Raspberry Pi!
 
 import shlex, subprocess, sys, traceback, os, time
@@ -22,13 +22,13 @@ def run_shell(cmd, success_state="", error_state="", critical=False):
 			stdout=subprocess.DEVNULL,
 			stderr=subprocess.DEVNULL,
 		)
-		print(success_state)
+		print(success_state,con_colors.ENDC)
 		return 0
 	except subprocess.CalledProcessError as error:
-		print(error_state)
+		print(error_state,con_colors.ENDC)
 		traceback.print_exception(error)
 		if critical:
-			print(f"{con_colors.WARNING}Critical failure has occurred, can't continue")
+			print(f"{con_colors.WARNING}Critical failure has occurred, can't continue{con_colors.ENDC}")
 			raise SystemExit()
 		return int(error.returncode)
 
@@ -54,21 +54,21 @@ def handle_hostname(choice):
 		IP = '127.0.0.1'
 	finally:
 		s.close()
-	if choice is 1:
-		set_hostname("RaspberryPi_Leader")
+	if choice == 1:
+		set_hostname("RaspberryPiLeader")
 		out = subprocess.check_output(shlex.split(f"avahi-resolve -a {IP}")).decode().split('\t')[1].strip()
-		if out is not "RaspberryPi_Leader.local":
-			print(f"{con_colors.WARNING}This isn't the only RaspberryPi Leader on the network. Can't continue")
+		if out != "RaspberryPiLeader.local":
+			print(f"{con_colors.WARNING}This isn't the only RaspberryPi Leader on the network. Can't continue{con_colors.ENDC}")
 			raise SystemExit()
 		else:
 			return
 	else:
 		for i in range(1,4):
-			set_hostname(f"RaspberryPi_Follower_{i}")
+			set_hostname(f"RaspberryPiFollower{i}")
 			out = subprocess.check_output(shlex.split(f"avahi-resolve -a {IP}")).decode().split('\t')[1].strip()
-			if out is f"RaspberryPi_Follower_{i}.local":
+			if out is f"RaspberryPiFollower{i}.local":
 				return
-		print(f"{con_colors.WARNING}Too many Follower RaspberryPis on the network. Can't continue")
+		print(f"{con_colors.WARNING}Too many Follower RaspberryPis on the network. Can't continue{con_colors.ENDC}")
 		raise SystemExit()
 
 class con_colors:
@@ -105,11 +105,11 @@ Option (a/b/c): """,
 )
 while True:
 	choice = str(input()).lower()
-	if choice is "a":
+	if choice == "a":
 		handle_hostname(1)
-	elif choice is "b":
+	elif choice == "b":
 		handle_hostname(2)
-	elif choice is "c":
+	elif choice == "c":
 		break
 	else:
 		print("Enter a, b, or c")
@@ -142,7 +142,7 @@ with open(f"{os.getcwd()}/.env",'w') as file:
 run_shell("apt update",f"{con_colors.OKBLUE}Updated package lists")
 run_shell("apt full-upgrade -y",f"{con_colors.OKBLUE}Upgraded system")
 run_shell("apt install -y avahi-utils avahi-daemon git python3 python3-pip cron",f"{con_colors.OKBLUE}Installed prerequisite programs")
-if run_shell("command -v docker",f"{con_colors.OKBLUE}Installing Docker",f"{con_colors.OKBLUE}Docker is already installed, skipping") is 1:
+if run_shell("command -v docker",f"{con_colors.OKBLUE}Installing Docker",f"{con_colors.OKBLUE}Docker is already installed, skipping") == 1:
 	run_shell("bash -c \"$(curl -fsSL https://get.docker.com)\"")
 pip_install("docker-compose")
 run_shell(f"mv --backup=t {os.getcwd()}/docker-compose.yml {os.getcwd()}/docker-compose-old.yml")

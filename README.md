@@ -27,21 +27,17 @@ For this you will need a Raspberry Pi with a working Raspbian installation. To s
 
 1. After first boot, plug the Raspberry Pi into an HDMI-compatible monitor and connect a keyboard. 
 2. Log in using the default username `pi` and password `raspberry`.
-3. Run the following commands on your Raspberry Pi to update and install several key programs:
+3. Run the following commands on your Raspberry Pi to use the easy setup script:
 ```console
-raspberrypi:~$ sudo apt update && sudo apt upgrade
-raspberrypi:~$ sudo apt install -y avahi-daemon git python3 python3-pip
+raspberrypi:~$ sudo apt update && sudo apt install -y python3 python3-pip
+raspberrypi:~$ curl -fsSLO https://raw.github.com/y-almannaee/peltier-controller/main/setup.py && sudo python3 setup.py
 ```
-4. To get the Docker environment, run the following:
-```console
-raspberrypi:~$ curl -sSL https://get.docker.com | sh
-raspberrypi:~$ sudo pip3 install docker-compose
-```
-5. Incomplete
+4. Follow the setup instructions to configure your Raspberry Pi
 
 ## Task list
 
 - [x] Create basic dockerfile
+- [x] Create easy setup script
 - [ ] Architect the leader-follower application in Python
 - [ ] Create Nginx configurations for leader & follower
 - [ ] Create remote administration logic

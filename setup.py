@@ -4,7 +4,7 @@
 # curl -fsSLO https://raw.github.com/y-almannaee/peltier-controller/main/setup.py && sudo python3 setup.py
 # on your Raspberry Pi!
 
-import shlex, subprocess, sys, traceback, os, time
+import shlex, subprocess, sys, os, time
 
 
 class con_colors:
@@ -144,6 +144,7 @@ def handle_hostname(choice):
 		)
 		raise SystemExit()
 
+os.system('clear')
 
 print(
 	f"{con_colors.WARNING}Warning: this script upgrades your Raspberry Pi to the latest version using apt full-upgrade"
@@ -195,15 +196,21 @@ DuckDNS.org from a web browser and looking for the 'token:' field
 """
 )
 
-user_hostname = input(
-	f"{con_colors.BOLD}Enter the hostname (xxxxx.duckdns.org):{con_colors.ENDC} "
-)
-user_duckdns_token = input(
-	f"{con_colors.BOLD}Enter the token (xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx):{con_colors.ENDC} "
-)
-user_email = input(
-	f"{con_colors.BOLD}Enter the email SSL certificates will be issued for (xxxx@xxxx.com):{con_colors.ENDC} "
-)
+user_hostname=""
+while not user_hostname.endswith(".duckdns.org"):
+	user_hostname = input(
+		f"{con_colors.BOLD}Enter the hostname (xxxxx.duckdns.org):{con_colors.ENDC} "
+	)
+user_duckdns_token = ""
+while len(user_duckdns_token) != 36:
+	user_duckdns_token = input(
+		f"{con_colors.BOLD}Enter the token (xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx):{con_colors.ENDC} "
+	)
+user_email = ""
+while "@" not in user_email:
+	user_email = input(
+		f"{con_colors.BOLD}Enter the email SSL certificates will be issued for (xxxx@xxxx.com):{con_colors.ENDC} "
+	)
 
 with open(f"{os.getcwd()}/.env", "w") as file:
 	file.writelines(
@@ -263,9 +270,12 @@ run_shell(
 )
 run_shell(
 	f'bash -c "mkdir -p {os.getcwd()}/app_data; chown -R pi:pi {os.getcwd()}/app_data {os.getcwd()}/docker-compose.yml {os.getcwd()}/.env"',
-	f"{con_colors.OKCYAN}Created app_data and transferred ownership of all requisite files to the {con_colors.BOLD}pi{con_colors.OKCYAN} user",
-	f"{con_colors.FAIL}Unable to create app_data folder or change ownership of files. {failure_warning}",
+	f"{con_colors.OKCYAN}Created ./app_data and transferred ownership of all requisite files to the pi user",
+	f"{con_colors.FAIL}Unable to create ./app_data folder or change ownership of files. {failure_warning}",
 	True,
+)
+print(
+	f"{con_colors.GRAY}We're pulling the latest Docker images. This may take a while, and it may look like there's no progress at all. Please sit tight.{con_colors.ENDC}"
 )
 run_shell(
 	"/usr/local/bin/docker-compose pull",

@@ -20,6 +20,9 @@ class con_colors:
 	UNDERLINE = "\033[4m"
 
 
+failure_warning = "Make sure you are connected to the internet, there is enough space on the SD card, and that this script is running with Sudo permissions (sudo python3 ./setup.py)"
+
+
 def pip_install(package):
 	try:
 		subprocess.check_call(
@@ -65,16 +68,33 @@ def set_hostname(hostname):
 	hosts_file.append(f"127.0.1.1 {hostname}\n")
 	with open("/etc/hosts", "w") as file:
 		file.writelines(hosts_file)
-	run_shell(f"hostnamectl set-hostname {hostname}")
-	run_shell(f"systemctl restart avahi-daemon")
+	run_shell(
+		f"hostnamectl set-hostname {hostname}",
+		f"{con_colors.OKCYAN}Changed hostname to {hostname}",
+		f"{con_colors.FAIL}Could not change hostname to {hostname}. {failure_warning}",
+		True,
+	)
+	run_shell(
+		f"systemctl restart avahi-daemon",
+		f"{con_colors.OKCYAN}Restarted the mDNS daemon to apply changes",
+		f"{con_colors.FAIL}Unable to restartthe mDNS daemon. {failure_warning}",
+		True,
+	)
 	time.sleep(5)
 
 
 def handle_hostname(choice):
-	run_shell("apt update", f"{con_colors.OKCYAN}Updated package lists")
+	run_shell(
+		"apt update",
+		f"{con_colors.OKCYAN}Updated package lists",
+		f"{con_colors.FAIL}Can't update package lists. {failure_warning}",
+		True,
+	)
 	run_shell(
 		"apt install -y avahi-utils",
 		f"{con_colors.OKCYAN}Installed prerequisite programs",
+		f"{con_colors.FAIL}Could not install prerequisite programs. {failure_warning}",
+		True,
 	)
 	import socket
 
@@ -96,7 +116,7 @@ def handle_hostname(choice):
 			.strip()
 			.split(".")[0]
 		)
-		if out != "RaspberryPiLeader.local":
+		if out != "RaspberryPiLeader":
 			print(
 				f"{con_colors.FAIL}This isn't the only RaspberryPi Leader on the network. Can't continue{con_colors.ENDC}"
 			)
@@ -113,8 +133,12 @@ def handle_hostname(choice):
 				.strip()
 				.split(".")[0]
 			)
-			if out is f"RaspberryPiFollower{i}.local":
+			if out is f"RaspberryPiFollower{i}":
 				return
+			else:
+				print(
+					f'{con_colors.WARNING}Found an existing RaspberryPi "RaspberryPiFollower{i}" on the network{con_colors.ENDC}'
+				)
 		print(
 			f"{con_colors.FAIL}Too many Follower RaspberryPis on the network. Can't continue{con_colors.ENDC}"
 		)
@@ -147,10 +171,14 @@ while True:
 	elif choice == "b":
 		handle_hostname(2)
 	elif choice == "c":
+		print(
+			f"{con_colors.WARNING}Skipping mDNS setup. This may prevent other Pis from finding this Pi on the network{con_colors.ENDC}"
+		)
 		break
 	else:
 		print(f"{con_colors.WARNING}Enter a, b, or c{con_colors.ENDC}")
 		continue
+	print(f"{con_colors.OKCYAN}Finished mDNS setup{con_colors.ENDC}")
 	break
 
 
@@ -185,9 +213,9 @@ with open(f"{os.getcwd()}/.env", "w") as file:
 			f"USER_DUCKDNS_TOKEN={user_duckdns_token}\n",
 		]
 	)
-	f"{con_colors.OKCYAN}Saved your configuration to the .env file, for use with Docker{con_colors.ENDC}"
-
-failure_warning = "Make sure you are connected to the internet, there is enough space on the SD card, and that this script is running with Sudo permissions (sudo python3 ./setup.py)"
+	print(
+		f"{con_colors.OKCYAN}Saved your configuration to the .env file, for use with Docker{con_colors.ENDC}"
+	)
 
 run_shell(
 	"apt update",
@@ -261,8 +289,8 @@ with open("/etc/cron.d/lego-renew", "w") as file:
 	)
 
 print(
-	f"\n{con_colors.OKGREEN}Successfully finished setup. Run the containers using {con_colors.BOLD}sudo docker-compose up{con_colors.ENDC}"
+	f"\n{con_colors.OKGREEN}Successfully finished setup. Run the containers using {con_colors.ENDC}{con_colors.BOLD}sudo docker-compose up{con_colors.ENDC}"
 )
 print(
-	f"{con_colors.WARNING}Report any issues to {con_colors.BOLD}https://github.com/y-almannaee/peltier-controller/issues{con_colors.ENDC}"
+	f"{con_colors.WARNING}Report any issues to {con_colors.ENDC}{con_colors.BOLD}https://github.com/y-almannaee/peltier-controller/issues{con_colors.ENDC}"
 )

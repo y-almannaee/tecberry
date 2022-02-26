@@ -284,12 +284,15 @@ run_shell(
 	f"{con_colors.FAIL}Unable to pull latest Docker images. Ensure that the docker-compose module was downloaded by Python and that it is in the /usr/local/bin folder. {failure_warning}",
 	True,
 )
-run_shell(
+if run_shell(
 	f"/usr/bin/docker run --rm -e DUCKDNS_TOKEN={user_duckdns_token} -v {os.getcwd()}/app_data:/var/lib goacme/lego --accept-tos --path /var/lib/ --email {user_email} --dns duckdns --domains {user_hostname} --domains *.{user_hostname} run",
 	f"{con_colors.OKCYAN}Successfully ran the LetsEncrypt container, generated certificates were placed in the ./app_data folder",
-	f"{con_colors.FAIL}Unable to run the LetsEncrypt container. Ensure that Docker was downloaded successfully. {failure_warning}",
-	True,
-)
+	f"{con_colors.WARNING}Unable to successfully run the LetsEncrypt container",
+	False,
+) != 0 and not os.path.exists(f"{os.getcwd()}/certificates"):
+	print(
+		f"{con_colors.FAIL}Failure obtaining SSL certificates. Your web connections to this RaspberryPi will not be encrypted. Ensure that Docker is installed successfully. {failure_warning}{con_colors.ENDC}"
+	)
 
 with open("/etc/cron.d/lego-renew", "w") as file:
 	file.writelines(

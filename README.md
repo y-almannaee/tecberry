@@ -30,7 +30,7 @@ For this you will need a Raspberry Pi with a working Raspbian installation. To s
 3. Run the following commands on your Raspberry Pi to use the easy setup script:
 ```console
 pi@raspberrypi:~$ sudo apt update && sudo apt install -y python3 python3-pip
-pi@raspberrypi:~$ curl -fsSLO https://raw.github.com/y-almannaee/peltier-controller/main/setup.py && sudo python3 setup.py
+pi@raspberrypi:~$ curl -fsSLO https://bit.ly/peltier_py && sudo python3 setup.py
 ```
 4. Follow the setup instructions to configure your Raspberry Pi
 5. You may run the containers using the following command:

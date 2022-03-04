@@ -126,3 +126,15 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# Svelte/Node Ignores
+.DS_Store
+node_modules
+/build
+/.svelte-kit
+/package
+.env
+.env.*
+!.env.example
+.vercel
+.output

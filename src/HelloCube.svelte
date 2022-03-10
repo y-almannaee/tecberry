@@ -58,12 +58,14 @@
 	};
   
 	function onPointerMove(e) {
-	  let obj = e.detail.target;
-  
-	  let unpr = new Vector3().copy(e.detail.unprojected);
-	  let unprwtl = obj.worldToLocal(unpr).add(new Vector3(0, 0, 1));
-	  obj.lookAt(unprwtl);
+		console.log(e);
+		let obj = e.detail.target;
+
+		let unpr = new Vector3().copy(e.detail.unprojected);
+		let unprwtl = obj.worldToLocal(unpr).add(new Vector3(0, 0, 1));
+		obj.lookAt(unprwtl);
 	}
+
   </script>
   
   <Canvas let:sti w={500} h={500} interactive>
@@ -75,7 +77,7 @@
 		id="cam1"
 		props={{ position: [0, 0, 3], lookAt: [0, 0, 0] }} />
   
-	  <DirectionalLight {scene} props={{ position: [3, 3, 3] }} />
+	  <DirectionalLight {scene} props={{ position: [3, 3, 3], lookAt: [10, 10, 10] }} />
   
 	  <AmbientLight {scene} props={{ color: 0xffffff, intensity: 1.25 }} />
   
@@ -90,7 +92,8 @@
 		on:pointermove={onPointerMove}
 		onClick={triggerOnClickAni}
 		onPointerOver={triggerOnOverAni}
-		onPointerLeave={triggerOnOutAni} />
+		onPointerLeave={triggerOnOutAni} 
+		/>
 	</Scene>
   
 	<WebGLRenderer

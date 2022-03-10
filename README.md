@@ -1,66 +1,109 @@
-![](/html-src/assets/banner_light.png#gh-light-mode-only) 
-![](/html-src/assets/banner_dark.png#gh-dark-mode-only) 
+*Psst — looking for a more complete solution? Check out [SvelteKit](https://kit.svelte.dev), the official framework for building web applications of all sizes, with a beautiful development experience and flexible filesystem-based routing.*
 
-# Raspberry Pi - Dockerized Peltier Controller
+*Looking for a shareable component template instead? You can [use SvelteKit for that as well](https://kit.svelte.dev/docs#packaging) or the older [sveltejs/component-template](https://github.com/sveltejs/component-template)*
 
-## About the project
+---
 
-Control and automate Peltier modules for thermal fatigue testing from a Raspberry Pi. Built for reliability, using hardware redundancy.
+# svelte app
 
-## Required items (incomplete)
+This is a project template for [Svelte](https://svelte.dev) apps. It lives at https://github.com/sveltejs/template.
 
-- 2x Raspberry Pi device
-  - This project was built using the Raspberry Pi 3 Model A+
-  - Other single-board computers will work provided that
-    - you will modify the software to adjust for the differences
-    - they are able to run the Debian-based Linux distribution
-    - they can interface using the GPIO pins
-    - they have internet connectivity
-- ?x Peltier Module
-  - This project was built using the TEC1-12715
-- 1x Dual Full-Bridge Driver
-  - This project was built using the L298N
+To create a new project based on this template using [degit](https://github.com/Rich-Harris/degit):
 
-## Setup instructions
-
-For this you will need a Raspberry Pi with a working Raspbian installation. To set the Raspberry Pi up, follow the instructions [here](https://www.raspberrypi.com/documentation/computers/getting-started.html#setting-up-your-raspberry-pi). **When choosing the operating system (OS) in the Raspberry Pi imager it is highly recommended that you press on *Raspberry Pi OS (Other)* and select *Raspberry Pi OS Lite (32-bit)* or *Raspberry Pi OS Lite (64-bit)*** 
-
-1. After first boot, plug the Raspberry Pi into an HDMI-compatible monitor and connect a keyboard. 
-2. Log in using the default username `pi` and password `raspberry`.
-3. Run the following commands on your Raspberry Pi to use the easy setup script:
-```console
-pi@raspberrypi:~$ sudo apt update && sudo apt install -y python3 python3-pip
-pi@raspberrypi:~$ curl -fsSLO https://bit.ly/peltier_py && sudo python3 peltier_py
-```
-4. Follow the setup instructions to configure your Raspberry Pi
-5. You may run the containers using the following command:
-```console
-pi@RaspberryPiLeader:~$ sudo docker-compose pull && sudo docker-compose up -d
+```bash
+npx degit sveltejs/template svelte-app
+cd svelte-app
 ```
 
-## Task list
+*Note that you will need to have [Node.js](https://nodejs.org) installed.*
 
-- [x] Create basic dockerfile
-- [x] Create easy setup script
-- [ ] Architect the leader-follower application in Python
-- [ ] Create Nginx configurations for leader & follower
-- [ ] Create remote administration logic
-- [ ] Create configurable GPIO logic
 
-## Want to modify the project?
+## Get started
 
-If you would like to contribute to the project or simply modify the code to your liking you may do so by:
+Install the dependencies...
 
-1. Opening this repo on Github.com and pressing Fork
-2. On your PC you may `git clone your/repo` and work on it, then `git push origin`. You may also edit it in the browser
-3. Once you are satisfied with the modified code, on Github.com:
-    1. press Settings &#8594; Secrets &#8594; Actions and create a secret titled `DOCKERHUB_TOKEN` and `DOCKERHUB_USERNAME` and populate these with the values you get from hub.docker.com
-    2.  press Actions &#8594; CI &#8594; Run Workflow (Enable the workflow if it isn't already enabled)
-    3.  once the workflow has finished running (usually takes ~20 mins) your Docker containers will be available on Dockerhub, you may follow the setup instructions above to set them up
-4. If you would like to contribute back to this project feel free to open a Pull Request with your modifications, we will get to it in a timely manner
+```bash
+cd svelte-app
+npm install
+```
 
-## Useful resources
+...then start [Rollup](https://rollupjs.org):
 
-![](https://www.raspberrypi-spy.co.uk/wp-content/uploads/2012/06/Raspberry-Pi-GPIO-Header-with-Photo.png)
+```bash
+npm run dev
+```
 
-Raspberry Pi 3/4 GPIO Pin Headers, courtesy of www.raspberrypi-spy.co.uk
+Navigate to [localhost:8080](http://localhost:8080). You should see your app running. Edit a component file in `src`, save it, and reload the page to see your changes.
+
+By default, the server will only respond to requests from localhost. To allow connections from other computers, edit the `sirv` commands in package.json to include the option `--host 0.0.0.0`.
+
+If you're using [Visual Studio Code](https://code.visualstudio.com/) we recommend installing the official extension [Svelte for VS Code](https://marketplace.visualstudio.com/items?itemName=svelte.svelte-vscode). If you are using other editors you may need to install a plugin in order to get syntax highlighting and intellisense.
+
+## Building and running in production mode
+
+To create an optimised version of the app:
+
+```bash
+npm run build
+```
+
+You can run the newly built app with `npm run start`. This uses [sirv](https://github.com/lukeed/sirv), which is included in your package.json's `dependencies` so that the app will work when you deploy to platforms like [Heroku](https://heroku.com).
+
+
+## Single-page app mode
+
+By default, sirv will only respond to requests that match files in `public`. This is to maximise compatibility with static fileservers, allowing you to deploy your app anywhere.
+
+If you're building a single-page app (SPA) with multiple routes, sirv needs to be able to respond to requests for *any* path. You can make it so by editing the `"start"` command in package.json:
+
+```js
+"start": "sirv public --single"
+```
+
+## Using TypeScript
+
+This template comes with a script to set up a TypeScript development environment, you can run it immediately after cloning the template with:
+
+```bash
+node scripts/setupTypeScript.js
+```
+
+Or remove the script via:
+
+```bash
+rm scripts/setupTypeScript.js
+```
+
+If you want to use `baseUrl` or `path` aliases within your `tsconfig`, you need to set up `@rollup/plugin-alias` to tell Rollup to resolve the aliases. For more info, see [this StackOverflow question](https://stackoverflow.com/questions/63427935/setup-tsconfig-path-in-svelte).
+
+## Deploying to the web
+
+### With [Vercel](https://vercel.com)
+
+Install `vercel` if you haven't already:
+
+```bash
+npm install -g vercel
+```
+
+Then, from within your project folder:
+
+```bash
+cd public
+vercel deploy --name my-project
+```
+
+### With [surge](https://surge.sh/)
+
+Install `surge` if you haven't already:
+
+```bash
+npm install -g surge
+```
+
+Then, from within your project folder:
+
+```bash
+npm run build
+surge public my-project.surge.sh
+```

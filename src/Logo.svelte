@@ -16,7 +16,7 @@
 
 		color: transparent;
 		transition: background-position 0.2s ease-out;
-		background-image: linear-gradient(to right, #011627 50%, #ff3366 30%);
+		background-image: linear-gradient(to right, var(--darks) 50%, var(--accent) 30%);
 		background-size: 200% auto;
 		background-position: -0% 0;
 		background-clip: text;

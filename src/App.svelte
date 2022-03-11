@@ -37,25 +37,44 @@
 				url("../fonts/work-sans-v16-latin-900.svg#WorkSans") format("svg"); /* Legacy iOS */
 	}
 
+	@media (prefers-color-scheme: dark) {
+		:root {
+			--bg: #011627;
+			--darks: #eef;
+			--main: #ff3366;
+			--accent: #4d6cfa;
+		}
+	}
+
+	@media (prefers-color-scheme: light) {
+		:root {
+			--bg: #eef;
+			--darks: #011627;
+			--main: #4d6cfa;
+			--accent: #ff3366;
+		}
+	}
+
 	:global(body) {
-		background-color: #eef;
+		background-color: var(--bg);
 	}
 
 	:global(::selection) {
-		background: #4d6cfa;
-		color: #eef;
+		background: var(--main);
+		color: var(--bg);
 	}
 
 	main {
 		font-family: "Avant Garde", sans-serif;
 		text-align: left;
+		color: var(--darks);
 		padding: 0 1em;
 		max-width: 240px;
 		margin: 0 auto;
 	}
 
 	h1 {
-		color: #ff3366;
+		color: var(--accent);
 		font-size: xx-large;
 		font-weight: 100;
 	}
@@ -94,15 +113,38 @@
 
 <script lang="ts">
 	import { onMount } from "svelte";
-	import { debounce } from "lodash";
+	import { writable } from "svelte/store";
 	import Slide from "./Slide.svelte";
 	import HelloCube from "./HelloCube.svelte";
 	import Presentation from "./Presentation.svelte";
 	import Logo from "./Logo.svelte";
 
+	const storedTheme = localStorage.getItem("theme");
+	const theme = writable(storedTheme);
+	theme.subscribe(value => {
+		console.log(value);
+		localStorage.setItem("theme", value === "dark" ? "dark" : "light");
+		document.documentElement.style.setProperty(
+			"--bg",
+			value === "dark" ? "#011627" : "#eef"
+		);
+		document.documentElement.style.setProperty(
+			"--darks",
+			value === "dark" ? "#eef" : "#011627"
+		);
+		document.documentElement.style.setProperty(
+			"--main",
+			value === "dark" ? "#f36" : "#4d6cfa"
+		);
+		document.documentElement.style.setProperty(
+			"--accent",
+			value === "dark" ? "#4d6cfa" : "#f36"
+		);
+	});
+
 	let y = 0;
 	let headings = [];
-	let presentation_mode, shared_style;
+	let presentation_mode;
 	let waited = false;
 
 	onMount(() => {
@@ -146,6 +188,8 @@
 			}
 		} else if (e.key == ".") {
 			presentation_mode = presentation_mode ? false : true;
+		} else if (e.key == ",") {
+			theme.update(v => (v === "dark" ? "light" : "dark"));
 		}
 	}
 

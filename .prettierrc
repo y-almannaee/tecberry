@@ -2,6 +2,7 @@
 	"arrowParens": "avoid",
 	"bracketSpacing": true,
 	"printWidth": 80,
+	"useTabs": true,
 	"semi": true,
 	"singleQuote": false,
 	"tralingComma": "all",

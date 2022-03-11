@@ -1,12 +1,7 @@
-
-
-<div class="title">
-	<h1>TECBERRY.ML</h1>
-</div>
-
 <style>
 	.title {
-		font-family: "Futura Book", sans-serif;
+		font-family: "Work Sans", sans-serif;
+		font-size: 1.6vh;
 		font-weight: 900;
 		text-align: right;
 		letter-spacing: -1px;
@@ -18,11 +13,10 @@
 		width: fit-content;
 		height: fit-content;
 		user-select: none;
-		text-transform: uppercase;
 
 		color: transparent;
 		transition: background-position 0.2s ease-out;
-		background-image: linear-gradient(to right, #011627 50%, #FF3366 30%);
+		background-image: linear-gradient(to right, #011627 50%, #ff3366 30%);
 		background-size: 200% auto;
 		background-position: -0% 0;
 		background-clip: text;
@@ -36,3 +30,7 @@
 		margin: 0px;
 	}
 </style>
+
+<div class="title">
+	<h1>TECBERRY.ml</h1>
+</div>

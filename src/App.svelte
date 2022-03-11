@@ -37,6 +37,15 @@
 				url("../fonts/work-sans-v16-latin-900.svg#WorkSans") format("svg"); /* Legacy iOS */
 	}
 
+	:global(body) {
+		background-color: #eef;
+	}
+
+	:global(::selection) {
+		background: #4d6cfa;
+		color: #eef;
+	}
+
 	main {
 		font-family: "Avant Garde", sans-serif;
 		text-align: left;
@@ -85,6 +94,7 @@
 
 <script lang="ts">
 	import { onMount } from "svelte";
+	import { debounce } from "lodash";
 	import Slide from "./Slide.svelte";
 	import HelloCube from "./HelloCube.svelte";
 	import Presentation from "./Presentation.svelte";
@@ -150,25 +160,22 @@
 		});
 	}
 
-	$: {
-		if (waited) {
-			if (y < 100) {
-				const location = window.location.toString().split("#")[0];
-				history.replaceState(null, null, `${location}`);
-			} else {
-				for (let i = 0; i < headings.length; i++) {
-					if (
-						headings[i].offsetTop < y + 50 &&
-						headings[i].offsetTop > y - 50
-					) {
-						const location = window.location.toString().split("#")[0];
-						history.replaceState(
-							null,
-							null,
-							`${location}${headings[i].getAttribute("href")}`
-						);
-						break;
-					}
+	function replace_hash(new_hash: string) {
+		const location = window.location.toString().split("#");
+		if (location[1] !== undefined && location[1] !== new_hash.replace("#", ""))
+			history.replaceState(null, null, location[0] + new_hash);
+		else if (location[1] === undefined && new_hash !== "")
+			history.replaceState(null, null, location[0] + new_hash);
+	}
+	$: if (waited) {
+		if (y < 100) {
+			replace_hash("");
+		} else {
+			for (let i = 0; i < headings.length; i++) {
+				if (headings[i].offsetTop < y + 50 && headings[i].offsetTop > y - 50) {
+					const heading = headings[i].getAttribute("href");
+					replace_hash(heading);
+					break;
 				}
 			}
 		}
@@ -179,14 +186,14 @@
 
 <Logo />
 <main>
-	<Presentation bind:presentation_mode={presentation_mode}/>
+	<Presentation bind:presentation_mode />
 	<div class="slide">
 		<span class="heading">
 			<h1 id="title-card">
 				TEC modules for rapid and automated thermomechanical fatigue testing
 			</h1>
 			<h3>
-				By M. Kamal, M. Abu Shaqra, and Y. AlMannaee <br /> Advised by Dr. M. Alkhader
+				By Maryam K, Mohammed A, and Yaseen A <br /> Advised by Dr. Maen Alkhader
 			</h3>
 		</span>
 		<p>The introduction goes here.</p>

@@ -1,1 +1,21 @@
-main.svelte-1gd3ole{font-family:"Avant Garde", sans-serif;text-align:left;padding:0 1em;max-width:240px;margin:0 auto}h1.svelte-1gd3ole{color:#ff3366;font-size:xx-large;font-weight:100}h1.svelte-1gd3ole,h2.svelte-1gd3ole{font-family:"Futura Book", sans-serif;text-transform:uppercase;line-height:1em;margin-bottom:0.2em}h2.svelte-1gd3ole{font-size:x-large}h3.svelte-1gd3ole{display:inline;font-size:larger;font-weight:400}h3.svelte-1gd3ole:after{content:"\a";white-space:pre}p.svelte-1gd3ole{font-size:large}.slide.svelte-1gd3ole{height:100vh;width:100%}.heading.svelte-1gd3ole{margin-bottom:24px}@media(min-width: 640px){main.svelte-1gd3ole{max-width:80vw}}.title.svelte-1eczsk9{font-family:"Futura Book", sans-serif;font-weight:900;text-align:right;letter-spacing:-1px;position:sticky;right:1em;margin-right:0;margin-left:auto;top:1em;width:fit-content;height:fit-content;user-select:none;text-transform:uppercase;color:transparent;transition:background-position 0.2s ease-out;background-image:linear-gradient(to right, #011627 50%, #FF3366 30%);background-size:200% auto;background-position:-0% 0;background-clip:text;-webkit-background-clip:text;-moz-background-clip:text}.title.svelte-1eczsk9:hover{background-position:-99.99% 0}h1.svelte-1eczsk9{margin:0px}
+@font-face{font-family:"Work Sans";font-style:normal;font-weight:700;src:url("../fonts/work-sans-v16-latin-700.eot");src:local(""),
+			url("../fonts/work-sans-v16-latin-700.eot?#iefix")
+				format("embedded-opentype"),
+			/* IE6-IE8 */ url("../fonts/work-sans-v16-latin-700.woff2")
+				format("woff2"),
+			/* Super Modern Browsers */ url("../fonts/work-sans-v16-latin-700.woff")
+				format("woff"),
+			/* Modern Browsers */ url("../fonts/work-sans-v16-latin-700.ttf")
+				format("truetype"),
+			/* Safari, Android, iOS */
+				url("../fonts/work-sans-v16-latin-700.svg#WorkSans") format("svg")}@font-face{font-family:"Work Sans";font-style:normal;font-weight:900;src:url("../fonts/work-sans-v16-latin-900.eot");src:local(""),
+			url("../fonts/work-sans-v16-latin-900.eot?#iefix")
+				format("embedded-opentype"),
+			/* IE6-IE8 */ url("../fonts/work-sans-v16-latin-900.woff2")
+				format("woff2"),
+			/* Super Modern Browsers */ url("../fonts/work-sans-v16-latin-900.woff")
+				format("woff"),
+			/* Modern Browsers */ url("../fonts/work-sans-v16-latin-900.ttf")
+				format("truetype"),
+			/* Safari, Android, iOS */
+				url("../fonts/work-sans-v16-latin-900.svg#WorkSans") format("svg")}main.svelte-1fahk4p{font-family:"Avant Garde", sans-serif;text-align:left;padding:0 1em;max-width:240px;margin:0 auto}h1.svelte-1fahk4p{color:#ff3366;font-size:xx-large;font-weight:100}h1.svelte-1fahk4p{font-family:"Work Sans", sans-serif;text-transform:uppercase;line-height:1em;margin-bottom:0.2em;padding-top:18px;margin-top:0}h3.svelte-1fahk4p{display:inline;font-size:larger;font-weight:400}h3.svelte-1fahk4p:after{content:"\a";white-space:pre}.slide.svelte-1fahk4p{height:100vh;width:100%}@media(min-width: 640px){main.svelte-1fahk4p{max-width:80vw}}.slide.svelte-1lwefrq.svelte-1lwefrq{height:100vh;width:100%}.heading.svelte-1lwefrq.svelte-1lwefrq{margin-bottom:24px}h2.svelte-1lwefrq.svelte-1lwefrq{font-family:"Work Sans", sans-serif;text-transform:uppercase;line-height:1em;margin-bottom:0.2em;padding-top:18px;margin-top:0}h2.svelte-1lwefrq a.svelte-1lwefrq{all:inherit}h2.svelte-1lwefrq.svelte-1lwefrq{font-size:x-large}.title.svelte-1ges6c3{font-family:"Work Sans", sans-serif;font-size:1.6vh;font-weight:900;text-align:right;letter-spacing:-1px;position:sticky;right:1em;margin-right:0;margin-left:auto;top:1em;width:fit-content;height:fit-content;user-select:none;color:transparent;transition:background-position 0.2s ease-out;background-image:linear-gradient(to right, #011627 50%, #ff3366 30%);background-size:200% auto;background-position:-0% 0;background-clip:text;-webkit-background-clip:text;-moz-background-clip:text}.title.svelte-1ges6c3:hover{background-position:-99.99% 0}h1.svelte-1ges6c3{margin:0px}

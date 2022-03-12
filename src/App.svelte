@@ -73,37 +73,6 @@
 		margin: 0 auto;
 	}
 
-	h1 {
-		color: var(--accent);
-		font-size: xx-large;
-		font-weight: 100;
-	}
-
-	h1 {
-		font-family: "Work Sans", sans-serif;
-		text-transform: uppercase;
-		line-height: 1em;
-		margin-bottom: 0.2em;
-		padding-top: 18px;
-		margin-top: 0;
-	}
-
-	h3 {
-		display: inline;
-		font-size: larger;
-		font-weight: 400;
-	}
-
-	h3:after {
-		content: "\a";
-		white-space: pre;
-	}
-
-	.slide {
-		height: 100vh;
-		width: 100%;
-	}
-
 	@media (min-width: 640px) {
 		main {
 			max-width: 80vw;
@@ -115,9 +84,10 @@
 	import { onMount } from "svelte";
 	import { writable } from "svelte/store";
 	import Slide from "./Slide.svelte";
-	import HelloCube from "./HelloCube.svelte";
 	import Presentation from "./Presentation.svelte";
 	import Logo from "./Logo.svelte";
+
+	import TecModule from "./TecModule.svelte";
 
 	const storedTheme = localStorage.getItem("theme");
 	const theme = writable(storedTheme);
@@ -231,17 +201,53 @@
 <Logo />
 <main>
 	<Presentation bind:presentation_mode />
-	<div class="slide">
-		<span class="heading">
-			<h1 id="title-card">
-				TEC modules for rapid and automated thermomechanical fatigue testing
-			</h1>
-			<h3>
-				By Maryam K, Mohammed A, and Yaseen A <br /> Advised by Dr. Maen Alkhader
-			</h3>
-		</span>
-		<p>The introduction goes here.</p>
-	</div>
+	<Slide id_slide="title-card" short_name="" capstone="{true}">
+		<svelte:fragment slot="slide-title">
+			TEC modules for rapid and automated thermomechanical fatigue testing
+		</svelte:fragment>
+		<svelte:fragment slot="byline">
+			By Maryam K, Mohammed A, and Yaseen A <br /> Advised by Dr. Maen Alkhader
+		</svelte:fragment>
+		<svelte:fragment slot="slide-content">
+			<p>Intro goes here.</p>
+		</svelte:fragment>
+	</Slide>
+	<Slide
+		id_slide="introduction-to-fatigue"
+		bind:short_name="{headings[headings.length]}"
+	>
+		<svelte:fragment slot="slide-title"
+			>What is Thermal Fatigue?</svelte:fragment
+		>
+		<svelte:fragment slot="slide-content">
+			<ul>
+				<li>Thermal fatigue testing types</li>
+				<li>AUS Example</li>
+			</ul>
+		</svelte:fragment>
+	</Slide>
+	<Slide
+		id_slide="where-is-thermal-fatigue"
+		bind:short_name="{headings[headings.length]}"
+	>
+		<svelte:fragment slot="slide-title"
+			>Where do you find Thermal Fatigue?</svelte:fragment
+		>
+		<svelte:fragment slot="slide-content">
+			<p>You may find thermal fatigue in many places.</p>
+			<ul>
+				<li>Thermal fatigue of aircraft components is a common occurrence</li>
+				<li>
+					Variation of the temperature field in turbines causes thermal stress
+					on the turbine components
+				</li>
+				<li>
+					The design of turbomachinery is directly related to the material
+					performance
+				</li>
+			</ul>
+		</svelte:fragment>
+	</Slide>
 	<Slide id_slide="what-is-a-tec" bind:short_name="{headings[headings.length]}">
 		<svelte:fragment slot="slide-title">What is a TEC module?</svelte:fragment>
 		<svelte:fragment slot="slide-content">
@@ -249,9 +255,16 @@
 				A TEC module, also known as a thermoelectric, or a Peltier module, is
 				basically a heat pump.
 			</p>
+			<TecModule
+				width="360"
+				height="360"
+				bg_color="#eeeeff"
+				cube_color="#ff3366"
+				lights_color="#99ffff"
+			/>
 		</svelte:fragment>
 	</Slide>
-	<Slide id_slide="our-idea" bind:short_name="{headings[headings.length]}">
+	<Slide id_slide="our-idea" bind:short_name="{headings[headings.length]}" capstone={true}>
 		<svelte:fragment slot="slide-title">Our Idea</svelte:fragment>
 		<svelte:fragment slot="slide-content">
 			<p>
@@ -259,5 +272,117 @@
 			</p>
 		</svelte:fragment>
 	</Slide>
-	<HelloCube />
+	<Slide id_slide="relevance-to-region" bind:short_name="{headings[headings.length]}">
+		<svelte:fragment slot="slide-title"
+			>How is this relevant to the region?</svelte:fragment
+		>
+		<svelte:fragment slot="slide-content">
+			<ul>
+				<li>Concrete fails often due to thermal fatigue from exposure to hot and moist environments</li>
+				<li>UAE uses concrete in many buildings and infrastructure</li>
+				<li>The UAE is home to one of the largest commercial plane hubs in the word, and the planes often see temperatures of -40°C to -60°C in the air, and temperatures of 50°C on the ground.</li>
+			</ul>
+		</svelte:fragment>
+	</Slide>
+	<Slide id_slide="environmental-impact" bind:short_name="{headings[headings.length]}">
+		<svelte:fragment slot="slide-title"
+			>Environmental Impact of our Project</svelte:fragment
+		>
+		<svelte:fragment slot="slide-content">
+			<p>Big chambers = more big environmental</p>
+			<ul>
+				<li>Our project is a tool to create more sustainable materials that last longer and need less replacing</li>
+				<li>Less materials needed to manufacture this than big machines</li>
+				<li>Can study smaller specimens, unlike furnaces which need large specimens</li>
+			</ul>
+		</svelte:fragment>
+	</Slide>
+	<Slide id_slide="problem-statement" bind:short_name="{headings[headings.length]}" capstone={true}>
+		<svelte:fragment slot="slide-title"
+			>Problem Statement</svelte:fragment
+		>
+		<svelte:fragment slot="slide-content">
+			<p>Problem</p>
+		</svelte:fragment>
+	</Slide>
+	<Slide id_slide="objectives" bind:short_name="{headings[headings.length]}">
+		<svelte:fragment slot="slide-title"
+			>Objectives</svelte:fragment
+		>
+		<svelte:fragment slot="slide-content">
+			<p>Problem</p>
+		</svelte:fragment>
+	</Slide>
+	<Slide id_slide="preeminent-literature" bind:short_name="{headings[headings.length]}">
+		<svelte:fragment slot="slide-title"
+			>Literature Review</svelte:fragment
+		>
+		<svelte:fragment slot="slide-content">
+			<p>Existing solutions</p>
+		</svelte:fragment>
+	</Slide>
+	<Slide id_slide="design-specs" bind:short_name="{headings[headings.length]}">
+		<svelte:fragment slot="slide-title"
+			>Product Design Specifications</svelte:fragment
+		>
+		<svelte:fragment slot="slide-content">
+			<ul>
+				<li>Raise and lower temperature: -30°C to 70°C, which is within 30% of the TEC module specifications</li>
+				<li>
+					Do so within a reliable timeframe (specific cycle count and cycle time)
+				</li>
+				<li>
+					Do so without destroying the TEC module (it's rated for a range and cyclecount)
+				</li>
+			</ul>
+		</svelte:fragment>
+	</Slide>
+	<Slide id_slide="cad-model" bind:short_name="{headings[headings.length]}" capstone={true}>
+		<svelte:fragment slot="slide-title"
+			>CAD Model</svelte:fragment
+		>
+		<svelte:fragment slot="slide-content">
+			<p> Put spinny here </p>
+		</svelte:fragment>
+	</Slide>
+	<Slide id_slide="house-of-quality" bind:short_name="{headings[headings.length]}">
+		<svelte:fragment slot="slide-title"
+			>House of Quality</svelte:fragment
+		>
+		<svelte:fragment slot="slide-content">
+			<p> Make zoom into it </p>
+		</svelte:fragment>
+	</Slide>
+	<Slide id_slide="methodology" bind:short_name="{headings[headings.length]}">
+		<svelte:fragment slot="slide-title"
+			>Proposed methodology</svelte:fragment
+		>
+		<svelte:fragment slot="slide-content">
+			<p> Make zoom into it </p>
+		</svelte:fragment>
+	</Slide>
+	<Slide id_slide="management" bind:short_name="{headings[headings.length]}">
+		<svelte:fragment slot="slide-title"
+			>Project Management</svelte:fragment
+		>
+		<svelte:fragment slot="slide-content">
+			<p> Make zoom into it </p>
+		</svelte:fragment>
+	</Slide>
+	<Slide id_slide="gantt-chart" bind:short_name="{headings[headings.length]}">
+		<svelte:fragment slot="slide-title"
+			>Gant chart</svelte:fragment
+		>
+		<svelte:fragment slot="slide-content">
+			<p> Make zoom into it </p>
+		</svelte:fragment>
+	</Slide>
+	<Slide id_slide="references" bind:short_name="{headings[headings.length]}">
+		<svelte:fragment slot="slide-title"
+			>References</svelte:fragment
+		>
+		<svelte:fragment slot="slide-content">
+			<p> Make zoom into it </p>
+		</svelte:fragment>
+	</Slide>
 </main>

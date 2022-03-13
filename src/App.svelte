@@ -4,18 +4,18 @@
 		font-family: "Work Sans";
 		font-style: normal;
 		font-weight: 700;
-		src: url("../fonts/work-sans-v16-latin-700.eot"); /* IE9 Compat Modes */
+		src: url("/fonts/work-sans-v16-latin-700.eot"); /* IE9 Compat Modes */
 		src: local(""),
-			url("../fonts/work-sans-v16-latin-700.eot?#iefix")
+			url("/fonts/work-sans-v16-latin-700.eot?#iefix")
 				format("embedded-opentype"),
-			/* IE6-IE8 */ url("../fonts/work-sans-v16-latin-700.woff2")
+			/* IE6-IE8 */ url("/fonts/work-sans-v16-latin-700.woff2")
 				format("woff2"),
-			/* Super Modern Browsers */ url("../fonts/work-sans-v16-latin-700.woff")
+			/* Super Modern Browsers */ url("/fonts/work-sans-v16-latin-700.woff")
 				format("woff"),
-			/* Modern Browsers */ url("../fonts/work-sans-v16-latin-700.ttf")
+			/* Modern Browsers */ url("/fonts/work-sans-v16-latin-700.ttf")
 				format("truetype"),
 			/* Safari, Android, iOS */
-				url("../fonts/work-sans-v16-latin-700.svg#WorkSans") format("svg"); /* Legacy iOS */
+				url("/fonts/work-sans-v16-latin-700.svg#WorkSans") format("svg"); /* Legacy iOS */
 	}
 
 	/* work-sans-900 - latin */
@@ -23,18 +23,18 @@
 		font-family: "Work Sans";
 		font-style: normal;
 		font-weight: 900;
-		src: url("../fonts/work-sans-v16-latin-900.eot"); /* IE9 Compat Modes */
+		src: url("/fonts/work-sans-v16-latin-900.eot"); /* IE9 Compat Modes */
 		src: local(""),
-			url("../fonts/work-sans-v16-latin-900.eot?#iefix")
+			url("/fonts/work-sans-v16-latin-900.eot?#iefix")
 				format("embedded-opentype"),
-			/* IE6-IE8 */ url("../fonts/work-sans-v16-latin-900.woff2")
+			/* IE6-IE8 */ url("/fonts/work-sans-v16-latin-900.woff2")
 				format("woff2"),
-			/* Super Modern Browsers */ url("../fonts/work-sans-v16-latin-900.woff")
+			/* Super Modern Browsers */ url("/fonts/work-sans-v16-latin-900.woff")
 				format("woff"),
-			/* Modern Browsers */ url("../fonts/work-sans-v16-latin-900.ttf")
+			/* Modern Browsers */ url("/fonts/work-sans-v16-latin-900.ttf")
 				format("truetype"),
 			/* Safari, Android, iOS */
-				url("../fonts/work-sans-v16-latin-900.svg#WorkSans") format("svg"); /* Legacy iOS */
+				url("/fonts/work-sans-v16-latin-900.svg#WorkSans") format("svg"); /* Legacy iOS */
 	}
 
 	@media (prefers-color-scheme: dark) {

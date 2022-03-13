@@ -48,7 +48,7 @@
 	}
 
 	loader.load(
-		"../Peltier.glb",
+		"/Peltier.glb",
 		function (gltf) {
 			TEC = gltf.scene;
 			enable_shadows(TEC);

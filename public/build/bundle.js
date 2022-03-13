@@ -60565,9 +60565,9 @@ var app = (function () {
     			t = text("Your browser does not support this element.");
     			attr_dev(canvas, "width", /*width*/ ctx[0]);
     			attr_dev(canvas, "height", /*height*/ ctx[1]);
-    			add_location(canvas, file$4, 121, 1, 3828);
+    			add_location(canvas, file$4, 121, 1, 3826);
     			add_render_callback(() => /*div_elementresize_handler*/ ctx[13].call(div));
-    			add_location(div, file$4, 120, 0, 3786);
+    			add_location(div, file$4, 120, 0, 3784);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -60660,7 +60660,7 @@ var app = (function () {
     	let TEC;
 
     	loader.load(
-    		"../Peltier.glb",
+    		"/Peltier.glb",
     		function (gltf) {
     			TEC = gltf.scene;
     			enable_shadows(TEC);
@@ -62280,7 +62280,7 @@ var app = (function () {
     			t0 = text("By Maryam K, Mohammed A, and Yaseen A ");
     			br = element("br");
     			t1 = text(" Advised by Dr. Maen Alkhader");
-    			add_location(br, file, 221, 41, 6756);
+    			add_location(br, file, 221, 41, 6732);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, t0, anchor);
@@ -62337,7 +62337,7 @@ var app = (function () {
     			p.textContent = "Intro goes here.";
     			t1 = space();
     			create_component(magnifier.$$.fragment);
-    			add_location(p, file, 224, 3, 6857);
+    			add_location(p, file, 224, 3, 6833);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, p, anchor);
@@ -62425,9 +62425,9 @@ var app = (function () {
     			t1 = space();
     			li1 = element("li");
     			li1.textContent = "AUS Example";
-    			add_location(li0, file, 243, 4, 7302);
-    			add_location(li1, file, 244, 4, 7345);
-    			add_location(ul, file, 242, 3, 7293);
+    			add_location(li0, file, 243, 4, 7278);
+    			add_location(li1, file, 244, 4, 7321);
+    			add_location(ul, file, 242, 3, 7269);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, ul, anchor);
@@ -62503,11 +62503,11 @@ var app = (function () {
     			t5 = space();
     			li2 = element("li");
     			li2.textContent = "The design of turbomachinery is directly related to the material\n\t\t\t\t\tperformance";
-    			add_location(p, file, 256, 3, 7645);
-    			add_location(li0, file, 258, 4, 7709);
-    			add_location(li1, file, 259, 4, 7784);
-    			add_location(li2, file, 263, 4, 7908);
-    			add_location(ul, file, 257, 3, 7700);
+    			add_location(p, file, 256, 3, 7621);
+    			add_location(li0, file, 258, 4, 7685);
+    			add_location(li1, file, 259, 4, 7760);
+    			add_location(li2, file, 263, 4, 7884);
+    			add_location(ul, file, 257, 3, 7676);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, p, anchor);
@@ -62588,7 +62588,7 @@ var app = (function () {
     			p.textContent = "A TEC module, also known as a thermoelectric, or a Peltier module, is\n\t\t\t\tbasically a heat pump.";
     			t1 = space();
     			create_component(tecmodule.$$.fragment);
-    			add_location(p, file, 273, 3, 8252);
+    			add_location(p, file, 273, 3, 8228);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, p, anchor);
@@ -62659,7 +62659,7 @@ var app = (function () {
     		c: function create() {
     			p = element("p");
     			p.textContent = "Our idea is to use a bunch to heat and cool stuff to see if it breaks";
-    			add_location(p, file, 293, 3, 8779);
+    			add_location(p, file, 293, 3, 8755);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, p, anchor);
@@ -62727,10 +62727,10 @@ var app = (function () {
     			t3 = space();
     			li2 = element("li");
     			li2.textContent = "The UAE is home to one of the largest commercial plane hubs in the\n\t\t\t\t\tword, and the planes often see temperatures of -40°C to -60°C in the\n\t\t\t\t\tair, and temperatures of 50°C on the ground.";
-    			add_location(li0, file, 307, 4, 9140);
-    			add_location(li1, file, 311, 4, 9257);
-    			add_location(li2, file, 312, 4, 9325);
-    			add_location(ul, file, 306, 3, 9131);
+    			add_location(li0, file, 307, 4, 9116);
+    			add_location(li1, file, 311, 4, 9233);
+    			add_location(li2, file, 312, 4, 9301);
+    			add_location(ul, file, 306, 3, 9107);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, ul, anchor);
@@ -62808,11 +62808,11 @@ var app = (function () {
     			t5 = space();
     			li2 = element("li");
     			li2.textContent = "Can study smaller specimens, unlike furnaces which need large\n\t\t\t\t\tspecimens";
-    			add_location(p, file, 328, 3, 9812);
-    			add_location(li0, file, 330, 4, 9869);
-    			add_location(li1, file, 334, 4, 9998);
-    			add_location(li2, file, 335, 4, 10071);
-    			add_location(ul, file, 329, 3, 9860);
+    			add_location(p, file, 328, 3, 9788);
+    			add_location(li0, file, 330, 4, 9845);
+    			add_location(li1, file, 334, 4, 9974);
+    			add_location(li2, file, 335, 4, 10047);
+    			add_location(ul, file, 329, 3, 9836);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, p, anchor);
@@ -62877,7 +62877,7 @@ var app = (function () {
     		c: function create() {
     			p = element("p");
     			p.textContent = "Problem";
-    			add_location(p, file, 349, 3, 10436);
+    			add_location(p, file, 349, 3, 10412);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, p, anchor);
@@ -62933,7 +62933,7 @@ var app = (function () {
     		c: function create() {
     			p = element("p");
     			p.textContent = "Problem";
-    			add_location(p, file, 355, 3, 10670);
+    			add_location(p, file, 355, 3, 10646);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, p, anchor);
@@ -62989,7 +62989,7 @@ var app = (function () {
     		c: function create() {
     			p = element("p");
     			p.textContent = "Existing solutions";
-    			add_location(p, file, 364, 3, 10928);
+    			add_location(p, file, 364, 3, 10904);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, p, anchor);
@@ -63057,10 +63057,10 @@ var app = (function () {
     			t3 = space();
     			li2 = element("li");
     			li2.textContent = "Do so without destroying the TEC module (it's rated for a range and\n\t\t\t\t\tcyclecount)";
-    			add_location(li0, file, 373, 4, 11210);
-    			add_location(li1, file, 377, 4, 11336);
-    			add_location(li2, file, 381, 4, 11437);
-    			add_location(ul, file, 372, 3, 11201);
+    			add_location(li0, file, 373, 4, 11186);
+    			add_location(li1, file, 377, 4, 11312);
+    			add_location(li2, file, 381, 4, 11413);
+    			add_location(ul, file, 372, 3, 11177);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, ul, anchor);
@@ -63121,7 +63121,7 @@ var app = (function () {
     		c: function create() {
     			p = element("p");
     			p.textContent = "Put spinny here";
-    			add_location(p, file, 395, 3, 11794);
+    			add_location(p, file, 395, 3, 11770);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, p, anchor);
@@ -63177,7 +63177,7 @@ var app = (function () {
     		c: function create() {
     			p = element("p");
     			p.textContent = "Make zoom into it";
-    			add_location(p, file, 404, 3, 12054);
+    			add_location(p, file, 404, 3, 12030);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, p, anchor);
@@ -63233,7 +63233,7 @@ var app = (function () {
     		c: function create() {
     			p = element("p");
     			p.textContent = "Make zoom into it";
-    			add_location(p, file, 410, 3, 12309);
+    			add_location(p, file, 410, 3, 12285);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, p, anchor);
@@ -63289,7 +63289,7 @@ var app = (function () {
     		c: function create() {
     			p = element("p");
     			p.textContent = "Make zoom into it";
-    			add_location(p, file, 416, 3, 12561);
+    			add_location(p, file, 416, 3, 12537);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, p, anchor);
@@ -63345,7 +63345,7 @@ var app = (function () {
     		c: function create() {
     			p = element("p");
     			p.textContent = "Make zoom into it";
-    			add_location(p, file, 422, 3, 12806);
+    			add_location(p, file, 422, 3, 12782);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, p, anchor);
@@ -63401,7 +63401,7 @@ var app = (function () {
     		c: function create() {
     			p = element("p");
     			p.textContent = "Make zoom into it";
-    			add_location(p, file, 428, 3, 13050);
+    			add_location(p, file, 428, 3, 13026);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, p, anchor);
@@ -63959,8 +63959,8 @@ var app = (function () {
     			create_component(slide15.$$.fragment);
     			t19 = space();
     			create_component(slide16.$$.fragment);
-    			attr_dev(main, "class", "svelte-1778wcc");
-    			add_location(main, file, 214, 0, 6438);
+    			attr_dev(main, "class", "svelte-1m9vhmc");
+    			add_location(main, file, 214, 0, 6414);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");

@@ -155,6 +155,8 @@
 	});
 </script>
 
+<svelte:window on:resize="{resize}" />
+
 <canvas
 	width="{width}"
 	height="{height}"

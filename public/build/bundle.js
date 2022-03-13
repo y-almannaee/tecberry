@@ -4,6 +4,7 @@ var app = (function () {
     'use strict';
 
     function noop() { }
+    const identity = x => x;
     function assign(tar, src) {
         // @ts-ignore
         for (const k in src)
@@ -79,8 +80,60 @@ var app = (function () {
         }
         return -1;
     }
+
+    const is_client = typeof window !== 'undefined';
+    let now$1 = is_client
+        ? () => window.performance.now()
+        : () => Date.now();
+    let raf = is_client ? cb => requestAnimationFrame(cb) : noop;
+
+    const tasks = new Set();
+    function run_tasks(now) {
+        tasks.forEach(task => {
+            if (!task.c(now)) {
+                tasks.delete(task);
+                task.f();
+            }
+        });
+        if (tasks.size !== 0)
+            raf(run_tasks);
+    }
+    /**
+     * Creates a new task that runs on each raf frame
+     * until it returns a falsy value or is aborted
+     */
+    function loop(callback) {
+        let task;
+        if (tasks.size === 0)
+            raf(run_tasks);
+        return {
+            promise: new Promise(fulfill => {
+                tasks.add(task = { c: callback, f: fulfill });
+            }),
+            abort() {
+                tasks.delete(task);
+            }
+        };
+    }
     function append(target, node) {
         target.appendChild(node);
+    }
+    function get_root_for_style(node) {
+        if (!node)
+            return document;
+        const root = node.getRootNode ? node.getRootNode() : node.ownerDocument;
+        if (root && root.host) {
+            return root;
+        }
+        return node.ownerDocument;
+    }
+    function append_empty_stylesheet(node) {
+        const style_element = element('style');
+        append_stylesheet(get_root_for_style(node), style_element);
+        return style_element.sheet;
+    }
+    function append_stylesheet(node, style) {
+        append(node.head || node, style);
     }
     function insert(target, node, anchor) {
         target.insertBefore(node, anchor || null);
@@ -97,6 +150,9 @@ var app = (function () {
     function space() {
         return text(' ');
     }
+    function empty() {
+        return text('');
+    }
     function listen(node, event, handler, options) {
         node.addEventListener(event, handler, options);
         return () => node.removeEventListener(event, handler, options);
@@ -107,13 +163,88 @@ var app = (function () {
         else if (node.getAttribute(attribute) !== value)
             node.setAttribute(attribute, value);
     }
+    function to_number(value) {
+        return value === '' ? null : +value;
+    }
     function children(element) {
         return Array.from(element.childNodes);
+    }
+    function set_input_value(input, value) {
+        input.value = value == null ? '' : value;
+    }
+    function toggle_class(element, name, toggle) {
+        element.classList[toggle ? 'add' : 'remove'](name);
     }
     function custom_event(type, detail, bubbles = false) {
         const e = document.createEvent('CustomEvent');
         e.initCustomEvent(type, bubbles, false, detail);
         return e;
+    }
+
+    // we need to store the information for multiple documents because a Svelte application could also contain iframes
+    // https://github.com/sveltejs/svelte/issues/3624
+    const managed_styles = new Map();
+    let active = 0;
+    // https://github.com/darkskyapp/string-hash/blob/master/index.js
+    function hash(str) {
+        let hash = 5381;
+        let i = str.length;
+        while (i--)
+            hash = ((hash << 5) - hash) ^ str.charCodeAt(i);
+        return hash >>> 0;
+    }
+    function create_style_information(doc, node) {
+        const info = { stylesheet: append_empty_stylesheet(node), rules: {} };
+        managed_styles.set(doc, info);
+        return info;
+    }
+    function create_rule(node, a, b, duration, delay, ease, fn, uid = 0) {
+        const step = 16.666 / duration;
+        let keyframes = '{\n';
+        for (let p = 0; p <= 1; p += step) {
+            const t = a + (b - a) * ease(p);
+            keyframes += p * 100 + `%{${fn(t, 1 - t)}}\n`;
+        }
+        const rule = keyframes + `100% {${fn(b, 1 - b)}}\n}`;
+        const name = `__svelte_${hash(rule)}_${uid}`;
+        const doc = get_root_for_style(node);
+        const { stylesheet, rules } = managed_styles.get(doc) || create_style_information(doc, node);
+        if (!rules[name]) {
+            rules[name] = true;
+            stylesheet.insertRule(`@keyframes ${name} ${rule}`, stylesheet.cssRules.length);
+        }
+        const animation = node.style.animation || '';
+        node.style.animation = `${animation ? `${animation}, ` : ''}${name} ${duration}ms linear ${delay}ms 1 both`;
+        active += 1;
+        return name;
+    }
+    function delete_rule(node, name) {
+        const previous = (node.style.animation || '').split(', ');
+        const next = previous.filter(name
+            ? anim => anim.indexOf(name) < 0 // remove specific animation
+            : anim => anim.indexOf('__svelte') === -1 // remove all Svelte animations
+        );
+        const deleted = previous.length - next.length;
+        if (deleted) {
+            node.style.animation = next.join(', ');
+            active -= deleted;
+            if (!active)
+                clear_rules();
+        }
+    }
+    function clear_rules() {
+        raf(() => {
+            if (active)
+                return;
+            managed_styles.forEach(info => {
+                const { stylesheet } = info;
+                let i = stylesheet.cssRules.length;
+                while (i--)
+                    stylesheet.deleteRule(i);
+                info.rules = {};
+            });
+            managed_styles.clear();
+        });
     }
 
     let current_component;
@@ -213,6 +344,20 @@ var app = (function () {
             $$.after_update.forEach(add_render_callback);
         }
     }
+
+    let promise;
+    function wait() {
+        if (!promise) {
+            promise = Promise.resolve();
+            promise.then(() => {
+                promise = null;
+            });
+        }
+        return promise;
+    }
+    function dispatch(node, direction, kind) {
+        node.dispatchEvent(custom_event(`${direction ? 'intro' : 'outro'}${kind}`));
+    }
     const outroing = new Set();
     let outros;
     function group_outros() {
@@ -249,6 +394,231 @@ var app = (function () {
             });
             block.o(local);
         }
+    }
+    const null_transition = { duration: 0 };
+    function create_in_transition(node, fn, params) {
+        let config = fn(node, params);
+        let running = false;
+        let animation_name;
+        let task;
+        let uid = 0;
+        function cleanup() {
+            if (animation_name)
+                delete_rule(node, animation_name);
+        }
+        function go() {
+            const { delay = 0, duration = 300, easing = identity, tick = noop, css } = config || null_transition;
+            if (css)
+                animation_name = create_rule(node, 0, 1, duration, delay, easing, css, uid++);
+            tick(0, 1);
+            const start_time = now$1() + delay;
+            const end_time = start_time + duration;
+            if (task)
+                task.abort();
+            running = true;
+            add_render_callback(() => dispatch(node, true, 'start'));
+            task = loop(now => {
+                if (running) {
+                    if (now >= end_time) {
+                        tick(1, 0);
+                        dispatch(node, true, 'end');
+                        cleanup();
+                        return running = false;
+                    }
+                    if (now >= start_time) {
+                        const t = easing((now - start_time) / duration);
+                        tick(t, 1 - t);
+                    }
+                }
+                return running;
+            });
+        }
+        let started = false;
+        return {
+            start() {
+                if (started)
+                    return;
+                started = true;
+                delete_rule(node);
+                if (is_function(config)) {
+                    config = config();
+                    wait().then(go);
+                }
+                else {
+                    go();
+                }
+            },
+            invalidate() {
+                started = false;
+            },
+            end() {
+                if (running) {
+                    cleanup();
+                    running = false;
+                }
+            }
+        };
+    }
+    function create_out_transition(node, fn, params) {
+        let config = fn(node, params);
+        let running = true;
+        let animation_name;
+        const group = outros;
+        group.r += 1;
+        function go() {
+            const { delay = 0, duration = 300, easing = identity, tick = noop, css } = config || null_transition;
+            if (css)
+                animation_name = create_rule(node, 1, 0, duration, delay, easing, css);
+            const start_time = now$1() + delay;
+            const end_time = start_time + duration;
+            add_render_callback(() => dispatch(node, false, 'start'));
+            loop(now => {
+                if (running) {
+                    if (now >= end_time) {
+                        tick(0, 1);
+                        dispatch(node, false, 'end');
+                        if (!--group.r) {
+                            // this will result in `end()` being called,
+                            // so we don't need to clean up here
+                            run_all(group.c);
+                        }
+                        return false;
+                    }
+                    if (now >= start_time) {
+                        const t = easing((now - start_time) / duration);
+                        tick(1 - t, t);
+                    }
+                }
+                return running;
+            });
+        }
+        if (is_function(config)) {
+            wait().then(() => {
+                // @ts-ignore
+                config = config();
+                go();
+            });
+        }
+        else {
+            go();
+        }
+        return {
+            end(reset) {
+                if (reset && config.tick) {
+                    config.tick(1, 0);
+                }
+                if (running) {
+                    if (animation_name)
+                        delete_rule(node, animation_name);
+                    running = false;
+                }
+            }
+        };
+    }
+    function create_bidirectional_transition(node, fn, params, intro) {
+        let config = fn(node, params);
+        let t = intro ? 0 : 1;
+        let running_program = null;
+        let pending_program = null;
+        let animation_name = null;
+        function clear_animation() {
+            if (animation_name)
+                delete_rule(node, animation_name);
+        }
+        function init(program, duration) {
+            const d = (program.b - t);
+            duration *= Math.abs(d);
+            return {
+                a: t,
+                b: program.b,
+                d,
+                duration,
+                start: program.start,
+                end: program.start + duration,
+                group: program.group
+            };
+        }
+        function go(b) {
+            const { delay = 0, duration = 300, easing = identity, tick = noop, css } = config || null_transition;
+            const program = {
+                start: now$1() + delay,
+                b
+            };
+            if (!b) {
+                // @ts-ignore todo: improve typings
+                program.group = outros;
+                outros.r += 1;
+            }
+            if (running_program || pending_program) {
+                pending_program = program;
+            }
+            else {
+                // if this is an intro, and there's a delay, we need to do
+                // an initial tick and/or apply CSS animation immediately
+                if (css) {
+                    clear_animation();
+                    animation_name = create_rule(node, t, b, duration, delay, easing, css);
+                }
+                if (b)
+                    tick(0, 1);
+                running_program = init(program, duration);
+                add_render_callback(() => dispatch(node, b, 'start'));
+                loop(now => {
+                    if (pending_program && now > pending_program.start) {
+                        running_program = init(pending_program, duration);
+                        pending_program = null;
+                        dispatch(node, running_program.b, 'start');
+                        if (css) {
+                            clear_animation();
+                            animation_name = create_rule(node, t, running_program.b, running_program.duration, 0, easing, config.css);
+                        }
+                    }
+                    if (running_program) {
+                        if (now >= running_program.end) {
+                            tick(t = running_program.b, 1 - t);
+                            dispatch(node, running_program.b, 'end');
+                            if (!pending_program) {
+                                // we're done
+                                if (running_program.b) {
+                                    // intro — we can tidy up immediately
+                                    clear_animation();
+                                }
+                                else {
+                                    // outro — needs to be coordinated
+                                    if (!--running_program.group.r)
+                                        run_all(running_program.group.c);
+                                }
+                            }
+                            running_program = null;
+                        }
+                        else if (now >= running_program.start) {
+                            const p = now - running_program.start;
+                            t = running_program.a + running_program.d * easing(p / running_program.duration);
+                            tick(t, 1 - t);
+                        }
+                    }
+                    return !!(running_program || pending_program);
+                });
+            }
+        }
+        return {
+            run(b) {
+                if (is_function(config)) {
+                    wait().then(() => {
+                        // @ts-ignore
+                        config = config();
+                        go(b);
+                    });
+                }
+                else {
+                    go(b);
+                }
+            },
+            end() {
+                clear_animation();
+                running_program = pending_program = null;
+            }
+        };
     }
 
     const globals = (typeof window !== 'undefined'
@@ -428,6 +798,13 @@ var app = (function () {
         else
             dispatch_dev('SvelteDOMSetAttribute', { node, attribute, value });
     }
+    function set_data_dev(text, data) {
+        data = '' + data;
+        if (text.wholeText === data)
+            return;
+        dispatch_dev('SvelteDOMSetData', { node: text, data });
+        text.data = data;
+    }
     function validate_slots(name, slot, keys) {
         for (const slot_key of Object.keys(slot)) {
             if (!~keys.indexOf(slot_key)) {
@@ -505,7 +882,7 @@ var app = (function () {
 
     /* src/Slide.svelte generated by Svelte v3.46.4 */
 
-    const file$3 = "src/Slide.svelte";
+    const file$5 = "src/Slide.svelte";
     const get_slide_content_slot_changes = dirty => ({});
     const get_slide_content_slot_context = ctx => ({});
     const get_byline_slot_changes = dirty => ({});
@@ -515,7 +892,7 @@ var app = (function () {
     const get_slide_title_slot_changes = dirty => ({});
     const get_slide_title_slot_context = ctx => ({});
 
-    // (77:2) {:else}
+    // (78:2) {:else}
     function create_else_block(ctx) {
     	let h2;
     	let a;
@@ -531,11 +908,11 @@ var app = (function () {
     			a = element("a");
     			if (slide_title_slot_or_fallback) slide_title_slot_or_fallback.c();
     			attr_dev(a, "href", a_href_value = `#${/*id_slide*/ ctx[1]}`);
-    			attr_dev(a, "class", "svelte-apgrgp");
-    			add_location(a, file$3, 78, 4, 1135);
+    			attr_dev(a, "class", "svelte-1uj2qow");
+    			add_location(a, file$5, 79, 4, 1155);
     			attr_dev(h2, "id", /*id_slide*/ ctx[1]);
-    			attr_dev(h2, "class", "svelte-apgrgp");
-    			add_location(h2, file$3, 77, 3, 1110);
+    			attr_dev(h2, "class", "svelte-1uj2qow");
+    			add_location(h2, file$5, 78, 3, 1130);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, h2, anchor);
@@ -592,15 +969,15 @@ var app = (function () {
     		block,
     		id: create_else_block.name,
     		type: "else",
-    		source: "(77:2) {:else}",
+    		source: "(78:2) {:else}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (71:2) {#if capstone}
-    function create_if_block(ctx) {
+    // (72:2) {#if capstone}
+    function create_if_block$1(ctx) {
     	let h1;
     	let a;
     	let a_href_value;
@@ -615,11 +992,11 @@ var app = (function () {
     			a = element("a");
     			if (slide_title_slot_or_fallback) slide_title_slot_or_fallback.c();
     			attr_dev(a, "href", a_href_value = `#${/*id_slide*/ ctx[1]}`);
-    			attr_dev(a, "class", "svelte-apgrgp");
-    			add_location(a, file$3, 72, 4, 974);
+    			attr_dev(a, "class", "svelte-1uj2qow");
+    			add_location(a, file$5, 73, 4, 994);
     			attr_dev(h1, "id", /*id_slide*/ ctx[1]);
-    			attr_dev(h1, "class", "svelte-apgrgp");
-    			add_location(h1, file$3, 71, 3, 949);
+    			attr_dev(h1, "class", "svelte-1uj2qow");
+    			add_location(h1, file$5, 72, 3, 969);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, h1, anchor);
@@ -674,16 +1051,16 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_if_block.name,
+    		id: create_if_block$1.name,
     		type: "if",
-    		source: "(71:2) {#if capstone}",
+    		source: "(72:2) {#if capstone}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (80:31) Untitled slide
+    // (81:31) Untitled slide
     function fallback_block_3(ctx) {
     	let t;
 
@@ -703,14 +1080,14 @@ var app = (function () {
     		block,
     		id: fallback_block_3.name,
     		type: "fallback",
-    		source: "(80:31) Untitled slide",
+    		source: "(81:31) Untitled slide",
     		ctx
     	});
 
     	return block;
     }
 
-    // (74:31) Untitled slide
+    // (75:31) Untitled slide
     function fallback_block_2(ctx) {
     	let t;
 
@@ -730,14 +1107,14 @@ var app = (function () {
     		block,
     		id: fallback_block_2.name,
     		type: "fallback",
-    		source: "(74:31) Untitled slide",
+    		source: "(75:31) Untitled slide",
     		ctx
     	});
 
     	return block;
     }
 
-    // (90:28) Untitled slide
+    // (91:28) Untitled slide
     function fallback_block(ctx) {
     	let t;
 
@@ -757,14 +1134,14 @@ var app = (function () {
     		block,
     		id: fallback_block.name,
     		type: "fallback",
-    		source: "(90:28) Untitled slide",
+    		source: "(91:28) Untitled slide",
     		ctx
     	});
 
     	return block;
     }
 
-    function create_fragment$4(ctx) {
+    function create_fragment$6(ctx) {
     	let div;
     	let span;
     	let current_block_type_index;
@@ -773,7 +1150,7 @@ var app = (function () {
     	let h3;
     	let t1;
     	let current;
-    	const if_block_creators = [create_if_block, create_else_block];
+    	const if_block_creators = [create_if_block$1, create_else_block];
     	const if_blocks = [];
 
     	function select_block_type(ctx, dirty) {
@@ -799,12 +1176,12 @@ var app = (function () {
     			if (byline_slot) byline_slot.c();
     			t1 = space();
     			if (slide_content_slot_or_fallback) slide_content_slot_or_fallback.c();
-    			attr_dev(h3, "class", "svelte-apgrgp");
-    			add_location(h3, file$3, 83, 2, 1268);
-    			attr_dev(span, "class", "heading svelte-apgrgp");
-    			add_location(span, file$3, 69, 1, 906);
-    			attr_dev(div, "class", "slide svelte-apgrgp");
-    			add_location(div, file$3, 68, 0, 885);
+    			attr_dev(h3, "class", "svelte-1uj2qow");
+    			add_location(h3, file$5, 84, 2, 1288);
+    			attr_dev(span, "class", "heading svelte-1uj2qow");
+    			add_location(span, file$5, 70, 1, 926);
+    			attr_dev(div, "class", "slide svelte-1uj2qow");
+    			add_location(div, file$5, 69, 0, 905);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -908,7 +1285,7 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_fragment$4.name,
+    		id: create_fragment$6.name,
     		type: "component",
     		source: "",
     		ctx
@@ -917,7 +1294,7 @@ var app = (function () {
     	return block;
     }
 
-    function instance$4($$self, $$props, $$invalidate) {
+    function instance$6($$self, $$props, $$invalidate) {
     	let { $$slots: slots = {}, $$scope } = $$props;
     	validate_slots('Slide', slots, ['slide-title','byline','slide-content']);
     	let { id_slide, short_name, capstone = false } = $$props;
@@ -966,13 +1343,13 @@ var app = (function () {
     class Slide extends SvelteComponentDev {
     	constructor(options) {
     		super(options);
-    		init(this, options, instance$4, create_fragment$4, safe_not_equal, { id_slide: 1, short_name: 0, capstone: 2 });
+    		init(this, options, instance$6, create_fragment$6, safe_not_equal, { id_slide: 1, short_name: 0, capstone: 2 });
 
     		dispatch_dev("SvelteRegisterComponent", {
     			component: this,
     			tagName: "Slide",
     			options,
-    			id: create_fragment$4.name
+    			id: create_fragment$6.name
     		});
 
     		const { ctx } = this.$$;
@@ -1016,7 +1393,7 @@ var app = (function () {
 
     const { console: console_1$2 } = globals;
 
-    function create_fragment$3(ctx) {
+    function create_fragment$5(ctx) {
     	const block = {
     		c: noop,
     		l: function claim(nodes) {
@@ -1031,7 +1408,7 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_fragment$3.name,
+    		id: create_fragment$5.name,
     		type: "component",
     		source: "",
     		ctx
@@ -1040,7 +1417,7 @@ var app = (function () {
     	return block;
     }
 
-    function instance$3($$self, $$props, $$invalidate) {
+    function instance$5($$self, $$props, $$invalidate) {
     	let { $$slots: slots = {}, $$scope } = $$props;
     	validate_slots('Presentation', slots, []);
     	let { presentation_mode } = $$props;
@@ -1082,13 +1459,13 @@ var app = (function () {
     class Presentation extends SvelteComponentDev {
     	constructor(options) {
     		super(options);
-    		init(this, options, instance$3, create_fragment$3, safe_not_equal, { presentation_mode: 0 });
+    		init(this, options, instance$5, create_fragment$5, safe_not_equal, { presentation_mode: 0 });
 
     		dispatch_dev("SvelteRegisterComponent", {
     			component: this,
     			tagName: "Presentation",
     			options,
-    			id: create_fragment$3.name
+    			id: create_fragment$5.name
     		});
 
     		const { ctx } = this.$$;
@@ -1109,22 +1486,32 @@ var app = (function () {
     }
 
     /* src/Logo.svelte generated by Svelte v3.46.4 */
+    const file$4 = "src/Logo.svelte";
 
-    const file$2 = "src/Logo.svelte";
+    function create_fragment$4(ctx) {
+    	let scrolling = false;
 
-    function create_fragment$2(ctx) {
+    	let clear_scrolling = () => {
+    		scrolling = false;
+    	};
+
+    	let scrolling_timeout;
     	let div;
     	let h1;
+    	let mounted;
+    	let dispose;
+    	add_render_callback(/*onwindowscroll*/ ctx[6]);
 
     	const block = {
     		c: function create() {
     			div = element("div");
     			h1 = element("h1");
     			h1.textContent = "TECBERRY.ml";
-    			attr_dev(h1, "class", "svelte-2ddsqr");
-    			add_location(h1, file$2, 35, 1, 711);
-    			attr_dev(div, "class", "title svelte-2ddsqr");
-    			add_location(div, file$2, 34, 0, 690);
+    			attr_dev(h1, "class", "svelte-jl6sd");
+    			add_location(h1, file$4, 82, 1, 1739);
+    			attr_dev(div, "class", "title svelte-jl6sd");
+    			toggle_class(div, "hidden", /*hidden*/ ctx[2]);
+    			add_location(div, file$4, 81, 0, 1686);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -1132,18 +1519,47 @@ var app = (function () {
     		m: function mount(target, anchor) {
     			insert_dev(target, div, anchor);
     			append_dev(div, h1);
+    			/*div_binding*/ ctx[7](div);
+
+    			if (!mounted) {
+    				dispose = [
+    					listen_dev(window, "resize", /*get_first_slide_offset*/ ctx[3], false, false, false),
+    					listen_dev(window, "scroll", () => {
+    						scrolling = true;
+    						clearTimeout(scrolling_timeout);
+    						scrolling_timeout = setTimeout(clear_scrolling, 100);
+    						/*onwindowscroll*/ ctx[6]();
+    					})
+    				];
+
+    				mounted = true;
+    			}
     		},
-    		p: noop,
+    		p: function update(ctx, [dirty]) {
+    			if (dirty & /*y*/ 1 && !scrolling) {
+    				scrolling = true;
+    				clearTimeout(scrolling_timeout);
+    				scrollTo(window.pageXOffset, /*y*/ ctx[0]);
+    				scrolling_timeout = setTimeout(clear_scrolling, 100);
+    			}
+
+    			if (dirty & /*hidden*/ 4) {
+    				toggle_class(div, "hidden", /*hidden*/ ctx[2]);
+    			}
+    		},
     		i: noop,
     		o: noop,
     		d: function destroy(detaching) {
     			if (detaching) detach_dev(div);
+    			/*div_binding*/ ctx[7](null);
+    			mounted = false;
+    			run_all(dispose);
     		}
     	};
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_fragment$2.name,
+    		id: create_fragment$4.name,
     		type: "component",
     		source: "",
     		ctx
@@ -1152,29 +1568,110 @@ var app = (function () {
     	return block;
     }
 
-    function instance$2($$self, $$props) {
+    function instance$4($$self, $$props, $$invalidate) {
     	let { $$slots: slots = {}, $$scope } = $$props;
     	validate_slots('Logo', slots, []);
-    	const writable_props = [];
+    	let { headings } = $$props;
+    	let first_slide, y, logo, hidden;
+
+    	function get_first_slide_offset() {
+    		if (headings[0] !== undefined) {
+    			$$invalidate(5, first_slide = headings[0].offsetTop - 25);
+    		}
+    	}
+
+    	onMount(get_first_slide_offset);
+    	const writable_props = ['headings'];
 
     	Object.keys($$props).forEach(key => {
     		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== '$$' && key !== 'slot') console.warn(`<Logo> was created with unknown prop '${key}'`);
     	});
 
-    	return [];
+    	function onwindowscroll() {
+    		$$invalidate(0, y = window.pageYOffset);
+    	}
+
+    	function div_binding($$value) {
+    		binding_callbacks[$$value ? 'unshift' : 'push'](() => {
+    			logo = $$value;
+    			$$invalidate(1, logo);
+    		});
+    	}
+
+    	$$self.$$set = $$props => {
+    		if ('headings' in $$props) $$invalidate(4, headings = $$props.headings);
+    	};
+
+    	$$self.$capture_state = () => ({
+    		onMount,
+    		headings,
+    		first_slide,
+    		y,
+    		logo,
+    		hidden,
+    		get_first_slide_offset
+    	});
+
+    	$$self.$inject_state = $$props => {
+    		if ('headings' in $$props) $$invalidate(4, headings = $$props.headings);
+    		if ('first_slide' in $$props) $$invalidate(5, first_slide = $$props.first_slide);
+    		if ('y' in $$props) $$invalidate(0, y = $$props.y);
+    		if ('logo' in $$props) $$invalidate(1, logo = $$props.logo);
+    		if ('hidden' in $$props) $$invalidate(2, hidden = $$props.hidden);
+    	};
+
+    	if ($$props && "$$inject" in $$props) {
+    		$$self.$inject_state($$props.$$inject);
+    	}
+
+    	$$self.$$.update = () => {
+    		if ($$self.$$.dirty & /*y, first_slide*/ 33) {
+    			if (y !== undefined && first_slide !== undefined && y > first_slide) {
+    				$$invalidate(2, hidden = true);
+    			} else if (y !== undefined && first_slide !== undefined && y <= first_slide) {
+    				$$invalidate(2, hidden = false);
+    			}
+    		}
+    	};
+
+    	return [
+    		y,
+    		logo,
+    		hidden,
+    		get_first_slide_offset,
+    		headings,
+    		first_slide,
+    		onwindowscroll,
+    		div_binding
+    	];
     }
 
     class Logo extends SvelteComponentDev {
     	constructor(options) {
     		super(options);
-    		init(this, options, instance$2, create_fragment$2, safe_not_equal, {});
+    		init(this, options, instance$4, create_fragment$4, safe_not_equal, { headings: 4 });
 
     		dispatch_dev("SvelteRegisterComponent", {
     			component: this,
     			tagName: "Logo",
     			options,
-    			id: create_fragment$2.name
+    			id: create_fragment$4.name
     		});
+
+    		const { ctx } = this.$$;
+    		const props = options.props || {};
+
+    		if (/*headings*/ ctx[4] === undefined && !('headings' in props)) {
+    			console.warn("<Logo> was created without expected prop 'headings'");
+    		}
+    	}
+
+    	get headings() {
+    		throw new Error("<Logo>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set headings(value) {
+    		throw new Error("<Logo>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
     	}
     }
 
@@ -59872,10 +60369,10 @@ var app = (function () {
 
     /* src/TecModule.svelte generated by Svelte v3.46.4 */
 
-    const { console: console_1$1 } = globals;
-    const file$1 = "src/TecModule.svelte";
+    const { console: console_1$1, window: window_1$1 } = globals;
+    const file$3 = "src/TecModule.svelte";
 
-    function create_fragment$1(ctx) {
+    function create_fragment$3(ctx) {
     	let canvas;
     	let t;
     	let mounted;
@@ -59887,7 +60384,7 @@ var app = (function () {
     			t = text("Your browser does not support this element.");
     			attr_dev(canvas, "width", /*width*/ ctx[0]);
     			attr_dev(canvas, "height", /*height*/ ctx[1]);
-    			add_location(canvas, file$1, 117, 0, 3667);
+    			add_location(canvas, file$3, 119, 0, 3707);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -59895,12 +60392,13 @@ var app = (function () {
     		m: function mount(target, anchor) {
     			insert_dev(target, canvas, anchor);
     			append_dev(canvas, t);
-    			/*canvas_binding*/ ctx[7](canvas);
+    			/*canvas_binding*/ ctx[8](canvas);
 
     			if (!mounted) {
     				dispose = [
-    					listen_dev(canvas, "pointerdown", /*pointerdown_handler*/ ctx[8], false, false, false),
-    					listen_dev(canvas, "pointerup", /*pointerup_handler*/ ctx[9], false, false, false)
+    					listen_dev(window_1$1, "resize", /*resize*/ ctx[4], false, false, false),
+    					listen_dev(canvas, "pointerdown", /*pointerdown_handler*/ ctx[9], false, false, false),
+    					listen_dev(canvas, "pointerup", /*pointerup_handler*/ ctx[10], false, false, false)
     				];
 
     				mounted = true;
@@ -59919,7 +60417,7 @@ var app = (function () {
     		o: noop,
     		d: function destroy(detaching) {
     			if (detaching) detach_dev(canvas);
-    			/*canvas_binding*/ ctx[7](null);
+    			/*canvas_binding*/ ctx[8](null);
     			mounted = false;
     			run_all(dispose);
     		}
@@ -59927,7 +60425,7 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_fragment$1.name,
+    		id: create_fragment$3.name,
     		type: "component",
     		source: "",
     		ctx
@@ -59949,7 +60447,7 @@ var app = (function () {
     	}
     }
 
-    function instance$1($$self, $$props, $$invalidate) {
+    function instance$3($$self, $$props, $$invalidate) {
     	let { $$slots: slots = {}, $$scope } = $$props;
     	validate_slots('TecModule', slots, []);
     	let { width, height, bg_color, cube_color, lights_color } = $$props;
@@ -60100,9 +60598,9 @@ var app = (function () {
     	$$self.$$set = $$props => {
     		if ('width' in $$props) $$invalidate(0, width = $$props.width);
     		if ('height' in $$props) $$invalidate(1, height = $$props.height);
-    		if ('bg_color' in $$props) $$invalidate(4, bg_color = $$props.bg_color);
-    		if ('cube_color' in $$props) $$invalidate(5, cube_color = $$props.cube_color);
-    		if ('lights_color' in $$props) $$invalidate(6, lights_color = $$props.lights_color);
+    		if ('bg_color' in $$props) $$invalidate(5, bg_color = $$props.bg_color);
+    		if ('cube_color' in $$props) $$invalidate(6, cube_color = $$props.cube_color);
+    		if ('lights_color' in $$props) $$invalidate(7, lights_color = $$props.lights_color);
     	};
 
     	$$self.$capture_state = () => ({
@@ -60143,9 +60641,9 @@ var app = (function () {
     	$$self.$inject_state = $$props => {
     		if ('width' in $$props) $$invalidate(0, width = $$props.width);
     		if ('height' in $$props) $$invalidate(1, height = $$props.height);
-    		if ('bg_color' in $$props) $$invalidate(4, bg_color = $$props.bg_color);
-    		if ('cube_color' in $$props) $$invalidate(5, cube_color = $$props.cube_color);
-    		if ('lights_color' in $$props) $$invalidate(6, lights_color = $$props.lights_color);
+    		if ('bg_color' in $$props) $$invalidate(5, bg_color = $$props.bg_color);
+    		if ('cube_color' in $$props) $$invalidate(6, cube_color = $$props.cube_color);
+    		if ('lights_color' in $$props) $$invalidate(7, lights_color = $$props.lights_color);
     		if ('camera' in $$props) camera = $$props.camera;
     		if ('scene' in $$props) scene = $$props.scene;
     		if ('renderer' in $$props) renderer = $$props.renderer;
@@ -60167,6 +60665,7 @@ var app = (function () {
     		height,
     		el,
     		do_rotation,
+    		resize,
     		bg_color,
     		cube_color,
     		lights_color,
@@ -60180,19 +60679,19 @@ var app = (function () {
     	constructor(options) {
     		super(options);
 
-    		init(this, options, instance$1, create_fragment$1, safe_not_equal, {
+    		init(this, options, instance$3, create_fragment$3, safe_not_equal, {
     			width: 0,
     			height: 1,
-    			bg_color: 4,
-    			cube_color: 5,
-    			lights_color: 6
+    			bg_color: 5,
+    			cube_color: 6,
+    			lights_color: 7
     		});
 
     		dispatch_dev("SvelteRegisterComponent", {
     			component: this,
     			tagName: "TecModule",
     			options,
-    			id: create_fragment$1.name
+    			id: create_fragment$3.name
     		});
 
     		const { ctx } = this.$$;
@@ -60206,15 +60705,15 @@ var app = (function () {
     			console_1$1.warn("<TecModule> was created without expected prop 'height'");
     		}
 
-    		if (/*bg_color*/ ctx[4] === undefined && !('bg_color' in props)) {
+    		if (/*bg_color*/ ctx[5] === undefined && !('bg_color' in props)) {
     			console_1$1.warn("<TecModule> was created without expected prop 'bg_color'");
     		}
 
-    		if (/*cube_color*/ ctx[5] === undefined && !('cube_color' in props)) {
+    		if (/*cube_color*/ ctx[6] === undefined && !('cube_color' in props)) {
     			console_1$1.warn("<TecModule> was created without expected prop 'cube_color'");
     		}
 
-    		if (/*lights_color*/ ctx[6] === undefined && !('lights_color' in props)) {
+    		if (/*lights_color*/ ctx[7] === undefined && !('lights_color' in props)) {
     			console_1$1.warn("<TecModule> was created without expected prop 'lights_color'");
     		}
     	}
@@ -60260,12 +60759,609 @@ var app = (function () {
     	}
     }
 
+    function cubicInOut(t) {
+        return t < 0.5 ? 4.0 * t * t * t : 0.5 * Math.pow(2.0 * t - 2.0, 3.0) + 1.0;
+    }
+    function cubicOut(t) {
+        const f = t - 1.0;
+        return f * f * f + 1.0;
+    }
+
+    function blur(node, { delay = 0, duration = 400, easing = cubicInOut, amount = 5, opacity = 0 } = {}) {
+        const style = getComputedStyle(node);
+        const target_opacity = +style.opacity;
+        const f = style.filter === 'none' ? '' : style.filter;
+        const od = target_opacity * (1 - opacity);
+        return {
+            delay,
+            duration,
+            easing,
+            css: (_t, u) => `opacity: ${target_opacity - (od * u)}; filter: ${f} blur(${u * amount}px);`
+        };
+    }
+    function fly(node, { delay = 0, duration = 400, easing = cubicOut, x = 0, y = 0, opacity = 0 } = {}) {
+        const style = getComputedStyle(node);
+        const target_opacity = +style.opacity;
+        const transform = style.transform === 'none' ? '' : style.transform;
+        const od = target_opacity * (1 - opacity);
+        return {
+            delay,
+            duration,
+            easing,
+            css: (t, u) => `
+			transform: ${transform} translate(${(1 - t) * x}px, ${(1 - t) * y}px);
+			opacity: ${target_opacity - (od * u)}`
+        };
+    }
+
+    /* src/PageNumber.svelte generated by Svelte v3.46.4 */
+    const file$2 = "src/PageNumber.svelte";
+
+    // (43:0) {#key page}
+    function create_key_block(ctx) {
+    	let div;
+    	let t;
+    	let div_intro;
+    	let div_outro;
+    	let current;
+
+    	const block = {
+    		c: function create() {
+    			div = element("div");
+    			t = text(/*page*/ ctx[3]);
+    			attr_dev(div, "class", "page_number svelte-1raidyr");
+    			toggle_class(div, "hidden", /*hidden*/ ctx[1]);
+    			add_location(div, file$2, 43, 1, 730);
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, div, anchor);
+    			append_dev(div, t);
+    			/*div_binding*/ ctx[7](div);
+    			current = true;
+    		},
+    		p: function update(ctx, dirty) {
+    			if (!current || dirty & /*page*/ 8) set_data_dev(t, /*page*/ ctx[3]);
+
+    			if (dirty & /*hidden*/ 2) {
+    				toggle_class(div, "hidden", /*hidden*/ ctx[1]);
+    			}
+    		},
+    		i: function intro(local) {
+    			if (current) return;
+
+    			add_render_callback(() => {
+    				if (div_outro) div_outro.end(1);
+    				div_intro = create_in_transition(div, fly, { x: -200, duration: 300 });
+    				div_intro.start();
+    			});
+
+    			current = true;
+    		},
+    		o: function outro(local) {
+    			if (div_intro) div_intro.invalidate();
+    			div_outro = create_out_transition(div, blur, { duration: 250 });
+    			current = false;
+    		},
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(div);
+    			/*div_binding*/ ctx[7](null);
+    			if (detaching && div_outro) div_outro.end();
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_key_block.name,
+    		type: "key",
+    		source: "(43:0) {#key page}",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    function create_fragment$2(ctx) {
+    	let scrolling = false;
+
+    	let clear_scrolling = () => {
+    		scrolling = false;
+    	};
+
+    	let scrolling_timeout;
+    	let previous_key = /*page*/ ctx[3];
+    	let key_block_anchor;
+    	let current;
+    	let mounted;
+    	let dispose;
+    	add_render_callback(/*onwindowscroll*/ ctx[6]);
+    	let key_block = create_key_block(ctx);
+
+    	const block = {
+    		c: function create() {
+    			key_block.c();
+    			key_block_anchor = empty();
+    		},
+    		l: function claim(nodes) {
+    			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
+    		},
+    		m: function mount(target, anchor) {
+    			key_block.m(target, anchor);
+    			insert_dev(target, key_block_anchor, anchor);
+    			current = true;
+
+    			if (!mounted) {
+    				dispose = listen_dev(window, "scroll", () => {
+    					scrolling = true;
+    					clearTimeout(scrolling_timeout);
+    					scrolling_timeout = setTimeout(clear_scrolling, 100);
+    					/*onwindowscroll*/ ctx[6]();
+    				});
+
+    				mounted = true;
+    			}
+    		},
+    		p: function update(ctx, [dirty]) {
+    			if (dirty & /*y*/ 1 && !scrolling) {
+    				scrolling = true;
+    				clearTimeout(scrolling_timeout);
+    				scrollTo(window.pageXOffset, /*y*/ ctx[0]);
+    				scrolling_timeout = setTimeout(clear_scrolling, 100);
+    			}
+
+    			if (dirty & /*page*/ 8 && safe_not_equal(previous_key, previous_key = /*page*/ ctx[3])) {
+    				group_outros();
+    				transition_out(key_block, 1, 1, noop);
+    				check_outros();
+    				key_block = create_key_block(ctx);
+    				key_block.c();
+    				transition_in(key_block);
+    				key_block.m(key_block_anchor.parentNode, key_block_anchor);
+    			} else {
+    				key_block.p(ctx, dirty);
+    			}
+    		},
+    		i: function intro(local) {
+    			if (current) return;
+    			transition_in(key_block);
+    			current = true;
+    		},
+    		o: function outro(local) {
+    			transition_out(key_block);
+    			current = false;
+    		},
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(key_block_anchor);
+    			key_block.d(detaching);
+    			mounted = false;
+    			dispose();
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_fragment$2.name,
+    		type: "component",
+    		source: "",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    function instance$2($$self, $$props, $$invalidate) {
+    	let { $$slots: slots = {}, $$scope } = $$props;
+    	validate_slots('PageNumber', slots, []);
+    	let { headings, presentation_mode } = $$props;
+    	let y, hidden = true, page_number, page = 0;
+    	const writable_props = ['headings', 'presentation_mode'];
+
+    	Object.keys($$props).forEach(key => {
+    		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== '$$' && key !== 'slot') console.warn(`<PageNumber> was created with unknown prop '${key}'`);
+    	});
+
+    	function onwindowscroll() {
+    		$$invalidate(0, y = window.pageYOffset);
+    	}
+
+    	function div_binding($$value) {
+    		binding_callbacks[$$value ? 'unshift' : 'push'](() => {
+    			page_number = $$value;
+    			$$invalidate(2, page_number);
+    		});
+    	}
+
+    	$$self.$$set = $$props => {
+    		if ('headings' in $$props) $$invalidate(4, headings = $$props.headings);
+    		if ('presentation_mode' in $$props) $$invalidate(5, presentation_mode = $$props.presentation_mode);
+    	};
+
+    	$$self.$capture_state = () => ({
+    		blur,
+    		fly,
+    		headings,
+    		presentation_mode,
+    		y,
+    		hidden,
+    		page_number,
+    		page
+    	});
+
+    	$$self.$inject_state = $$props => {
+    		if ('headings' in $$props) $$invalidate(4, headings = $$props.headings);
+    		if ('presentation_mode' in $$props) $$invalidate(5, presentation_mode = $$props.presentation_mode);
+    		if ('y' in $$props) $$invalidate(0, y = $$props.y);
+    		if ('hidden' in $$props) $$invalidate(1, hidden = $$props.hidden);
+    		if ('page_number' in $$props) $$invalidate(2, page_number = $$props.page_number);
+    		if ('page' in $$props) $$invalidate(3, page = $$props.page);
+    	};
+
+    	if ($$props && "$$inject" in $$props) {
+    		$$self.$inject_state($$props.$$inject);
+    	}
+
+    	$$self.$$.update = () => {
+    		if ($$self.$$.dirty & /*presentation_mode, headings, y*/ 49) {
+    			if (presentation_mode) {
+    				for (let i = 0; i < headings.length; i++) {
+    					if (headings[i].offsetTop > y - 25 && headings[i].offsetTop < y + 25) {
+    						$$invalidate(3, page = i + 1);
+    						$$invalidate(1, hidden = false);
+    						break;
+    					} else if (y - 25 < headings[0].offsetTop) {
+    						$$invalidate(1, hidden = true);
+    						break;
+    					}
+    				}
+    			}
+    		}
+    	};
+
+    	return [
+    		y,
+    		hidden,
+    		page_number,
+    		page,
+    		headings,
+    		presentation_mode,
+    		onwindowscroll,
+    		div_binding
+    	];
+    }
+
+    class PageNumber extends SvelteComponentDev {
+    	constructor(options) {
+    		super(options);
+    		init(this, options, instance$2, create_fragment$2, safe_not_equal, { headings: 4, presentation_mode: 5 });
+
+    		dispatch_dev("SvelteRegisterComponent", {
+    			component: this,
+    			tagName: "PageNumber",
+    			options,
+    			id: create_fragment$2.name
+    		});
+
+    		const { ctx } = this.$$;
+    		const props = options.props || {};
+
+    		if (/*headings*/ ctx[4] === undefined && !('headings' in props)) {
+    			console.warn("<PageNumber> was created without expected prop 'headings'");
+    		}
+
+    		if (/*presentation_mode*/ ctx[5] === undefined && !('presentation_mode' in props)) {
+    			console.warn("<PageNumber> was created without expected prop 'presentation_mode'");
+    		}
+    	}
+
+    	get headings() {
+    		throw new Error("<PageNumber>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set headings(value) {
+    		throw new Error("<PageNumber>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get presentation_mode() {
+    		throw new Error("<PageNumber>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set presentation_mode(value) {
+    		throw new Error("<PageNumber>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+    }
+
+    /* src/ScrollToSlide.svelte generated by Svelte v3.46.4 */
+    const file$1 = "src/ScrollToSlide.svelte";
+
+    // (65:0) {#if !hidden}
+    function create_if_block(ctx) {
+    	let input;
+    	let input_transition;
+    	let current;
+    	let mounted;
+    	let dispose;
+
+    	const block = {
+    		c: function create() {
+    			input = element("input");
+    			attr_dev(input, "class", "page_input svelte-u4gih5");
+    			attr_dev(input, "type", "number");
+    			attr_dev(input, "placeholder", "Enter slide number");
+    			input.autofocus = true;
+    			add_location(input, file$1, 65, 1, 1419);
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, input, anchor);
+    			/*input_binding*/ ctx[6](input);
+    			set_input_value(input, /*value*/ ctx[2]);
+    			current = true;
+    			input.focus();
+
+    			if (!mounted) {
+    				dispose = listen_dev(input, "input", /*input_input_handler*/ ctx[7]);
+    				mounted = true;
+    			}
+    		},
+    		p: function update(ctx, dirty) {
+    			if (dirty & /*value*/ 4 && to_number(input.value) !== /*value*/ ctx[2]) {
+    				set_input_value(input, /*value*/ ctx[2]);
+    			}
+    		},
+    		i: function intro(local) {
+    			if (current) return;
+
+    			add_render_callback(() => {
+    				if (!input_transition) input_transition = create_bidirectional_transition(input, blur, { duration: 250 }, true);
+    				input_transition.run(1);
+    			});
+
+    			current = true;
+    		},
+    		o: function outro(local) {
+    			if (!input_transition) input_transition = create_bidirectional_transition(input, blur, { duration: 250 }, false);
+    			input_transition.run(0);
+    			current = false;
+    		},
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(input);
+    			/*input_binding*/ ctx[6](null);
+    			if (detaching && input_transition) input_transition.end();
+    			mounted = false;
+    			dispose();
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_if_block.name,
+    		type: "if",
+    		source: "(65:0) {#if !hidden}",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    function create_fragment$1(ctx) {
+    	let if_block_anchor;
+    	let current;
+    	let mounted;
+    	let dispose;
+    	let if_block = !/*hidden*/ ctx[0] && create_if_block(ctx);
+
+    	const block = {
+    		c: function create() {
+    			if (if_block) if_block.c();
+    			if_block_anchor = empty();
+    		},
+    		l: function claim(nodes) {
+    			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
+    		},
+    		m: function mount(target, anchor) {
+    			if (if_block) if_block.m(target, anchor);
+    			insert_dev(target, if_block_anchor, anchor);
+    			current = true;
+
+    			if (!mounted) {
+    				dispose = listen_dev(window, "keydown", /*handle_keys*/ ctx[3], false, false, false);
+    				mounted = true;
+    			}
+    		},
+    		p: function update(ctx, [dirty]) {
+    			if (!/*hidden*/ ctx[0]) {
+    				if (if_block) {
+    					if_block.p(ctx, dirty);
+
+    					if (dirty & /*hidden*/ 1) {
+    						transition_in(if_block, 1);
+    					}
+    				} else {
+    					if_block = create_if_block(ctx);
+    					if_block.c();
+    					transition_in(if_block, 1);
+    					if_block.m(if_block_anchor.parentNode, if_block_anchor);
+    				}
+    			} else if (if_block) {
+    				group_outros();
+
+    				transition_out(if_block, 1, 1, () => {
+    					if_block = null;
+    				});
+
+    				check_outros();
+    			}
+    		},
+    		i: function intro(local) {
+    			if (current) return;
+    			transition_in(if_block);
+    			current = true;
+    		},
+    		o: function outro(local) {
+    			transition_out(if_block);
+    			current = false;
+    		},
+    		d: function destroy(detaching) {
+    			if (if_block) if_block.d(detaching);
+    			if (detaching) detach_dev(if_block_anchor);
+    			mounted = false;
+    			dispose();
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_fragment$1.name,
+    		type: "component",
+    		source: "",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    function scroll_to$1(target) {
+    	target = target.toString().startsWith("#")
+    	? target.toString()
+    	: `#${target.toString()}`;
+
+    	const el = document.querySelector(target);
+    	if (!el) return;
+    	el.scrollIntoView({ behavior: "smooth" });
+    }
+
+    function instance$1($$self, $$props, $$invalidate) {
+    	let { $$slots: slots = {}, $$scope } = $$props;
+    	validate_slots('ScrollToSlide', slots, []);
+    	let { headings, presentation_mode } = $$props;
+    	let hidden = true, page_input, value;
+
+    	// $: for (let i = 0; i < headings.length; i++) {
+    	// 	if (headings[i].offsetTop > y - 25 && headings[i].offsetTop < y + 25) {
+    	// 		page = i + 1;
+    	// 		hidden = false;
+    	// 		break;
+    	// 	} else if (y - 25 < headings[0].offsetTop) {
+    	// 		hidden = true;
+    	// 		break;
+    	// 	}
+    	// }
+    	function handle_keys(e) {
+    		if (!presentation_mode) return;
+
+    		if (hidden == true && e.key == "/") {
+    			$$invalidate(0, hidden = false);
+    			e.preventDefault();
+    		} else if (hidden === false && e.key == "/" || hidden === false && e.key == "Enter") {
+    			$$invalidate(0, hidden = true);
+    			if (value == 0) scroll_to$1("#title-card"); else if (!(value > headings.length || value < 0)) scroll_to$1(headings[value - 1].getAttribute("href"));
+    			$$invalidate(2, value = "");
+    		}
+    	}
+
+    	const writable_props = ['headings', 'presentation_mode'];
+
+    	Object.keys($$props).forEach(key => {
+    		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== '$$' && key !== 'slot') console.warn(`<ScrollToSlide> was created with unknown prop '${key}'`);
+    	});
+
+    	function input_binding($$value) {
+    		binding_callbacks[$$value ? 'unshift' : 'push'](() => {
+    			page_input = $$value;
+    			$$invalidate(1, page_input);
+    		});
+    	}
+
+    	function input_input_handler() {
+    		value = to_number(this.value);
+    		$$invalidate(2, value);
+    	}
+
+    	$$self.$$set = $$props => {
+    		if ('headings' in $$props) $$invalidate(4, headings = $$props.headings);
+    		if ('presentation_mode' in $$props) $$invalidate(5, presentation_mode = $$props.presentation_mode);
+    	};
+
+    	$$self.$capture_state = () => ({
+    		blur,
+    		headings,
+    		presentation_mode,
+    		hidden,
+    		page_input,
+    		value,
+    		handle_keys,
+    		scroll_to: scroll_to$1
+    	});
+
+    	$$self.$inject_state = $$props => {
+    		if ('headings' in $$props) $$invalidate(4, headings = $$props.headings);
+    		if ('presentation_mode' in $$props) $$invalidate(5, presentation_mode = $$props.presentation_mode);
+    		if ('hidden' in $$props) $$invalidate(0, hidden = $$props.hidden);
+    		if ('page_input' in $$props) $$invalidate(1, page_input = $$props.page_input);
+    		if ('value' in $$props) $$invalidate(2, value = $$props.value);
+    	};
+
+    	if ($$props && "$$inject" in $$props) {
+    		$$self.$inject_state($$props.$$inject);
+    	}
+
+    	return [
+    		hidden,
+    		page_input,
+    		value,
+    		handle_keys,
+    		headings,
+    		presentation_mode,
+    		input_binding,
+    		input_input_handler
+    	];
+    }
+
+    class ScrollToSlide extends SvelteComponentDev {
+    	constructor(options) {
+    		super(options);
+    		init(this, options, instance$1, create_fragment$1, safe_not_equal, { headings: 4, presentation_mode: 5 });
+
+    		dispatch_dev("SvelteRegisterComponent", {
+    			component: this,
+    			tagName: "ScrollToSlide",
+    			options,
+    			id: create_fragment$1.name
+    		});
+
+    		const { ctx } = this.$$;
+    		const props = options.props || {};
+
+    		if (/*headings*/ ctx[4] === undefined && !('headings' in props)) {
+    			console.warn("<ScrollToSlide> was created without expected prop 'headings'");
+    		}
+
+    		if (/*presentation_mode*/ ctx[5] === undefined && !('presentation_mode' in props)) {
+    			console.warn("<ScrollToSlide> was created without expected prop 'presentation_mode'");
+    		}
+    	}
+
+    	get headings() {
+    		throw new Error("<ScrollToSlide>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set headings(value) {
+    		throw new Error("<ScrollToSlide>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get presentation_mode() {
+    		throw new Error("<ScrollToSlide>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set presentation_mode(value) {
+    		throw new Error("<ScrollToSlide>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+    }
+
     /* src/App.svelte generated by Svelte v3.46.4 */
 
     const { console: console_1, window: window_1 } = globals;
     const file = "src/App.svelte";
 
-    // (196:2) <svelte:fragment slot="slide-title">
+    // (200:2) <svelte:fragment slot="slide-title">
     function create_slide_title_slot_16(ctx) {
     	let t;
 
@@ -60285,14 +61381,14 @@ var app = (function () {
     		block,
     		id: create_slide_title_slot_16.name,
     		type: "slot",
-    		source: "(196:2) <svelte:fragment slot=\\\"slide-title\\\">",
+    		source: "(200:2) <svelte:fragment slot=\\\"slide-title\\\">",
     		ctx
     	});
 
     	return block;
     }
 
-    // (199:2) <svelte:fragment slot="byline">
+    // (203:2) <svelte:fragment slot="byline">
     function create_byline_slot(ctx) {
     	let t0;
     	let br;
@@ -60303,7 +61399,7 @@ var app = (function () {
     			t0 = text("By Maryam K, Mohammed A, and Yaseen A ");
     			br = element("br");
     			t1 = text(" Advised by Dr. Maen Alkhader");
-    			add_location(br, file, 199, 41, 6075);
+    			add_location(br, file, 203, 41, 6292);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, t0, anchor);
@@ -60321,14 +61417,14 @@ var app = (function () {
     		block,
     		id: create_byline_slot.name,
     		type: "slot",
-    		source: "(199:2) <svelte:fragment slot=\\\"byline\\\">",
+    		source: "(203:2) <svelte:fragment slot=\\\"byline\\\">",
     		ctx
     	});
 
     	return block;
     }
 
-    // (202:2) <svelte:fragment slot="slide-content">
+    // (206:2) <svelte:fragment slot="slide-content">
     function create_slide_content_slot_16(ctx) {
     	let p;
 
@@ -60336,7 +61432,7 @@ var app = (function () {
     		c: function create() {
     			p = element("p");
     			p.textContent = "Intro goes here.";
-    			add_location(p, file, 202, 3, 6176);
+    			add_location(p, file, 206, 3, 6393);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, p, anchor);
@@ -60350,14 +61446,14 @@ var app = (function () {
     		block,
     		id: create_slide_content_slot_16.name,
     		type: "slot",
-    		source: "(202:2) <svelte:fragment slot=\\\"slide-content\\\">",
+    		source: "(206:2) <svelte:fragment slot=\\\"slide-content\\\">",
     		ctx
     	});
 
     	return block;
     }
 
-    // (210:2) <svelte:fragment slot="slide-title"    >
+    // (214:2) <svelte:fragment slot="slide-title"    >
     function create_slide_title_slot_15(ctx) {
     	let t;
 
@@ -60377,14 +61473,14 @@ var app = (function () {
     		block,
     		id: create_slide_title_slot_15.name,
     		type: "slot",
-    		source: "(210:2) <svelte:fragment slot=\\\"slide-title\\\"    >",
+    		source: "(214:2) <svelte:fragment slot=\\\"slide-title\\\"    >",
     		ctx
     	});
 
     	return block;
     }
 
-    // (213:2) <svelte:fragment slot="slide-content">
+    // (217:2) <svelte:fragment slot="slide-content">
     function create_slide_content_slot_15(ctx) {
     	let ul;
     	let li0;
@@ -60399,9 +61495,9 @@ var app = (function () {
     			t1 = space();
     			li1 = element("li");
     			li1.textContent = "AUS Example";
-    			add_location(li0, file, 214, 4, 6468);
-    			add_location(li1, file, 215, 4, 6511);
-    			add_location(ul, file, 213, 3, 6459);
+    			add_location(li0, file, 218, 4, 6685);
+    			add_location(li1, file, 219, 4, 6728);
+    			add_location(ul, file, 217, 3, 6676);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, ul, anchor);
@@ -60418,14 +61514,14 @@ var app = (function () {
     		block,
     		id: create_slide_content_slot_15.name,
     		type: "slot",
-    		source: "(213:2) <svelte:fragment slot=\\\"slide-content\\\">",
+    		source: "(217:2) <svelte:fragment slot=\\\"slide-content\\\">",
     		ctx
     	});
 
     	return block;
     }
 
-    // (224:2) <svelte:fragment slot="slide-title"    >
+    // (228:2) <svelte:fragment slot="slide-title"    >
     function create_slide_title_slot_14(ctx) {
     	let t;
 
@@ -60445,14 +61541,14 @@ var app = (function () {
     		block,
     		id: create_slide_title_slot_14.name,
     		type: "slot",
-    		source: "(224:2) <svelte:fragment slot=\\\"slide-title\\\"    >",
+    		source: "(228:2) <svelte:fragment slot=\\\"slide-title\\\"    >",
     		ctx
     	});
 
     	return block;
     }
 
-    // (227:2) <svelte:fragment slot="slide-content">
+    // (231:2) <svelte:fragment slot="slide-content">
     function create_slide_content_slot_14(ctx) {
     	let p;
     	let t1;
@@ -60477,11 +61573,11 @@ var app = (function () {
     			t5 = space();
     			li2 = element("li");
     			li2.textContent = "The design of turbomachinery is directly related to the material\n\t\t\t\t\tperformance";
-    			add_location(p, file, 227, 3, 6811);
-    			add_location(li0, file, 229, 4, 6875);
-    			add_location(li1, file, 230, 4, 6950);
-    			add_location(li2, file, 234, 4, 7074);
-    			add_location(ul, file, 228, 3, 6866);
+    			add_location(p, file, 231, 3, 7028);
+    			add_location(li0, file, 233, 4, 7092);
+    			add_location(li1, file, 234, 4, 7167);
+    			add_location(li2, file, 238, 4, 7291);
+    			add_location(ul, file, 232, 3, 7083);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, p, anchor);
@@ -60504,14 +61600,14 @@ var app = (function () {
     		block,
     		id: create_slide_content_slot_14.name,
     		type: "slot",
-    		source: "(227:2) <svelte:fragment slot=\\\"slide-content\\\">",
+    		source: "(231:2) <svelte:fragment slot=\\\"slide-content\\\">",
     		ctx
     	});
 
     	return block;
     }
 
-    // (243:2) <svelte:fragment slot="slide-title">
+    // (247:2) <svelte:fragment slot="slide-title">
     function create_slide_title_slot_13(ctx) {
     	let t;
 
@@ -60531,14 +61627,14 @@ var app = (function () {
     		block,
     		id: create_slide_title_slot_13.name,
     		type: "slot",
-    		source: "(243:2) <svelte:fragment slot=\\\"slide-title\\\">",
+    		source: "(247:2) <svelte:fragment slot=\\\"slide-title\\\">",
     		ctx
     	});
 
     	return block;
     }
 
-    // (244:2) <svelte:fragment slot="slide-content">
+    // (248:2) <svelte:fragment slot="slide-content">
     function create_slide_content_slot_13(ctx) {
     	let p;
     	let t1;
@@ -60547,8 +61643,8 @@ var app = (function () {
 
     	tecmodule = new TecModule({
     			props: {
-    				width: "360",
-    				height: "360",
+    				width: window.innerWidth * 0.9,
+    				height: window.innerHeight * 0.9,
     				bg_color: "#eeeeff",
     				cube_color: "#ff3366",
     				lights_color: "#99ffff"
@@ -60562,7 +61658,7 @@ var app = (function () {
     			p.textContent = "A TEC module, also known as a thermoelectric, or a Peltier module, is\n\t\t\t\tbasically a heat pump.";
     			t1 = space();
     			create_component(tecmodule.$$.fragment);
-    			add_location(p, file, 244, 3, 7418);
+    			add_location(p, file, 248, 3, 7635);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, p, anchor);
@@ -60591,14 +61687,14 @@ var app = (function () {
     		block,
     		id: create_slide_content_slot_13.name,
     		type: "slot",
-    		source: "(244:2) <svelte:fragment slot=\\\"slide-content\\\">",
+    		source: "(248:2) <svelte:fragment slot=\\\"slide-content\\\">",
     		ctx
     	});
 
     	return block;
     }
 
-    // (259:2) <svelte:fragment slot="slide-title">
+    // (267:2) <svelte:fragment slot="slide-title">
     function create_slide_title_slot_12(ctx) {
     	let t;
 
@@ -60618,14 +61714,14 @@ var app = (function () {
     		block,
     		id: create_slide_title_slot_12.name,
     		type: "slot",
-    		source: "(259:2) <svelte:fragment slot=\\\"slide-title\\\">",
+    		source: "(267:2) <svelte:fragment slot=\\\"slide-title\\\">",
     		ctx
     	});
 
     	return block;
     }
 
-    // (260:2) <svelte:fragment slot="slide-content">
+    // (268:2) <svelte:fragment slot="slide-content">
     function create_slide_content_slot_12(ctx) {
     	let p;
 
@@ -60633,7 +61729,7 @@ var app = (function () {
     		c: function create() {
     			p = element("p");
     			p.textContent = "Our idea is to use a bunch to heat and cool stuff to see if it breaks";
-    			add_location(p, file, 260, 3, 7890);
+    			add_location(p, file, 268, 3, 8162);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, p, anchor);
@@ -60647,14 +61743,14 @@ var app = (function () {
     		block,
     		id: create_slide_content_slot_12.name,
     		type: "slot",
-    		source: "(260:2) <svelte:fragment slot=\\\"slide-content\\\">",
+    		source: "(268:2) <svelte:fragment slot=\\\"slide-content\\\">",
     		ctx
     	});
 
     	return block;
     }
 
-    // (267:2) <svelte:fragment slot="slide-title"    >
+    // (278:2) <svelte:fragment slot="slide-title"    >
     function create_slide_title_slot_11(ctx) {
     	let t;
 
@@ -60674,14 +61770,14 @@ var app = (function () {
     		block,
     		id: create_slide_title_slot_11.name,
     		type: "slot",
-    		source: "(267:2) <svelte:fragment slot=\\\"slide-title\\\"    >",
+    		source: "(278:2) <svelte:fragment slot=\\\"slide-title\\\"    >",
     		ctx
     	});
 
     	return block;
     }
 
-    // (270:2) <svelte:fragment slot="slide-content">
+    // (281:2) <svelte:fragment slot="slide-content">
     function create_slide_content_slot_11(ctx) {
     	let ul;
     	let li0;
@@ -60694,17 +61790,17 @@ var app = (function () {
     		c: function create() {
     			ul = element("ul");
     			li0 = element("li");
-    			li0.textContent = "Concrete fails often due to thermal fatigue from exposure to hot and moist environments";
+    			li0.textContent = "Concrete fails often due to thermal fatigue from exposure to hot and\n\t\t\t\t\tmoist environments";
     			t1 = space();
     			li1 = element("li");
     			li1.textContent = "UAE uses concrete in many buildings and infrastructure";
     			t3 = space();
     			li2 = element("li");
-    			li2.textContent = "The UAE is home to one of the largest commercial plane hubs in the word, and the planes often see temperatures of -40°C to -60°C in the air, and temperatures of 50°C on the ground.";
-    			add_location(li0, file, 271, 4, 8245);
-    			add_location(li1, file, 272, 4, 8346);
-    			add_location(li2, file, 273, 4, 8414);
-    			add_location(ul, file, 270, 3, 8236);
+    			li2.textContent = "The UAE is home to one of the largest commercial plane hubs in the\n\t\t\t\t\tword, and the planes often see temperatures of -40°C to -60°C in the\n\t\t\t\t\tair, and temperatures of 50°C on the ground.";
+    			add_location(li0, file, 282, 4, 8523);
+    			add_location(li1, file, 286, 4, 8640);
+    			add_location(li2, file, 287, 4, 8708);
+    			add_location(ul, file, 281, 3, 8514);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, ul, anchor);
@@ -60723,14 +61819,14 @@ var app = (function () {
     		block,
     		id: create_slide_content_slot_11.name,
     		type: "slot",
-    		source: "(270:2) <svelte:fragment slot=\\\"slide-content\\\">",
+    		source: "(281:2) <svelte:fragment slot=\\\"slide-content\\\">",
     		ctx
     	});
 
     	return block;
     }
 
-    // (279:2) <svelte:fragment slot="slide-title"    >
+    // (300:2) <svelte:fragment slot="slide-title"    >
     function create_slide_title_slot_10(ctx) {
     	let t;
 
@@ -60750,14 +61846,14 @@ var app = (function () {
     		block,
     		id: create_slide_title_slot_10.name,
     		type: "slot",
-    		source: "(279:2) <svelte:fragment slot=\\\"slide-title\\\"    >",
+    		source: "(300:2) <svelte:fragment slot=\\\"slide-title\\\"    >",
     		ctx
     	});
 
     	return block;
     }
 
-    // (282:2) <svelte:fragment slot="slide-content">
+    // (303:2) <svelte:fragment slot="slide-content">
     function create_slide_content_slot_10(ctx) {
     	let p;
     	let t1;
@@ -60775,18 +61871,18 @@ var app = (function () {
     			t1 = space();
     			ul = element("ul");
     			li0 = element("li");
-    			li0.textContent = "Our project is a tool to create more sustainable materials that last longer and need less replacing";
+    			li0.textContent = "Our project is a tool to create more sustainable materials that last\n\t\t\t\t\tlonger and need less replacing";
     			t3 = space();
     			li1 = element("li");
     			li1.textContent = "Less materials needed to manufacture this than big machines";
     			t5 = space();
     			li2 = element("li");
-    			li2.textContent = "Can study smaller specimens, unlike furnaces which need large specimens";
-    			add_location(p, file, 282, 3, 8874);
-    			add_location(li0, file, 284, 4, 8931);
-    			add_location(li1, file, 285, 4, 9044);
-    			add_location(li2, file, 286, 4, 9117);
-    			add_location(ul, file, 283, 3, 8922);
+    			li2.textContent = "Can study smaller specimens, unlike furnaces which need large\n\t\t\t\t\tspecimens";
+    			add_location(p, file, 303, 3, 9195);
+    			add_location(li0, file, 305, 4, 9252);
+    			add_location(li1, file, 309, 4, 9381);
+    			add_location(li2, file, 310, 4, 9454);
+    			add_location(ul, file, 304, 3, 9243);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, p, anchor);
@@ -60809,14 +61905,14 @@ var app = (function () {
     		block,
     		id: create_slide_content_slot_10.name,
     		type: "slot",
-    		source: "(282:2) <svelte:fragment slot=\\\"slide-content\\\">",
+    		source: "(303:2) <svelte:fragment slot=\\\"slide-content\\\">",
     		ctx
     	});
 
     	return block;
     }
 
-    // (292:2) <svelte:fragment slot="slide-title"    >
+    // (323:2) <svelte:fragment slot="slide-title">
     function create_slide_title_slot_9(ctx) {
     	let t;
 
@@ -60836,14 +61932,14 @@ var app = (function () {
     		block,
     		id: create_slide_title_slot_9.name,
     		type: "slot",
-    		source: "(292:2) <svelte:fragment slot=\\\"slide-title\\\"    >",
+    		source: "(323:2) <svelte:fragment slot=\\\"slide-title\\\">",
     		ctx
     	});
 
     	return block;
     }
 
-    // (295:2) <svelte:fragment slot="slide-content">
+    // (324:2) <svelte:fragment slot="slide-content">
     function create_slide_content_slot_9(ctx) {
     	let p;
 
@@ -60851,7 +61947,7 @@ var app = (function () {
     		c: function create() {
     			p = element("p");
     			p.textContent = "Problem";
-    			add_location(p, file, 295, 3, 9463);
+    			add_location(p, file, 324, 3, 9819);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, p, anchor);
@@ -60865,14 +61961,14 @@ var app = (function () {
     		block,
     		id: create_slide_content_slot_9.name,
     		type: "slot",
-    		source: "(295:2) <svelte:fragment slot=\\\"slide-content\\\">",
+    		source: "(324:2) <svelte:fragment slot=\\\"slide-content\\\">",
     		ctx
     	});
 
     	return block;
     }
 
-    // (300:2) <svelte:fragment slot="slide-title"    >
+    // (329:2) <svelte:fragment slot="slide-title">
     function create_slide_title_slot_8(ctx) {
     	let t;
 
@@ -60892,14 +61988,14 @@ var app = (function () {
     		block,
     		id: create_slide_title_slot_8.name,
     		type: "slot",
-    		source: "(300:2) <svelte:fragment slot=\\\"slide-title\\\"    >",
+    		source: "(329:2) <svelte:fragment slot=\\\"slide-title\\\">",
     		ctx
     	});
 
     	return block;
     }
 
-    // (303:2) <svelte:fragment slot="slide-content">
+    // (330:2) <svelte:fragment slot="slide-content">
     function create_slide_content_slot_8(ctx) {
     	let p;
 
@@ -60907,7 +62003,7 @@ var app = (function () {
     		c: function create() {
     			p = element("p");
     			p.textContent = "Problem";
-    			add_location(p, file, 303, 3, 9704);
+    			add_location(p, file, 330, 3, 10053);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, p, anchor);
@@ -60921,14 +62017,14 @@ var app = (function () {
     		block,
     		id: create_slide_content_slot_8.name,
     		type: "slot",
-    		source: "(303:2) <svelte:fragment slot=\\\"slide-content\\\">",
+    		source: "(330:2) <svelte:fragment slot=\\\"slide-content\\\">",
     		ctx
     	});
 
     	return block;
     }
 
-    // (308:2) <svelte:fragment slot="slide-title"    >
+    // (338:2) <svelte:fragment slot="slide-title">
     function create_slide_title_slot_7(ctx) {
     	let t;
 
@@ -60948,14 +62044,14 @@ var app = (function () {
     		block,
     		id: create_slide_title_slot_7.name,
     		type: "slot",
-    		source: "(308:2) <svelte:fragment slot=\\\"slide-title\\\"    >",
+    		source: "(338:2) <svelte:fragment slot=\\\"slide-title\\\">",
     		ctx
     	});
 
     	return block;
     }
 
-    // (311:2) <svelte:fragment slot="slide-content">
+    // (339:2) <svelte:fragment slot="slide-content">
     function create_slide_content_slot_7(ctx) {
     	let p;
 
@@ -60963,7 +62059,7 @@ var app = (function () {
     		c: function create() {
     			p = element("p");
     			p.textContent = "Existing solutions";
-    			add_location(p, file, 311, 3, 9963);
+    			add_location(p, file, 339, 3, 10311);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, p, anchor);
@@ -60977,14 +62073,14 @@ var app = (function () {
     		block,
     		id: create_slide_content_slot_7.name,
     		type: "slot",
-    		source: "(311:2) <svelte:fragment slot=\\\"slide-content\\\">",
+    		source: "(339:2) <svelte:fragment slot=\\\"slide-content\\\">",
     		ctx
     	});
 
     	return block;
     }
 
-    // (316:2) <svelte:fragment slot="slide-title"    >
+    // (344:2) <svelte:fragment slot="slide-title"    >
     function create_slide_title_slot_6(ctx) {
     	let t;
 
@@ -61004,14 +62100,14 @@ var app = (function () {
     		block,
     		id: create_slide_title_slot_6.name,
     		type: "slot",
-    		source: "(316:2) <svelte:fragment slot=\\\"slide-title\\\"    >",
+    		source: "(344:2) <svelte:fragment slot=\\\"slide-title\\\"    >",
     		ctx
     	});
 
     	return block;
     }
 
-    // (319:2) <svelte:fragment slot="slide-content">
+    // (347:2) <svelte:fragment slot="slide-content">
     function create_slide_content_slot_6(ctx) {
     	let ul;
     	let li0;
@@ -61024,17 +62120,17 @@ var app = (function () {
     		c: function create() {
     			ul = element("ul");
     			li0 = element("li");
-    			li0.textContent = "Raise and lower temperature: -30°C to 70°C, which is within 30% of the TEC module specifications";
+    			li0.textContent = "Raise and lower temperature: -30°C to 70°C, which is within 30% of the\n\t\t\t\t\tTEC module specifications";
     			t1 = space();
     			li1 = element("li");
-    			li1.textContent = "Do so within a reliable timeframe (specific cycle count and cycle time)";
+    			li1.textContent = "Do so within a reliable timeframe (specific cycle count and cycle\n\t\t\t\t\ttime)";
     			t3 = space();
     			li2 = element("li");
-    			li2.textContent = "Do so without destroying the TEC module (it's rated for a range and cyclecount)";
-    			add_location(li0, file, 320, 4, 10245);
-    			add_location(li1, file, 321, 4, 10355);
-    			add_location(li2, file, 324, 4, 10451);
-    			add_location(ul, file, 319, 3, 10236);
+    			li2.textContent = "Do so without destroying the TEC module (it's rated for a range and\n\t\t\t\t\tcyclecount)";
+    			add_location(li0, file, 348, 4, 10593);
+    			add_location(li1, file, 352, 4, 10719);
+    			add_location(li2, file, 356, 4, 10820);
+    			add_location(ul, file, 347, 3, 10584);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, ul, anchor);
@@ -61053,14 +62149,14 @@ var app = (function () {
     		block,
     		id: create_slide_content_slot_6.name,
     		type: "slot",
-    		source: "(319:2) <svelte:fragment slot=\\\"slide-content\\\">",
+    		source: "(347:2) <svelte:fragment slot=\\\"slide-content\\\">",
     		ctx
     	});
 
     	return block;
     }
 
-    // (332:2) <svelte:fragment slot="slide-title"    >
+    // (369:2) <svelte:fragment slot="slide-title">
     function create_slide_title_slot_5(ctx) {
     	let t;
 
@@ -61080,14 +62176,14 @@ var app = (function () {
     		block,
     		id: create_slide_title_slot_5.name,
     		type: "slot",
-    		source: "(332:2) <svelte:fragment slot=\\\"slide-title\\\"    >",
+    		source: "(369:2) <svelte:fragment slot=\\\"slide-title\\\">",
     		ctx
     	});
 
     	return block;
     }
 
-    // (335:2) <svelte:fragment slot="slide-content">
+    // (370:2) <svelte:fragment slot="slide-content">
     function create_slide_content_slot_5(ctx) {
     	let p;
 
@@ -61095,7 +62191,7 @@ var app = (function () {
     		c: function create() {
     			p = element("p");
     			p.textContent = "Put spinny here";
-    			add_location(p, file, 335, 3, 10800);
+    			add_location(p, file, 370, 3, 11177);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, p, anchor);
@@ -61109,14 +62205,14 @@ var app = (function () {
     		block,
     		id: create_slide_content_slot_5.name,
     		type: "slot",
-    		source: "(335:2) <svelte:fragment slot=\\\"slide-content\\\">",
+    		source: "(370:2) <svelte:fragment slot=\\\"slide-content\\\">",
     		ctx
     	});
 
     	return block;
     }
 
-    // (340:2) <svelte:fragment slot="slide-title"    >
+    // (378:2) <svelte:fragment slot="slide-title">
     function create_slide_title_slot_4(ctx) {
     	let t;
 
@@ -61136,14 +62232,14 @@ var app = (function () {
     		block,
     		id: create_slide_title_slot_4.name,
     		type: "slot",
-    		source: "(340:2) <svelte:fragment slot=\\\"slide-title\\\"    >",
+    		source: "(378:2) <svelte:fragment slot=\\\"slide-title\\\">",
     		ctx
     	});
 
     	return block;
     }
 
-    // (343:2) <svelte:fragment slot="slide-content">
+    // (379:2) <svelte:fragment slot="slide-content">
     function create_slide_content_slot_4(ctx) {
     	let p;
 
@@ -61151,7 +62247,7 @@ var app = (function () {
     		c: function create() {
     			p = element("p");
     			p.textContent = "Make zoom into it";
-    			add_location(p, file, 343, 3, 11063);
+    			add_location(p, file, 379, 3, 11437);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, p, anchor);
@@ -61165,14 +62261,14 @@ var app = (function () {
     		block,
     		id: create_slide_content_slot_4.name,
     		type: "slot",
-    		source: "(343:2) <svelte:fragment slot=\\\"slide-content\\\">",
+    		source: "(379:2) <svelte:fragment slot=\\\"slide-content\\\">",
     		ctx
     	});
 
     	return block;
     }
 
-    // (348:2) <svelte:fragment slot="slide-title"    >
+    // (384:2) <svelte:fragment slot="slide-title">
     function create_slide_title_slot_3(ctx) {
     	let t;
 
@@ -61192,14 +62288,14 @@ var app = (function () {
     		block,
     		id: create_slide_title_slot_3.name,
     		type: "slot",
-    		source: "(348:2) <svelte:fragment slot=\\\"slide-title\\\"    >",
+    		source: "(384:2) <svelte:fragment slot=\\\"slide-title\\\">",
     		ctx
     	});
 
     	return block;
     }
 
-    // (351:2) <svelte:fragment slot="slide-content">
+    // (385:2) <svelte:fragment slot="slide-content">
     function create_slide_content_slot_3(ctx) {
     	let p;
 
@@ -61207,7 +62303,7 @@ var app = (function () {
     		c: function create() {
     			p = element("p");
     			p.textContent = "Make zoom into it";
-    			add_location(p, file, 351, 3, 11327);
+    			add_location(p, file, 385, 3, 11692);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, p, anchor);
@@ -61221,14 +62317,14 @@ var app = (function () {
     		block,
     		id: create_slide_content_slot_3.name,
     		type: "slot",
-    		source: "(351:2) <svelte:fragment slot=\\\"slide-content\\\">",
+    		source: "(385:2) <svelte:fragment slot=\\\"slide-content\\\">",
     		ctx
     	});
 
     	return block;
     }
 
-    // (356:2) <svelte:fragment slot="slide-title"    >
+    // (390:2) <svelte:fragment slot="slide-title">
     function create_slide_title_slot_2(ctx) {
     	let t;
 
@@ -61248,14 +62344,14 @@ var app = (function () {
     		block,
     		id: create_slide_title_slot_2.name,
     		type: "slot",
-    		source: "(356:2) <svelte:fragment slot=\\\"slide-title\\\"    >",
+    		source: "(390:2) <svelte:fragment slot=\\\"slide-title\\\">",
     		ctx
     	});
 
     	return block;
     }
 
-    // (359:2) <svelte:fragment slot="slide-content">
+    // (391:2) <svelte:fragment slot="slide-content">
     function create_slide_content_slot_2(ctx) {
     	let p;
 
@@ -61263,7 +62359,7 @@ var app = (function () {
     		c: function create() {
     			p = element("p");
     			p.textContent = "Make zoom into it";
-    			add_location(p, file, 359, 3, 11588);
+    			add_location(p, file, 391, 3, 11944);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, p, anchor);
@@ -61277,14 +62373,14 @@ var app = (function () {
     		block,
     		id: create_slide_content_slot_2.name,
     		type: "slot",
-    		source: "(359:2) <svelte:fragment slot=\\\"slide-content\\\">",
+    		source: "(391:2) <svelte:fragment slot=\\\"slide-content\\\">",
     		ctx
     	});
 
     	return block;
     }
 
-    // (364:2) <svelte:fragment slot="slide-title"    >
+    // (396:2) <svelte:fragment slot="slide-title">
     function create_slide_title_slot_1(ctx) {
     	let t;
 
@@ -61304,14 +62400,14 @@ var app = (function () {
     		block,
     		id: create_slide_title_slot_1.name,
     		type: "slot",
-    		source: "(364:2) <svelte:fragment slot=\\\"slide-title\\\"    >",
+    		source: "(396:2) <svelte:fragment slot=\\\"slide-title\\\">",
     		ctx
     	});
 
     	return block;
     }
 
-    // (367:2) <svelte:fragment slot="slide-content">
+    // (397:2) <svelte:fragment slot="slide-content">
     function create_slide_content_slot_1(ctx) {
     	let p;
 
@@ -61319,7 +62415,7 @@ var app = (function () {
     		c: function create() {
     			p = element("p");
     			p.textContent = "Make zoom into it";
-    			add_location(p, file, 367, 3, 11842);
+    			add_location(p, file, 397, 3, 12189);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, p, anchor);
@@ -61333,14 +62429,14 @@ var app = (function () {
     		block,
     		id: create_slide_content_slot_1.name,
     		type: "slot",
-    		source: "(367:2) <svelte:fragment slot=\\\"slide-content\\\">",
+    		source: "(397:2) <svelte:fragment slot=\\\"slide-content\\\">",
     		ctx
     	});
 
     	return block;
     }
 
-    // (372:2) <svelte:fragment slot="slide-title"    >
+    // (402:2) <svelte:fragment slot="slide-title">
     function create_slide_title_slot(ctx) {
     	let t;
 
@@ -61360,14 +62456,14 @@ var app = (function () {
     		block,
     		id: create_slide_title_slot.name,
     		type: "slot",
-    		source: "(372:2) <svelte:fragment slot=\\\"slide-title\\\"    >",
+    		source: "(402:2) <svelte:fragment slot=\\\"slide-title\\\">",
     		ctx
     	});
 
     	return block;
     }
 
-    // (375:2) <svelte:fragment slot="slide-content">
+    // (403:2) <svelte:fragment slot="slide-content">
     function create_slide_content_slot(ctx) {
     	let p;
 
@@ -61375,7 +62471,7 @@ var app = (function () {
     		c: function create() {
     			p = element("p");
     			p.textContent = "Make zoom into it";
-    			add_location(p, file, 375, 3, 12095);
+    			add_location(p, file, 403, 3, 12433);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, p, anchor);
@@ -61389,7 +62485,7 @@ var app = (function () {
     		block,
     		id: create_slide_content_slot.name,
     		type: "slot",
-    		source: "(375:2) <svelte:fragment slot=\\\"slide-content\\\">",
+    		source: "(403:2) <svelte:fragment slot=\\\"slide-content\\\">",
     		ctx
     	});
 
@@ -61405,68 +62501,137 @@ var app = (function () {
 
     	let scrolling_timeout;
     	let logo;
+    	let updating_headings;
     	let t0;
-    	let main;
-    	let presentation;
+    	let pagenumber;
+    	let updating_headings_1;
     	let updating_presentation_mode;
     	let t1;
-    	let slide0;
+    	let scrolltoslide;
+    	let updating_headings_2;
+    	let updating_presentation_mode_1;
     	let t2;
+    	let main;
+    	let presentation;
+    	let updating_presentation_mode_2;
+    	let t3;
+    	let slide0;
+    	let t4;
     	let slide1;
     	let updating_short_name;
-    	let t3;
+    	let t5;
     	let slide2;
     	let updating_short_name_1;
-    	let t4;
+    	let t6;
     	let slide3;
     	let updating_short_name_2;
-    	let t5;
+    	let t7;
     	let slide4;
     	let updating_short_name_3;
-    	let t6;
+    	let t8;
     	let slide5;
     	let updating_short_name_4;
-    	let t7;
+    	let t9;
     	let slide6;
     	let updating_short_name_5;
-    	let t8;
+    	let t10;
     	let slide7;
     	let updating_short_name_6;
-    	let t9;
+    	let t11;
     	let slide8;
     	let updating_short_name_7;
-    	let t10;
+    	let t12;
     	let slide9;
     	let updating_short_name_8;
-    	let t11;
+    	let t13;
     	let slide10;
     	let updating_short_name_9;
-    	let t12;
+    	let t14;
     	let slide11;
     	let updating_short_name_10;
-    	let t13;
+    	let t15;
     	let slide12;
     	let updating_short_name_11;
-    	let t14;
+    	let t16;
     	let slide13;
     	let updating_short_name_12;
-    	let t15;
+    	let t17;
     	let slide14;
     	let updating_short_name_13;
-    	let t16;
+    	let t18;
     	let slide15;
     	let updating_short_name_14;
-    	let t17;
+    	let t19;
     	let slide16;
     	let updating_short_name_15;
     	let current;
     	let mounted;
     	let dispose;
     	add_render_callback(/*onwindowscroll*/ ctx[5]);
-    	logo = new Logo({ $$inline: true });
+
+    	function logo_headings_binding(value) {
+    		/*logo_headings_binding*/ ctx[6](value);
+    	}
+
+    	let logo_props = {};
+
+    	if (/*headings*/ ctx[1] !== void 0) {
+    		logo_props.headings = /*headings*/ ctx[1];
+    	}
+
+    	logo = new Logo({ props: logo_props, $$inline: true });
+    	binding_callbacks.push(() => bind(logo, 'headings', logo_headings_binding));
+
+    	function pagenumber_headings_binding(value) {
+    		/*pagenumber_headings_binding*/ ctx[7](value);
+    	}
+
+    	function pagenumber_presentation_mode_binding(value) {
+    		/*pagenumber_presentation_mode_binding*/ ctx[8](value);
+    	}
+
+    	let pagenumber_props = {};
+
+    	if (/*headings*/ ctx[1] !== void 0) {
+    		pagenumber_props.headings = /*headings*/ ctx[1];
+    	}
+
+    	if (/*presentation_mode*/ ctx[2] !== void 0) {
+    		pagenumber_props.presentation_mode = /*presentation_mode*/ ctx[2];
+    	}
+
+    	pagenumber = new PageNumber({ props: pagenumber_props, $$inline: true });
+    	binding_callbacks.push(() => bind(pagenumber, 'headings', pagenumber_headings_binding));
+    	binding_callbacks.push(() => bind(pagenumber, 'presentation_mode', pagenumber_presentation_mode_binding));
+
+    	function scrolltoslide_headings_binding(value) {
+    		/*scrolltoslide_headings_binding*/ ctx[9](value);
+    	}
+
+    	function scrolltoslide_presentation_mode_binding(value) {
+    		/*scrolltoslide_presentation_mode_binding*/ ctx[10](value);
+    	}
+
+    	let scrolltoslide_props = {};
+
+    	if (/*headings*/ ctx[1] !== void 0) {
+    		scrolltoslide_props.headings = /*headings*/ ctx[1];
+    	}
+
+    	if (/*presentation_mode*/ ctx[2] !== void 0) {
+    		scrolltoslide_props.presentation_mode = /*presentation_mode*/ ctx[2];
+    	}
+
+    	scrolltoslide = new ScrollToSlide({
+    			props: scrolltoslide_props,
+    			$$inline: true
+    		});
+
+    	binding_callbacks.push(() => bind(scrolltoslide, 'headings', scrolltoslide_headings_binding));
+    	binding_callbacks.push(() => bind(scrolltoslide, 'presentation_mode', scrolltoslide_presentation_mode_binding));
 
     	function presentation_presentation_mode_binding(value) {
-    		/*presentation_presentation_mode_binding*/ ctx[6](value);
+    		/*presentation_presentation_mode_binding*/ ctx[11](value);
     	}
 
     	let presentation_props = {};
@@ -61498,7 +62663,7 @@ var app = (function () {
     		});
 
     	function slide1_short_name_binding(value) {
-    		/*slide1_short_name_binding*/ ctx[7](value);
+    		/*slide1_short_name_binding*/ ctx[12](value);
     	}
 
     	let slide1_props = {
@@ -61518,7 +62683,7 @@ var app = (function () {
     	binding_callbacks.push(() => bind(slide1, 'short_name', slide1_short_name_binding));
 
     	function slide2_short_name_binding(value) {
-    		/*slide2_short_name_binding*/ ctx[8](value);
+    		/*slide2_short_name_binding*/ ctx[13](value);
     	}
 
     	let slide2_props = {
@@ -61538,7 +62703,7 @@ var app = (function () {
     	binding_callbacks.push(() => bind(slide2, 'short_name', slide2_short_name_binding));
 
     	function slide3_short_name_binding(value) {
-    		/*slide3_short_name_binding*/ ctx[9](value);
+    		/*slide3_short_name_binding*/ ctx[14](value);
     	}
 
     	let slide3_props = {
@@ -61558,7 +62723,7 @@ var app = (function () {
     	binding_callbacks.push(() => bind(slide3, 'short_name', slide3_short_name_binding));
 
     	function slide4_short_name_binding(value) {
-    		/*slide4_short_name_binding*/ ctx[10](value);
+    		/*slide4_short_name_binding*/ ctx[15](value);
     	}
 
     	let slide4_props = {
@@ -61579,7 +62744,7 @@ var app = (function () {
     	binding_callbacks.push(() => bind(slide4, 'short_name', slide4_short_name_binding));
 
     	function slide5_short_name_binding(value) {
-    		/*slide5_short_name_binding*/ ctx[11](value);
+    		/*slide5_short_name_binding*/ ctx[16](value);
     	}
 
     	let slide5_props = {
@@ -61599,7 +62764,7 @@ var app = (function () {
     	binding_callbacks.push(() => bind(slide5, 'short_name', slide5_short_name_binding));
 
     	function slide6_short_name_binding(value) {
-    		/*slide6_short_name_binding*/ ctx[12](value);
+    		/*slide6_short_name_binding*/ ctx[17](value);
     	}
 
     	let slide6_props = {
@@ -61619,7 +62784,7 @@ var app = (function () {
     	binding_callbacks.push(() => bind(slide6, 'short_name', slide6_short_name_binding));
 
     	function slide7_short_name_binding(value) {
-    		/*slide7_short_name_binding*/ ctx[13](value);
+    		/*slide7_short_name_binding*/ ctx[18](value);
     	}
 
     	let slide7_props = {
@@ -61640,7 +62805,7 @@ var app = (function () {
     	binding_callbacks.push(() => bind(slide7, 'short_name', slide7_short_name_binding));
 
     	function slide8_short_name_binding(value) {
-    		/*slide8_short_name_binding*/ ctx[14](value);
+    		/*slide8_short_name_binding*/ ctx[19](value);
     	}
 
     	let slide8_props = {
@@ -61660,7 +62825,7 @@ var app = (function () {
     	binding_callbacks.push(() => bind(slide8, 'short_name', slide8_short_name_binding));
 
     	function slide9_short_name_binding(value) {
-    		/*slide9_short_name_binding*/ ctx[15](value);
+    		/*slide9_short_name_binding*/ ctx[20](value);
     	}
 
     	let slide9_props = {
@@ -61680,7 +62845,7 @@ var app = (function () {
     	binding_callbacks.push(() => bind(slide9, 'short_name', slide9_short_name_binding));
 
     	function slide10_short_name_binding(value) {
-    		/*slide10_short_name_binding*/ ctx[16](value);
+    		/*slide10_short_name_binding*/ ctx[21](value);
     	}
 
     	let slide10_props = {
@@ -61700,7 +62865,7 @@ var app = (function () {
     	binding_callbacks.push(() => bind(slide10, 'short_name', slide10_short_name_binding));
 
     	function slide11_short_name_binding(value) {
-    		/*slide11_short_name_binding*/ ctx[17](value);
+    		/*slide11_short_name_binding*/ ctx[22](value);
     	}
 
     	let slide11_props = {
@@ -61721,7 +62886,7 @@ var app = (function () {
     	binding_callbacks.push(() => bind(slide11, 'short_name', slide11_short_name_binding));
 
     	function slide12_short_name_binding(value) {
-    		/*slide12_short_name_binding*/ ctx[18](value);
+    		/*slide12_short_name_binding*/ ctx[23](value);
     	}
 
     	let slide12_props = {
@@ -61741,7 +62906,7 @@ var app = (function () {
     	binding_callbacks.push(() => bind(slide12, 'short_name', slide12_short_name_binding));
 
     	function slide13_short_name_binding(value) {
-    		/*slide13_short_name_binding*/ ctx[19](value);
+    		/*slide13_short_name_binding*/ ctx[24](value);
     	}
 
     	let slide13_props = {
@@ -61761,7 +62926,7 @@ var app = (function () {
     	binding_callbacks.push(() => bind(slide13, 'short_name', slide13_short_name_binding));
 
     	function slide14_short_name_binding(value) {
-    		/*slide14_short_name_binding*/ ctx[20](value);
+    		/*slide14_short_name_binding*/ ctx[25](value);
     	}
 
     	let slide14_props = {
@@ -61781,7 +62946,7 @@ var app = (function () {
     	binding_callbacks.push(() => bind(slide14, 'short_name', slide14_short_name_binding));
 
     	function slide15_short_name_binding(value) {
-    		/*slide15_short_name_binding*/ ctx[21](value);
+    		/*slide15_short_name_binding*/ ctx[26](value);
     	}
 
     	let slide15_props = {
@@ -61801,7 +62966,7 @@ var app = (function () {
     	binding_callbacks.push(() => bind(slide15, 'short_name', slide15_short_name_binding));
 
     	function slide16_short_name_binding(value) {
-    		/*slide16_short_name_binding*/ ctx[22](value);
+    		/*slide16_short_name_binding*/ ctx[27](value);
     	}
 
     	let slide16_props = {
@@ -61824,44 +62989,48 @@ var app = (function () {
     		c: function create() {
     			create_component(logo.$$.fragment);
     			t0 = space();
+    			create_component(pagenumber.$$.fragment);
+    			t1 = space();
+    			create_component(scrolltoslide.$$.fragment);
+    			t2 = space();
     			main = element("main");
     			create_component(presentation.$$.fragment);
-    			t1 = space();
-    			create_component(slide0.$$.fragment);
-    			t2 = space();
-    			create_component(slide1.$$.fragment);
     			t3 = space();
-    			create_component(slide2.$$.fragment);
+    			create_component(slide0.$$.fragment);
     			t4 = space();
-    			create_component(slide3.$$.fragment);
+    			create_component(slide1.$$.fragment);
     			t5 = space();
-    			create_component(slide4.$$.fragment);
+    			create_component(slide2.$$.fragment);
     			t6 = space();
-    			create_component(slide5.$$.fragment);
+    			create_component(slide3.$$.fragment);
     			t7 = space();
-    			create_component(slide6.$$.fragment);
+    			create_component(slide4.$$.fragment);
     			t8 = space();
-    			create_component(slide7.$$.fragment);
+    			create_component(slide5.$$.fragment);
     			t9 = space();
-    			create_component(slide8.$$.fragment);
+    			create_component(slide6.$$.fragment);
     			t10 = space();
-    			create_component(slide9.$$.fragment);
+    			create_component(slide7.$$.fragment);
     			t11 = space();
-    			create_component(slide10.$$.fragment);
+    			create_component(slide8.$$.fragment);
     			t12 = space();
-    			create_component(slide11.$$.fragment);
+    			create_component(slide9.$$.fragment);
     			t13 = space();
-    			create_component(slide12.$$.fragment);
+    			create_component(slide10.$$.fragment);
     			t14 = space();
-    			create_component(slide13.$$.fragment);
+    			create_component(slide11.$$.fragment);
     			t15 = space();
-    			create_component(slide14.$$.fragment);
+    			create_component(slide12.$$.fragment);
     			t16 = space();
-    			create_component(slide15.$$.fragment);
+    			create_component(slide13.$$.fragment);
     			t17 = space();
+    			create_component(slide14.$$.fragment);
+    			t18 = space();
+    			create_component(slide15.$$.fragment);
+    			t19 = space();
     			create_component(slide16.$$.fragment);
     			attr_dev(main, "class", "svelte-1778wcc");
-    			add_location(main, file, 192, 0, 5757);
+    			add_location(main, file, 196, 0, 5974);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -61869,41 +63038,45 @@ var app = (function () {
     		m: function mount(target, anchor) {
     			mount_component(logo, target, anchor);
     			insert_dev(target, t0, anchor);
+    			mount_component(pagenumber, target, anchor);
+    			insert_dev(target, t1, anchor);
+    			mount_component(scrolltoslide, target, anchor);
+    			insert_dev(target, t2, anchor);
     			insert_dev(target, main, anchor);
     			mount_component(presentation, main, null);
-    			append_dev(main, t1);
-    			mount_component(slide0, main, null);
-    			append_dev(main, t2);
-    			mount_component(slide1, main, null);
     			append_dev(main, t3);
-    			mount_component(slide2, main, null);
+    			mount_component(slide0, main, null);
     			append_dev(main, t4);
-    			mount_component(slide3, main, null);
+    			mount_component(slide1, main, null);
     			append_dev(main, t5);
-    			mount_component(slide4, main, null);
+    			mount_component(slide2, main, null);
     			append_dev(main, t6);
-    			mount_component(slide5, main, null);
+    			mount_component(slide3, main, null);
     			append_dev(main, t7);
-    			mount_component(slide6, main, null);
+    			mount_component(slide4, main, null);
     			append_dev(main, t8);
-    			mount_component(slide7, main, null);
+    			mount_component(slide5, main, null);
     			append_dev(main, t9);
-    			mount_component(slide8, main, null);
+    			mount_component(slide6, main, null);
     			append_dev(main, t10);
-    			mount_component(slide9, main, null);
+    			mount_component(slide7, main, null);
     			append_dev(main, t11);
-    			mount_component(slide10, main, null);
+    			mount_component(slide8, main, null);
     			append_dev(main, t12);
-    			mount_component(slide11, main, null);
+    			mount_component(slide9, main, null);
     			append_dev(main, t13);
-    			mount_component(slide12, main, null);
+    			mount_component(slide10, main, null);
     			append_dev(main, t14);
-    			mount_component(slide13, main, null);
+    			mount_component(slide11, main, null);
     			append_dev(main, t15);
-    			mount_component(slide14, main, null);
+    			mount_component(slide12, main, null);
     			append_dev(main, t16);
-    			mount_component(slide15, main, null);
+    			mount_component(slide13, main, null);
     			append_dev(main, t17);
+    			mount_component(slide14, main, null);
+    			append_dev(main, t18);
+    			mount_component(slide15, main, null);
+    			append_dev(main, t19);
     			mount_component(slide16, main, null);
     			current = true;
 
@@ -61929,25 +63102,64 @@ var app = (function () {
     				scrolling_timeout = setTimeout(clear_scrolling, 100);
     			}
 
-    			const presentation_changes = {};
+    			const logo_changes = {};
+
+    			if (!updating_headings && dirty & /*headings*/ 2) {
+    				updating_headings = true;
+    				logo_changes.headings = /*headings*/ ctx[1];
+    				add_flush_callback(() => updating_headings = false);
+    			}
+
+    			logo.$set(logo_changes);
+    			const pagenumber_changes = {};
+
+    			if (!updating_headings_1 && dirty & /*headings*/ 2) {
+    				updating_headings_1 = true;
+    				pagenumber_changes.headings = /*headings*/ ctx[1];
+    				add_flush_callback(() => updating_headings_1 = false);
+    			}
 
     			if (!updating_presentation_mode && dirty & /*presentation_mode*/ 4) {
     				updating_presentation_mode = true;
-    				presentation_changes.presentation_mode = /*presentation_mode*/ ctx[2];
+    				pagenumber_changes.presentation_mode = /*presentation_mode*/ ctx[2];
     				add_flush_callback(() => updating_presentation_mode = false);
+    			}
+
+    			pagenumber.$set(pagenumber_changes);
+    			const scrolltoslide_changes = {};
+
+    			if (!updating_headings_2 && dirty & /*headings*/ 2) {
+    				updating_headings_2 = true;
+    				scrolltoslide_changes.headings = /*headings*/ ctx[1];
+    				add_flush_callback(() => updating_headings_2 = false);
+    			}
+
+    			if (!updating_presentation_mode_1 && dirty & /*presentation_mode*/ 4) {
+    				updating_presentation_mode_1 = true;
+    				scrolltoslide_changes.presentation_mode = /*presentation_mode*/ ctx[2];
+    				add_flush_callback(() => updating_presentation_mode_1 = false);
+    			}
+
+    			scrolltoslide.$set(scrolltoslide_changes);
+    			const presentation_changes = {};
+
+    			if (!updating_presentation_mode_2 && dirty & /*presentation_mode*/ 4) {
+    				updating_presentation_mode_2 = true;
+    				presentation_changes.presentation_mode = /*presentation_mode*/ ctx[2];
+    				add_flush_callback(() => updating_presentation_mode_2 = false);
     			}
 
     			presentation.$set(presentation_changes);
     			const slide0_changes = {};
 
-    			if (dirty & /*$$scope*/ 33554432) {
+    			if (dirty & /*$$scope*/ 1073741824) {
     				slide0_changes.$$scope = { dirty, ctx };
     			}
 
     			slide0.$set(slide0_changes);
     			const slide1_changes = {};
 
-    			if (dirty & /*$$scope*/ 33554432) {
+    			if (dirty & /*$$scope*/ 1073741824) {
     				slide1_changes.$$scope = { dirty, ctx };
     			}
 
@@ -61960,7 +63172,7 @@ var app = (function () {
     			slide1.$set(slide1_changes);
     			const slide2_changes = {};
 
-    			if (dirty & /*$$scope*/ 33554432) {
+    			if (dirty & /*$$scope*/ 1073741824) {
     				slide2_changes.$$scope = { dirty, ctx };
     			}
 
@@ -61973,7 +63185,7 @@ var app = (function () {
     			slide2.$set(slide2_changes);
     			const slide3_changes = {};
 
-    			if (dirty & /*$$scope*/ 33554432) {
+    			if (dirty & /*$$scope*/ 1073741824) {
     				slide3_changes.$$scope = { dirty, ctx };
     			}
 
@@ -61986,7 +63198,7 @@ var app = (function () {
     			slide3.$set(slide3_changes);
     			const slide4_changes = {};
 
-    			if (dirty & /*$$scope*/ 33554432) {
+    			if (dirty & /*$$scope*/ 1073741824) {
     				slide4_changes.$$scope = { dirty, ctx };
     			}
 
@@ -61999,7 +63211,7 @@ var app = (function () {
     			slide4.$set(slide4_changes);
     			const slide5_changes = {};
 
-    			if (dirty & /*$$scope*/ 33554432) {
+    			if (dirty & /*$$scope*/ 1073741824) {
     				slide5_changes.$$scope = { dirty, ctx };
     			}
 
@@ -62012,7 +63224,7 @@ var app = (function () {
     			slide5.$set(slide5_changes);
     			const slide6_changes = {};
 
-    			if (dirty & /*$$scope*/ 33554432) {
+    			if (dirty & /*$$scope*/ 1073741824) {
     				slide6_changes.$$scope = { dirty, ctx };
     			}
 
@@ -62025,7 +63237,7 @@ var app = (function () {
     			slide6.$set(slide6_changes);
     			const slide7_changes = {};
 
-    			if (dirty & /*$$scope*/ 33554432) {
+    			if (dirty & /*$$scope*/ 1073741824) {
     				slide7_changes.$$scope = { dirty, ctx };
     			}
 
@@ -62038,7 +63250,7 @@ var app = (function () {
     			slide7.$set(slide7_changes);
     			const slide8_changes = {};
 
-    			if (dirty & /*$$scope*/ 33554432) {
+    			if (dirty & /*$$scope*/ 1073741824) {
     				slide8_changes.$$scope = { dirty, ctx };
     			}
 
@@ -62051,7 +63263,7 @@ var app = (function () {
     			slide8.$set(slide8_changes);
     			const slide9_changes = {};
 
-    			if (dirty & /*$$scope*/ 33554432) {
+    			if (dirty & /*$$scope*/ 1073741824) {
     				slide9_changes.$$scope = { dirty, ctx };
     			}
 
@@ -62064,7 +63276,7 @@ var app = (function () {
     			slide9.$set(slide9_changes);
     			const slide10_changes = {};
 
-    			if (dirty & /*$$scope*/ 33554432) {
+    			if (dirty & /*$$scope*/ 1073741824) {
     				slide10_changes.$$scope = { dirty, ctx };
     			}
 
@@ -62077,7 +63289,7 @@ var app = (function () {
     			slide10.$set(slide10_changes);
     			const slide11_changes = {};
 
-    			if (dirty & /*$$scope*/ 33554432) {
+    			if (dirty & /*$$scope*/ 1073741824) {
     				slide11_changes.$$scope = { dirty, ctx };
     			}
 
@@ -62090,7 +63302,7 @@ var app = (function () {
     			slide11.$set(slide11_changes);
     			const slide12_changes = {};
 
-    			if (dirty & /*$$scope*/ 33554432) {
+    			if (dirty & /*$$scope*/ 1073741824) {
     				slide12_changes.$$scope = { dirty, ctx };
     			}
 
@@ -62103,7 +63315,7 @@ var app = (function () {
     			slide12.$set(slide12_changes);
     			const slide13_changes = {};
 
-    			if (dirty & /*$$scope*/ 33554432) {
+    			if (dirty & /*$$scope*/ 1073741824) {
     				slide13_changes.$$scope = { dirty, ctx };
     			}
 
@@ -62116,7 +63328,7 @@ var app = (function () {
     			slide13.$set(slide13_changes);
     			const slide14_changes = {};
 
-    			if (dirty & /*$$scope*/ 33554432) {
+    			if (dirty & /*$$scope*/ 1073741824) {
     				slide14_changes.$$scope = { dirty, ctx };
     			}
 
@@ -62129,7 +63341,7 @@ var app = (function () {
     			slide14.$set(slide14_changes);
     			const slide15_changes = {};
 
-    			if (dirty & /*$$scope*/ 33554432) {
+    			if (dirty & /*$$scope*/ 1073741824) {
     				slide15_changes.$$scope = { dirty, ctx };
     			}
 
@@ -62142,7 +63354,7 @@ var app = (function () {
     			slide15.$set(slide15_changes);
     			const slide16_changes = {};
 
-    			if (dirty & /*$$scope*/ 33554432) {
+    			if (dirty & /*$$scope*/ 1073741824) {
     				slide16_changes.$$scope = { dirty, ctx };
     			}
 
@@ -62157,6 +63369,8 @@ var app = (function () {
     		i: function intro(local) {
     			if (current) return;
     			transition_in(logo.$$.fragment, local);
+    			transition_in(pagenumber.$$.fragment, local);
+    			transition_in(scrolltoslide.$$.fragment, local);
     			transition_in(presentation.$$.fragment, local);
     			transition_in(slide0.$$.fragment, local);
     			transition_in(slide1.$$.fragment, local);
@@ -62179,6 +63393,8 @@ var app = (function () {
     		},
     		o: function outro(local) {
     			transition_out(logo.$$.fragment, local);
+    			transition_out(pagenumber.$$.fragment, local);
+    			transition_out(scrolltoslide.$$.fragment, local);
     			transition_out(presentation.$$.fragment, local);
     			transition_out(slide0.$$.fragment, local);
     			transition_out(slide1.$$.fragment, local);
@@ -62202,6 +63418,10 @@ var app = (function () {
     		d: function destroy(detaching) {
     			destroy_component(logo, detaching);
     			if (detaching) detach_dev(t0);
+    			destroy_component(pagenumber, detaching);
+    			if (detaching) detach_dev(t1);
+    			destroy_component(scrolltoslide, detaching);
+    			if (detaching) detach_dev(t2);
     			if (detaching) detach_dev(main);
     			destroy_component(presentation);
     			destroy_component(slide0);
@@ -62330,6 +63550,31 @@ var app = (function () {
     		$$invalidate(0, y = window_1.pageYOffset);
     	}
 
+    	function logo_headings_binding(value) {
+    		headings = value;
+    		$$invalidate(1, headings);
+    	}
+
+    	function pagenumber_headings_binding(value) {
+    		headings = value;
+    		$$invalidate(1, headings);
+    	}
+
+    	function pagenumber_presentation_mode_binding(value) {
+    		presentation_mode = value;
+    		$$invalidate(2, presentation_mode);
+    	}
+
+    	function scrolltoslide_headings_binding(value) {
+    		headings = value;
+    		$$invalidate(1, headings);
+    	}
+
+    	function scrolltoslide_presentation_mode_binding(value) {
+    		presentation_mode = value;
+    		$$invalidate(2, presentation_mode);
+    	}
+
     	function presentation_presentation_mode_binding(value) {
     		presentation_mode = value;
     		$$invalidate(2, presentation_mode);
@@ -62454,6 +63699,8 @@ var app = (function () {
     		Presentation,
     		Logo,
     		TecModule,
+    		PageNumber,
+    		ScrollToSlide,
     		storedTheme,
     		theme,
     		y,
@@ -62501,6 +63748,11 @@ var app = (function () {
     		handle_keys,
     		waited,
     		onwindowscroll,
+    		logo_headings_binding,
+    		pagenumber_headings_binding,
+    		pagenumber_presentation_mode_binding,
+    		scrolltoslide_headings_binding,
+    		scrolltoslide_presentation_mode_binding,
     		presentation_presentation_mode_binding,
     		slide1_short_name_binding,
     		slide2_short_name_binding,

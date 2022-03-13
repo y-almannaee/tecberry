@@ -88,6 +88,8 @@
 	import Logo from "./Logo.svelte";
 
 	import TecModule from "./TecModule.svelte";
+	import PageNumber from "./PageNumber.svelte";
+	import ScrollToSlide from "./ScrollToSlide.svelte";
 
 	const storedTheme = localStorage.getItem("theme");
 	const theme = writable(storedTheme);
@@ -198,7 +200,9 @@
 
 <svelte:window on:keydown="{handle_keys}" bind:scrollY="{y}" />
 
-<Logo />
+<Logo bind:headings />
+<PageNumber bind:headings bind:presentation_mode/>
+<ScrollToSlide bind:headings bind:presentation_mode/>
 <main>
 	<Presentation bind:presentation_mode />
 	<Slide id_slide="title-card" short_name="" capstone="{true}">
@@ -256,15 +260,19 @@
 				basically a heat pump.
 			</p>
 			<TecModule
-				width="360"
-				height="360"
+				width="{window.innerWidth * 0.9}"
+				height="{window.innerHeight * 0.9}"
 				bg_color="#eeeeff"
 				cube_color="#ff3366"
 				lights_color="#99ffff"
 			/>
 		</svelte:fragment>
 	</Slide>
-	<Slide id_slide="our-idea" bind:short_name="{headings[headings.length]}" capstone={true}>
+	<Slide
+		id_slide="our-idea"
+		bind:short_name="{headings[headings.length]}"
+		capstone="{true}"
+	>
 		<svelte:fragment slot="slide-title">Our Idea</svelte:fragment>
 		<svelte:fragment slot="slide-content">
 			<p>
@@ -272,51 +280,71 @@
 			</p>
 		</svelte:fragment>
 	</Slide>
-	<Slide id_slide="relevance-to-region" bind:short_name="{headings[headings.length]}">
+	<Slide
+		id_slide="relevance-to-region"
+		bind:short_name="{headings[headings.length]}"
+	>
 		<svelte:fragment slot="slide-title"
 			>How is this relevant to the region?</svelte:fragment
 		>
 		<svelte:fragment slot="slide-content">
 			<ul>
-				<li>Concrete fails often due to thermal fatigue from exposure to hot and moist environments</li>
+				<li>
+					Concrete fails often due to thermal fatigue from exposure to hot and
+					moist environments
+				</li>
 				<li>UAE uses concrete in many buildings and infrastructure</li>
-				<li>The UAE is home to one of the largest commercial plane hubs in the word, and the planes often see temperatures of -40°C to -60°C in the air, and temperatures of 50°C on the ground.</li>
+				<li>
+					The UAE is home to one of the largest commercial plane hubs in the
+					word, and the planes often see temperatures of -40°C to -60°C in the
+					air, and temperatures of 50°C on the ground.
+				</li>
 			</ul>
 		</svelte:fragment>
 	</Slide>
-	<Slide id_slide="environmental-impact" bind:short_name="{headings[headings.length]}">
+	<Slide
+		id_slide="environmental-impact"
+		bind:short_name="{headings[headings.length]}"
+	>
 		<svelte:fragment slot="slide-title"
 			>Environmental Impact of our Project</svelte:fragment
 		>
 		<svelte:fragment slot="slide-content">
 			<p>Big chambers = more big environmental</p>
 			<ul>
-				<li>Our project is a tool to create more sustainable materials that last longer and need less replacing</li>
+				<li>
+					Our project is a tool to create more sustainable materials that last
+					longer and need less replacing
+				</li>
 				<li>Less materials needed to manufacture this than big machines</li>
-				<li>Can study smaller specimens, unlike furnaces which need large specimens</li>
+				<li>
+					Can study smaller specimens, unlike furnaces which need large
+					specimens
+				</li>
 			</ul>
 		</svelte:fragment>
 	</Slide>
-	<Slide id_slide="problem-statement" bind:short_name="{headings[headings.length]}" capstone={true}>
-		<svelte:fragment slot="slide-title"
-			>Problem Statement</svelte:fragment
-		>
+	<Slide
+		id_slide="problem-statement"
+		bind:short_name="{headings[headings.length]}"
+		capstone="{true}"
+	>
+		<svelte:fragment slot="slide-title">Problem Statement</svelte:fragment>
 		<svelte:fragment slot="slide-content">
 			<p>Problem</p>
 		</svelte:fragment>
 	</Slide>
 	<Slide id_slide="objectives" bind:short_name="{headings[headings.length]}">
-		<svelte:fragment slot="slide-title"
-			>Objectives</svelte:fragment
-		>
+		<svelte:fragment slot="slide-title">Objectives</svelte:fragment>
 		<svelte:fragment slot="slide-content">
 			<p>Problem</p>
 		</svelte:fragment>
 	</Slide>
-	<Slide id_slide="preeminent-literature" bind:short_name="{headings[headings.length]}">
-		<svelte:fragment slot="slide-title"
-			>Literature Review</svelte:fragment
-		>
+	<Slide
+		id_slide="preeminent-literature"
+		bind:short_name="{headings[headings.length]}"
+	>
+		<svelte:fragment slot="slide-title">Literature Review</svelte:fragment>
 		<svelte:fragment slot="slide-content">
 			<p>Existing solutions</p>
 		</svelte:fragment>
@@ -327,62 +355,62 @@
 		>
 		<svelte:fragment slot="slide-content">
 			<ul>
-				<li>Raise and lower temperature: -30°C to 70°C, which is within 30% of the TEC module specifications</li>
 				<li>
-					Do so within a reliable timeframe (specific cycle count and cycle time)
+					Raise and lower temperature: -30°C to 70°C, which is within 30% of the
+					TEC module specifications
 				</li>
 				<li>
-					Do so without destroying the TEC module (it's rated for a range and cyclecount)
+					Do so within a reliable timeframe (specific cycle count and cycle
+					time)
+				</li>
+				<li>
+					Do so without destroying the TEC module (it's rated for a range and
+					cyclecount)
 				</li>
 			</ul>
 		</svelte:fragment>
 	</Slide>
-	<Slide id_slide="cad-model" bind:short_name="{headings[headings.length]}" capstone={true}>
-		<svelte:fragment slot="slide-title"
-			>CAD Model</svelte:fragment
-		>
+	<Slide
+		id_slide="cad-model"
+		bind:short_name="{headings[headings.length]}"
+		capstone="{true}"
+	>
+		<svelte:fragment slot="slide-title">CAD Model</svelte:fragment>
 		<svelte:fragment slot="slide-content">
-			<p> Put spinny here </p>
+			<p>Put spinny here</p>
 		</svelte:fragment>
 	</Slide>
-	<Slide id_slide="house-of-quality" bind:short_name="{headings[headings.length]}">
-		<svelte:fragment slot="slide-title"
-			>House of Quality</svelte:fragment
-		>
+	<Slide
+		id_slide="house-of-quality"
+		bind:short_name="{headings[headings.length]}"
+	>
+		<svelte:fragment slot="slide-title">House of Quality</svelte:fragment>
 		<svelte:fragment slot="slide-content">
-			<p> Make zoom into it </p>
+			<p>Make zoom into it</p>
 		</svelte:fragment>
 	</Slide>
 	<Slide id_slide="methodology" bind:short_name="{headings[headings.length]}">
-		<svelte:fragment slot="slide-title"
-			>Proposed methodology</svelte:fragment
-		>
+		<svelte:fragment slot="slide-title">Proposed methodology</svelte:fragment>
 		<svelte:fragment slot="slide-content">
-			<p> Make zoom into it </p>
+			<p>Make zoom into it</p>
 		</svelte:fragment>
 	</Slide>
 	<Slide id_slide="management" bind:short_name="{headings[headings.length]}">
-		<svelte:fragment slot="slide-title"
-			>Project Management</svelte:fragment
-		>
+		<svelte:fragment slot="slide-title">Project Management</svelte:fragment>
 		<svelte:fragment slot="slide-content">
-			<p> Make zoom into it </p>
+			<p>Make zoom into it</p>
 		</svelte:fragment>
 	</Slide>
 	<Slide id_slide="gantt-chart" bind:short_name="{headings[headings.length]}">
-		<svelte:fragment slot="slide-title"
-			>Gant chart</svelte:fragment
-		>
+		<svelte:fragment slot="slide-title">Gant chart</svelte:fragment>
 		<svelte:fragment slot="slide-content">
-			<p> Make zoom into it </p>
+			<p>Make zoom into it</p>
 		</svelte:fragment>
 	</Slide>
 	<Slide id_slide="references" bind:short_name="{headings[headings.length]}">
-		<svelte:fragment slot="slide-title"
-			>References</svelte:fragment
-		>
+		<svelte:fragment slot="slide-title">References</svelte:fragment>
 		<svelte:fragment slot="slide-content">
-			<p> Make zoom into it </p>
+			<p>Make zoom into it</p>
 		</svelte:fragment>
 	</Slide>
 </main>

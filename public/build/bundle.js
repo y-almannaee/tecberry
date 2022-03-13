@@ -249,59 +249,6 @@ var app = (function () {
             node.style.setProperty(key, value, important ? 'important' : '');
         }
     }
-    // unfortunately this can't be a constant as that wouldn't be tree-shakeable
-    // so we cache the result instead
-    let crossorigin;
-    function is_crossorigin() {
-        if (crossorigin === undefined) {
-            crossorigin = false;
-            try {
-                if (typeof window !== 'undefined' && window.parent) {
-                    void window.parent.document;
-                }
-            }
-            catch (error) {
-                crossorigin = true;
-            }
-        }
-        return crossorigin;
-    }
-    function add_resize_listener(node, fn) {
-        const computed_style = getComputedStyle(node);
-        if (computed_style.position === 'static') {
-            node.style.position = 'relative';
-        }
-        const iframe = element('iframe');
-        iframe.setAttribute('style', 'display: block; position: absolute; top: 0; left: 0; width: 100%; height: 100%; ' +
-            'overflow: hidden; border: 0; opacity: 0; pointer-events: none; z-index: -1;');
-        iframe.setAttribute('aria-hidden', 'true');
-        iframe.tabIndex = -1;
-        const crossorigin = is_crossorigin();
-        let unsubscribe;
-        if (crossorigin) {
-            iframe.src = "data:text/html,<script>onresize=function(){parent.postMessage(0,'*')}</script>";
-            unsubscribe = listen(window, 'message', (event) => {
-                if (event.source === iframe.contentWindow)
-                    fn();
-            });
-        }
-        else {
-            iframe.src = 'about:blank';
-            iframe.onload = () => {
-                unsubscribe = listen(iframe.contentWindow, 'resize', fn);
-            };
-        }
-        append(node, iframe);
-        return () => {
-            if (crossorigin) {
-                unsubscribe();
-            }
-            else if (unsubscribe && iframe.contentWindow) {
-                unsubscribe();
-            }
-            detach(iframe);
-        };
-    }
     function toggle_class(element, name, toggle) {
         element.classList[toggle ? 'add' : 'remove'](name);
     }
@@ -60551,59 +60498,51 @@ var app = (function () {
     const file$4 = "src/TecModule.svelte";
 
     function create_fragment$5(ctx) {
-    	let div;
     	let canvas;
     	let t;
-    	let div_resize_listener;
     	let mounted;
     	let dispose;
 
     	const block = {
     		c: function create() {
-    			div = element("div");
     			canvas = element("canvas");
     			t = text("Your browser does not support this element.");
     			attr_dev(canvas, "width", /*width*/ ctx[0]);
     			attr_dev(canvas, "height", /*height*/ ctx[1]);
-    			add_location(canvas, file$4, 121, 1, 3826);
-    			add_render_callback(() => /*div_elementresize_handler*/ ctx[13].call(div));
-    			add_location(div, file$4, 120, 0, 3784);
+    			add_location(canvas, file$4, 119, 0, 3705);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
     		},
     		m: function mount(target, anchor) {
-    			insert_dev(target, div, anchor);
-    			append_dev(div, canvas);
+    			insert_dev(target, canvas, anchor);
     			append_dev(canvas, t);
-    			/*canvas_binding*/ ctx[10](canvas);
-    			div_resize_listener = add_resize_listener(div, /*div_elementresize_handler*/ ctx[13].bind(div));
+    			/*canvas_binding*/ ctx[8](canvas);
 
     			if (!mounted) {
     				dispose = [
-    					listen_dev(window_1$1, "resize", /*resize*/ ctx[6], false, false, false),
-    					listen_dev(canvas, "pointerdown", /*pointerdown_handler*/ ctx[11], false, false, false),
-    					listen_dev(canvas, "pointerup", /*pointerup_handler*/ ctx[12], false, false, false)
+    					listen_dev(window_1$1, "resize", /*resize*/ ctx[4], false, false, false),
+    					listen_dev(canvas, "pointerdown", /*pointerdown_handler*/ ctx[9], false, false, false),
+    					listen_dev(canvas, "pointerup", /*pointerup_handler*/ ctx[10], false, false, false)
     				];
 
     				mounted = true;
     			}
     		},
-    		p: function update(ctx, dirty) {
-    			if (dirty[0] & /*width*/ 1) {
+    		p: function update(ctx, [dirty]) {
+    			if (dirty & /*width*/ 1) {
     				attr_dev(canvas, "width", /*width*/ ctx[0]);
     			}
 
-    			if (dirty[0] & /*height*/ 2) {
+    			if (dirty & /*height*/ 2) {
     				attr_dev(canvas, "height", /*height*/ ctx[1]);
     			}
     		},
     		i: noop,
     		o: noop,
     		d: function destroy(detaching) {
-    			if (detaching) detach_dev(div);
-    			/*canvas_binding*/ ctx[10](null);
-    			div_resize_listener();
+    			if (detaching) detach_dev(canvas);
+    			/*canvas_binding*/ ctx[8](null);
     			mounted = false;
     			run_all(dispose);
     		}
@@ -60637,7 +60576,6 @@ var app = (function () {
     	let { $$slots: slots = {}, $$scope } = $$props;
     	validate_slots('TecModule', slots, []);
     	let { width, height, bg_color, cube_color, lights_color } = $$props;
-    	let clientWidth, clientHeight;
 
     	let camera,
     		scene,
@@ -60649,7 +60587,7 @@ var app = (function () {
 
     	const clock = new Clock();
     	let delta = 0, interval = 1 / 60;
-    	camera = new OrthographicCamera(clientWidth / -scale_c, clientWidth / scale_c, clientHeight / scale_c, clientHeight / -scale_c, 0.01, 10);
+    	camera = new OrthographicCamera(width / -scale_c, width / scale_c, height / scale_c, height / -scale_c, 0.01, 10);
     	camera.position.set(1, 1, 1);
     	camera.lookAt(0, 0, 0);
     	scene = new Scene();
@@ -60703,8 +60641,8 @@ var app = (function () {
     				z = 1;
     				break;
     			case 1:
-    				x = 3;
-    				y = 0;
+    				x = 0;
+    				y = 1;
     				z = 1.5;
     				break;
     		}
@@ -60741,8 +60679,8 @@ var app = (function () {
     	};
 
     	const resize = () => {
-    		renderer.setSize(clientWidth, clientHeight);
-    		camera.aspect = clientWidth / clientHeight;
+    		renderer.setSize(width, height);
+    		camera.aspect = width / height;
     		camera.updateProjectionMatrix();
     	};
 
@@ -60770,31 +60708,24 @@ var app = (function () {
     	function canvas_binding($$value) {
     		binding_callbacks[$$value ? 'unshift' : 'push'](() => {
     			el = $$value;
-    			$$invalidate(4, el);
+    			$$invalidate(2, el);
     		});
     	}
 
     	const pointerdown_handler = () => {
-    		$$invalidate(5, do_rotation = false);
+    		$$invalidate(3, do_rotation = false);
     	};
 
     	const pointerup_handler = () => {
-    		$$invalidate(5, do_rotation = true);
+    		$$invalidate(3, do_rotation = true);
     	};
-
-    	function div_elementresize_handler() {
-    		clientWidth = this.clientWidth;
-    		clientHeight = this.clientHeight;
-    		$$invalidate(2, clientWidth);
-    		$$invalidate(3, clientHeight);
-    	}
 
     	$$self.$$set = $$props => {
     		if ('width' in $$props) $$invalidate(0, width = $$props.width);
     		if ('height' in $$props) $$invalidate(1, height = $$props.height);
-    		if ('bg_color' in $$props) $$invalidate(7, bg_color = $$props.bg_color);
-    		if ('cube_color' in $$props) $$invalidate(8, cube_color = $$props.cube_color);
-    		if ('lights_color' in $$props) $$invalidate(9, lights_color = $$props.lights_color);
+    		if ('bg_color' in $$props) $$invalidate(5, bg_color = $$props.bg_color);
+    		if ('cube_color' in $$props) $$invalidate(6, cube_color = $$props.cube_color);
+    		if ('lights_color' in $$props) $$invalidate(7, lights_color = $$props.lights_color);
     	};
 
     	$$self.$capture_state = () => ({
@@ -60804,8 +60735,6 @@ var app = (function () {
     		bg_color,
     		cube_color,
     		lights_color,
-    		clientWidth,
-    		clientHeight,
     		THREE,
     		ArcballControls,
     		GLTFLoader,
@@ -60837,17 +60766,15 @@ var app = (function () {
     	$$self.$inject_state = $$props => {
     		if ('width' in $$props) $$invalidate(0, width = $$props.width);
     		if ('height' in $$props) $$invalidate(1, height = $$props.height);
-    		if ('bg_color' in $$props) $$invalidate(7, bg_color = $$props.bg_color);
-    		if ('cube_color' in $$props) $$invalidate(8, cube_color = $$props.cube_color);
-    		if ('lights_color' in $$props) $$invalidate(9, lights_color = $$props.lights_color);
-    		if ('clientWidth' in $$props) $$invalidate(2, clientWidth = $$props.clientWidth);
-    		if ('clientHeight' in $$props) $$invalidate(3, clientHeight = $$props.clientHeight);
+    		if ('bg_color' in $$props) $$invalidate(5, bg_color = $$props.bg_color);
+    		if ('cube_color' in $$props) $$invalidate(6, cube_color = $$props.cube_color);
+    		if ('lights_color' in $$props) $$invalidate(7, lights_color = $$props.lights_color);
     		if ('camera' in $$props) camera = $$props.camera;
     		if ('scene' in $$props) scene = $$props.scene;
     		if ('renderer' in $$props) renderer = $$props.renderer;
-    		if ('el' in $$props) $$invalidate(4, el = $$props.el);
+    		if ('el' in $$props) $$invalidate(2, el = $$props.el);
     		if ('arcball_controls' in $$props) arcball_controls = $$props.arcball_controls;
-    		if ('do_rotation' in $$props) $$invalidate(5, do_rotation = $$props.do_rotation);
+    		if ('do_rotation' in $$props) $$invalidate(3, do_rotation = $$props.do_rotation);
     		if ('scale_c' in $$props) scale_c = $$props.scale_c;
     		if ('delta' in $$props) delta = $$props.delta;
     		if ('interval' in $$props) interval = $$props.interval;
@@ -60861,8 +60788,6 @@ var app = (function () {
     	return [
     		width,
     		height,
-    		clientWidth,
-    		clientHeight,
     		el,
     		do_rotation,
     		resize,
@@ -60871,8 +60796,7 @@ var app = (function () {
     		lights_color,
     		canvas_binding,
     		pointerdown_handler,
-    		pointerup_handler,
-    		div_elementresize_handler
+    		pointerup_handler
     	];
     }
 
@@ -60880,22 +60804,13 @@ var app = (function () {
     	constructor(options) {
     		super(options);
 
-    		init(
-    			this,
-    			options,
-    			instance$5,
-    			create_fragment$5,
-    			safe_not_equal,
-    			{
-    				width: 0,
-    				height: 1,
-    				bg_color: 7,
-    				cube_color: 8,
-    				lights_color: 9
-    			},
-    			null,
-    			[-1, -1]
-    		);
+    		init(this, options, instance$5, create_fragment$5, safe_not_equal, {
+    			width: 0,
+    			height: 1,
+    			bg_color: 5,
+    			cube_color: 6,
+    			lights_color: 7
+    		});
 
     		dispatch_dev("SvelteRegisterComponent", {
     			component: this,
@@ -60915,15 +60830,15 @@ var app = (function () {
     			console_1$2.warn("<TecModule> was created without expected prop 'height'");
     		}
 
-    		if (/*bg_color*/ ctx[7] === undefined && !('bg_color' in props)) {
+    		if (/*bg_color*/ ctx[5] === undefined && !('bg_color' in props)) {
     			console_1$2.warn("<TecModule> was created without expected prop 'bg_color'");
     		}
 
-    		if (/*cube_color*/ ctx[8] === undefined && !('cube_color' in props)) {
+    		if (/*cube_color*/ ctx[6] === undefined && !('cube_color' in props)) {
     			console_1$2.warn("<TecModule> was created without expected prop 'cube_color'");
     		}
 
-    		if (/*lights_color*/ ctx[9] === undefined && !('lights_color' in props)) {
+    		if (/*lights_color*/ ctx[7] === undefined && !('lights_color' in props)) {
     			console_1$2.warn("<TecModule> was created without expected prop 'lights_color'");
     		}
     	}
@@ -62573,8 +62488,8 @@ var app = (function () {
 
     	tecmodule = new TecModule({
     			props: {
-    				width: window.innerWidth * 0.9,
-    				height: window.innerHeight * 0.9,
+    				width: 512,
+    				height: 512,
     				bg_color: "#eeeeff",
     				cube_color: "#ff3366",
     				lights_color: "#99ffff"
@@ -62659,7 +62574,7 @@ var app = (function () {
     		c: function create() {
     			p = element("p");
     			p.textContent = "Our idea is to use a bunch to heat and cool stuff to see if it breaks";
-    			add_location(p, file, 293, 3, 8755);
+    			add_location(p, file, 293, 3, 8714);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, p, anchor);
@@ -62727,10 +62642,10 @@ var app = (function () {
     			t3 = space();
     			li2 = element("li");
     			li2.textContent = "The UAE is home to one of the largest commercial plane hubs in the\n\t\t\t\t\tword, and the planes often see temperatures of -40°C to -60°C in the\n\t\t\t\t\tair, and temperatures of 50°C on the ground.";
-    			add_location(li0, file, 307, 4, 9116);
-    			add_location(li1, file, 311, 4, 9233);
-    			add_location(li2, file, 312, 4, 9301);
-    			add_location(ul, file, 306, 3, 9107);
+    			add_location(li0, file, 307, 4, 9075);
+    			add_location(li1, file, 311, 4, 9192);
+    			add_location(li2, file, 312, 4, 9260);
+    			add_location(ul, file, 306, 3, 9066);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, ul, anchor);
@@ -62808,11 +62723,11 @@ var app = (function () {
     			t5 = space();
     			li2 = element("li");
     			li2.textContent = "Can study smaller specimens, unlike furnaces which need large\n\t\t\t\t\tspecimens";
-    			add_location(p, file, 328, 3, 9788);
-    			add_location(li0, file, 330, 4, 9845);
-    			add_location(li1, file, 334, 4, 9974);
-    			add_location(li2, file, 335, 4, 10047);
-    			add_location(ul, file, 329, 3, 9836);
+    			add_location(p, file, 328, 3, 9747);
+    			add_location(li0, file, 330, 4, 9804);
+    			add_location(li1, file, 334, 4, 9933);
+    			add_location(li2, file, 335, 4, 10006);
+    			add_location(ul, file, 329, 3, 9795);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, p, anchor);
@@ -62877,7 +62792,7 @@ var app = (function () {
     		c: function create() {
     			p = element("p");
     			p.textContent = "Problem";
-    			add_location(p, file, 349, 3, 10412);
+    			add_location(p, file, 349, 3, 10371);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, p, anchor);
@@ -62933,7 +62848,7 @@ var app = (function () {
     		c: function create() {
     			p = element("p");
     			p.textContent = "Problem";
-    			add_location(p, file, 355, 3, 10646);
+    			add_location(p, file, 355, 3, 10605);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, p, anchor);
@@ -62989,7 +62904,7 @@ var app = (function () {
     		c: function create() {
     			p = element("p");
     			p.textContent = "Existing solutions";
-    			add_location(p, file, 364, 3, 10904);
+    			add_location(p, file, 364, 3, 10863);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, p, anchor);
@@ -63057,10 +62972,10 @@ var app = (function () {
     			t3 = space();
     			li2 = element("li");
     			li2.textContent = "Do so without destroying the TEC module (it's rated for a range and\n\t\t\t\t\tcyclecount)";
-    			add_location(li0, file, 373, 4, 11186);
-    			add_location(li1, file, 377, 4, 11312);
-    			add_location(li2, file, 381, 4, 11413);
-    			add_location(ul, file, 372, 3, 11177);
+    			add_location(li0, file, 373, 4, 11145);
+    			add_location(li1, file, 377, 4, 11271);
+    			add_location(li2, file, 381, 4, 11372);
+    			add_location(ul, file, 372, 3, 11136);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, ul, anchor);
@@ -63121,7 +63036,7 @@ var app = (function () {
     		c: function create() {
     			p = element("p");
     			p.textContent = "Put spinny here";
-    			add_location(p, file, 395, 3, 11770);
+    			add_location(p, file, 395, 3, 11729);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, p, anchor);
@@ -63177,7 +63092,7 @@ var app = (function () {
     		c: function create() {
     			p = element("p");
     			p.textContent = "Make zoom into it";
-    			add_location(p, file, 404, 3, 12030);
+    			add_location(p, file, 404, 3, 11989);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, p, anchor);
@@ -63233,7 +63148,7 @@ var app = (function () {
     		c: function create() {
     			p = element("p");
     			p.textContent = "Make zoom into it";
-    			add_location(p, file, 410, 3, 12285);
+    			add_location(p, file, 410, 3, 12244);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, p, anchor);
@@ -63289,7 +63204,7 @@ var app = (function () {
     		c: function create() {
     			p = element("p");
     			p.textContent = "Make zoom into it";
-    			add_location(p, file, 416, 3, 12537);
+    			add_location(p, file, 416, 3, 12496);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, p, anchor);
@@ -63345,7 +63260,7 @@ var app = (function () {
     		c: function create() {
     			p = element("p");
     			p.textContent = "Make zoom into it";
-    			add_location(p, file, 422, 3, 12782);
+    			add_location(p, file, 422, 3, 12741);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, p, anchor);
@@ -63401,7 +63316,7 @@ var app = (function () {
     		c: function create() {
     			p = element("p");
     			p.textContent = "Make zoom into it";
-    			add_location(p, file, 428, 3, 13026);
+    			add_location(p, file, 428, 3, 12985);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, p, anchor);

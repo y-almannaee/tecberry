@@ -283,8 +283,8 @@
 				basically a heat pump.
 			</p>
 			<TecModule
-				width="{window.innerWidth * 0.9}"
-				height="{window.innerHeight * 0.9}"
+				width="{512}"
+				height="{512}"
 				bg_color="#eeeeff"
 				cube_color="#ff3366"
 				lights_color="#99ffff"

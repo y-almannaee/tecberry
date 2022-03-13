@@ -31,6 +31,14 @@ var app = (function () {
     function safe_not_equal(a, b) {
         return a != a ? b == b : a !== b || ((a && typeof a === 'object') || typeof a === 'function');
     }
+    let src_url_equal_anchor;
+    function src_url_equal(element_src, url) {
+        if (!src_url_equal_anchor) {
+            src_url_equal_anchor = document.createElement('a');
+        }
+        src_url_equal_anchor.href = url;
+        return element_src === src_url_equal_anchor.href;
+    }
     function is_empty(obj) {
         return Object.keys(obj).length === 0;
     }
@@ -79,6 +87,21 @@ var app = (function () {
             return dirty;
         }
         return -1;
+    }
+    function exclude_internal_props(props) {
+        const result = {};
+        for (const k in props)
+            if (k[0] !== '$')
+                result[k] = props[k];
+        return result;
+    }
+    function compute_rest_props(props, keys) {
+        const rest = {};
+        keys = new Set(keys);
+        for (const k in props)
+            if (!keys.has(k) && k[0] !== '$')
+                rest[k] = props[k];
+        return rest;
     }
 
     const is_client = typeof window !== 'undefined';
@@ -157,11 +180,39 @@ var app = (function () {
         node.addEventListener(event, handler, options);
         return () => node.removeEventListener(event, handler, options);
     }
+    function prevent_default(fn) {
+        return function (event) {
+            event.preventDefault();
+            // @ts-ignore
+            return fn.call(this, event);
+        };
+    }
     function attr(node, attribute, value) {
         if (value == null)
             node.removeAttribute(attribute);
         else if (node.getAttribute(attribute) !== value)
             node.setAttribute(attribute, value);
+    }
+    function set_attributes(node, attributes) {
+        // @ts-ignore
+        const descriptors = Object.getOwnPropertyDescriptors(node.__proto__);
+        for (const key in attributes) {
+            if (attributes[key] == null) {
+                node.removeAttribute(key);
+            }
+            else if (key === 'style') {
+                node.style.cssText = attributes[key];
+            }
+            else if (key === '__value') {
+                node.value = node[key] = attributes[key];
+            }
+            else if (descriptors[key] && descriptors[key].set) {
+                node[key] = attributes[key];
+            }
+            else {
+                attr(node, key, attributes[key]);
+            }
+        }
     }
     function to_number(value) {
         return value === '' ? null : +value;
@@ -171,6 +222,67 @@ var app = (function () {
     }
     function set_input_value(input, value) {
         input.value = value == null ? '' : value;
+    }
+    function set_style(node, key, value, important) {
+        if (value === null) {
+            node.style.removeProperty(key);
+        }
+        else {
+            node.style.setProperty(key, value, important ? 'important' : '');
+        }
+    }
+    // unfortunately this can't be a constant as that wouldn't be tree-shakeable
+    // so we cache the result instead
+    let crossorigin;
+    function is_crossorigin() {
+        if (crossorigin === undefined) {
+            crossorigin = false;
+            try {
+                if (typeof window !== 'undefined' && window.parent) {
+                    void window.parent.document;
+                }
+            }
+            catch (error) {
+                crossorigin = true;
+            }
+        }
+        return crossorigin;
+    }
+    function add_resize_listener(node, fn) {
+        const computed_style = getComputedStyle(node);
+        if (computed_style.position === 'static') {
+            node.style.position = 'relative';
+        }
+        const iframe = element('iframe');
+        iframe.setAttribute('style', 'display: block; position: absolute; top: 0; left: 0; width: 100%; height: 100%; ' +
+            'overflow: hidden; border: 0; opacity: 0; pointer-events: none; z-index: -1;');
+        iframe.setAttribute('aria-hidden', 'true');
+        iframe.tabIndex = -1;
+        const crossorigin = is_crossorigin();
+        let unsubscribe;
+        if (crossorigin) {
+            iframe.src = "data:text/html,<script>onresize=function(){parent.postMessage(0,'*')}</script>";
+            unsubscribe = listen(window, 'message', (event) => {
+                if (event.source === iframe.contentWindow)
+                    fn();
+            });
+        }
+        else {
+            iframe.src = 'about:blank';
+            iframe.onload = () => {
+                unsubscribe = listen(iframe.contentWindow, 'resize', fn);
+            };
+        }
+        append(node, iframe);
+        return () => {
+            if (crossorigin) {
+                unsubscribe();
+            }
+            else if (unsubscribe && iframe.contentWindow) {
+                unsubscribe();
+            }
+            detach(iframe);
+        };
     }
     function toggle_class(element, name, toggle) {
         element.classList[toggle ? 'add' : 'remove'](name);
@@ -627,6 +739,40 @@ var app = (function () {
             ? globalThis
             : global);
 
+    function get_spread_update(levels, updates) {
+        const update = {};
+        const to_null_out = {};
+        const accounted_for = { $$scope: 1 };
+        let i = levels.length;
+        while (i--) {
+            const o = levels[i];
+            const n = updates[i];
+            if (n) {
+                for (const key in o) {
+                    if (!(key in n))
+                        to_null_out[key] = 1;
+                }
+                for (const key in n) {
+                    if (!accounted_for[key]) {
+                        update[key] = n[key];
+                        accounted_for[key] = 1;
+                    }
+                }
+                levels[i] = n;
+            }
+            else {
+                for (const key in o) {
+                    accounted_for[key] = 1;
+                }
+            }
+        }
+        for (const key in to_null_out) {
+            if (!(key in update))
+                update[key] = undefined;
+        }
+        return update;
+    }
+
     function bind(component, name, callback) {
         const index = component.$$.props[name];
         if (index !== undefined) {
@@ -882,7 +1028,7 @@ var app = (function () {
 
     /* src/Slide.svelte generated by Svelte v3.46.4 */
 
-    const file$5 = "src/Slide.svelte";
+    const file$6 = "src/Slide.svelte";
     const get_slide_content_slot_changes = dirty => ({});
     const get_slide_content_slot_context = ctx => ({});
     const get_byline_slot_changes = dirty => ({});
@@ -909,10 +1055,10 @@ var app = (function () {
     			if (slide_title_slot_or_fallback) slide_title_slot_or_fallback.c();
     			attr_dev(a, "href", a_href_value = `#${/*id_slide*/ ctx[1]}`);
     			attr_dev(a, "class", "svelte-1uj2qow");
-    			add_location(a, file$5, 79, 4, 1155);
+    			add_location(a, file$6, 79, 4, 1155);
     			attr_dev(h2, "id", /*id_slide*/ ctx[1]);
     			attr_dev(h2, "class", "svelte-1uj2qow");
-    			add_location(h2, file$5, 78, 3, 1130);
+    			add_location(h2, file$6, 78, 3, 1130);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, h2, anchor);
@@ -977,7 +1123,7 @@ var app = (function () {
     }
 
     // (72:2) {#if capstone}
-    function create_if_block$1(ctx) {
+    function create_if_block$2(ctx) {
     	let h1;
     	let a;
     	let a_href_value;
@@ -993,10 +1139,10 @@ var app = (function () {
     			if (slide_title_slot_or_fallback) slide_title_slot_or_fallback.c();
     			attr_dev(a, "href", a_href_value = `#${/*id_slide*/ ctx[1]}`);
     			attr_dev(a, "class", "svelte-1uj2qow");
-    			add_location(a, file$5, 73, 4, 994);
+    			add_location(a, file$6, 73, 4, 994);
     			attr_dev(h1, "id", /*id_slide*/ ctx[1]);
     			attr_dev(h1, "class", "svelte-1uj2qow");
-    			add_location(h1, file$5, 72, 3, 969);
+    			add_location(h1, file$6, 72, 3, 969);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, h1, anchor);
@@ -1051,7 +1197,7 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_if_block$1.name,
+    		id: create_if_block$2.name,
     		type: "if",
     		source: "(72:2) {#if capstone}",
     		ctx
@@ -1141,7 +1287,7 @@ var app = (function () {
     	return block;
     }
 
-    function create_fragment$6(ctx) {
+    function create_fragment$7(ctx) {
     	let div;
     	let span;
     	let current_block_type_index;
@@ -1150,7 +1296,7 @@ var app = (function () {
     	let h3;
     	let t1;
     	let current;
-    	const if_block_creators = [create_if_block$1, create_else_block];
+    	const if_block_creators = [create_if_block$2, create_else_block];
     	const if_blocks = [];
 
     	function select_block_type(ctx, dirty) {
@@ -1177,11 +1323,11 @@ var app = (function () {
     			t1 = space();
     			if (slide_content_slot_or_fallback) slide_content_slot_or_fallback.c();
     			attr_dev(h3, "class", "svelte-1uj2qow");
-    			add_location(h3, file$5, 84, 2, 1288);
+    			add_location(h3, file$6, 84, 2, 1288);
     			attr_dev(span, "class", "heading svelte-1uj2qow");
-    			add_location(span, file$5, 70, 1, 926);
+    			add_location(span, file$6, 70, 1, 926);
     			attr_dev(div, "class", "slide svelte-1uj2qow");
-    			add_location(div, file$5, 69, 0, 905);
+    			add_location(div, file$6, 69, 0, 905);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -1285,7 +1431,7 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_fragment$6.name,
+    		id: create_fragment$7.name,
     		type: "component",
     		source: "",
     		ctx
@@ -1294,7 +1440,7 @@ var app = (function () {
     	return block;
     }
 
-    function instance$6($$self, $$props, $$invalidate) {
+    function instance$7($$self, $$props, $$invalidate) {
     	let { $$slots: slots = {}, $$scope } = $$props;
     	validate_slots('Slide', slots, ['slide-title','byline','slide-content']);
     	let { id_slide, short_name, capstone = false } = $$props;
@@ -1343,13 +1489,13 @@ var app = (function () {
     class Slide extends SvelteComponentDev {
     	constructor(options) {
     		super(options);
-    		init(this, options, instance$6, create_fragment$6, safe_not_equal, { id_slide: 1, short_name: 0, capstone: 2 });
+    		init(this, options, instance$7, create_fragment$7, safe_not_equal, { id_slide: 1, short_name: 0, capstone: 2 });
 
     		dispatch_dev("SvelteRegisterComponent", {
     			component: this,
     			tagName: "Slide",
     			options,
-    			id: create_fragment$6.name
+    			id: create_fragment$7.name
     		});
 
     		const { ctx } = this.$$;
@@ -1389,106 +1535,10 @@ var app = (function () {
     	}
     }
 
-    /* src/Presentation.svelte generated by Svelte v3.46.4 */
-
-    const { console: console_1$2 } = globals;
-
-    function create_fragment$5(ctx) {
-    	const block = {
-    		c: noop,
-    		l: function claim(nodes) {
-    			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
-    		},
-    		m: noop,
-    		p: noop,
-    		i: noop,
-    		o: noop,
-    		d: noop
-    	};
-
-    	dispatch_dev("SvelteRegisterBlock", {
-    		block,
-    		id: create_fragment$5.name,
-    		type: "component",
-    		source: "",
-    		ctx
-    	});
-
-    	return block;
-    }
-
-    function instance$5($$self, $$props, $$invalidate) {
-    	let { $$slots: slots = {}, $$scope } = $$props;
-    	validate_slots('Presentation', slots, []);
-    	let { presentation_mode } = $$props;
-    	const writable_props = ['presentation_mode'];
-
-    	Object.keys($$props).forEach(key => {
-    		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== '$$' && key !== 'slot') console_1$2.warn(`<Presentation> was created with unknown prop '${key}'`);
-    	});
-
-    	$$self.$$set = $$props => {
-    		if ('presentation_mode' in $$props) $$invalidate(0, presentation_mode = $$props.presentation_mode);
-    	};
-
-    	$$self.$capture_state = () => ({ presentation_mode });
-
-    	$$self.$inject_state = $$props => {
-    		if ('presentation_mode' in $$props) $$invalidate(0, presentation_mode = $$props.presentation_mode);
-    	};
-
-    	if ($$props && "$$inject" in $$props) {
-    		$$self.$inject_state($$props.$$inject);
-    	}
-
-    	$$self.$$.update = () => {
-    		if ($$self.$$.dirty & /*presentation_mode*/ 1) {
-    			if (presentation_mode) {
-    				console.log("Presentation mode");
-    				document.querySelector("body").style.cursor = `url("../Cur.webp") 16 16, url("../Cur.png") 16 16, pointer`;
-    			} else {
-    				console.log("Leaving presentation mode");
-    				document.querySelector("body").style.cursor = ``;
-    			}
-    		}
-    	};
-
-    	return [presentation_mode];
-    }
-
-    class Presentation extends SvelteComponentDev {
-    	constructor(options) {
-    		super(options);
-    		init(this, options, instance$5, create_fragment$5, safe_not_equal, { presentation_mode: 0 });
-
-    		dispatch_dev("SvelteRegisterComponent", {
-    			component: this,
-    			tagName: "Presentation",
-    			options,
-    			id: create_fragment$5.name
-    		});
-
-    		const { ctx } = this.$$;
-    		const props = options.props || {};
-
-    		if (/*presentation_mode*/ ctx[0] === undefined && !('presentation_mode' in props)) {
-    			console_1$2.warn("<Presentation> was created without expected prop 'presentation_mode'");
-    		}
-    	}
-
-    	get presentation_mode() {
-    		throw new Error("<Presentation>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-
-    	set presentation_mode(value) {
-    		throw new Error("<Presentation>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-    }
-
     /* src/Logo.svelte generated by Svelte v3.46.4 */
-    const file$4 = "src/Logo.svelte";
+    const file$5 = "src/Logo.svelte";
 
-    function create_fragment$4(ctx) {
+    function create_fragment$6(ctx) {
     	let scrolling = false;
 
     	let clear_scrolling = () => {
@@ -1508,10 +1558,10 @@ var app = (function () {
     			h1 = element("h1");
     			h1.textContent = "TECBERRY.ml";
     			attr_dev(h1, "class", "svelte-jl6sd");
-    			add_location(h1, file$4, 82, 1, 1739);
+    			add_location(h1, file$5, 82, 1, 1739);
     			attr_dev(div, "class", "title svelte-jl6sd");
     			toggle_class(div, "hidden", /*hidden*/ ctx[2]);
-    			add_location(div, file$4, 81, 0, 1686);
+    			add_location(div, file$5, 81, 0, 1686);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -1559,7 +1609,7 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_fragment$4.name,
+    		id: create_fragment$6.name,
     		type: "component",
     		source: "",
     		ctx
@@ -1568,7 +1618,7 @@ var app = (function () {
     	return block;
     }
 
-    function instance$4($$self, $$props, $$invalidate) {
+    function instance$6($$self, $$props, $$invalidate) {
     	let { $$slots: slots = {}, $$scope } = $$props;
     	validate_slots('Logo', slots, []);
     	let { headings } = $$props;
@@ -1649,13 +1699,13 @@ var app = (function () {
     class Logo extends SvelteComponentDev {
     	constructor(options) {
     		super(options);
-    		init(this, options, instance$4, create_fragment$4, safe_not_equal, { headings: 4 });
+    		init(this, options, instance$6, create_fragment$6, safe_not_equal, { headings: 4 });
 
     		dispatch_dev("SvelteRegisterComponent", {
     			component: this,
     			tagName: "Logo",
     			options,
-    			id: create_fragment$4.name
+    			id: create_fragment$6.name
     		});
 
     		const { ctx } = this.$$;
@@ -60369,55 +60419,63 @@ var app = (function () {
 
     /* src/TecModule.svelte generated by Svelte v3.46.4 */
 
-    const { console: console_1$1, window: window_1$1 } = globals;
-    const file$3 = "src/TecModule.svelte";
+    const { console: console_1$2, window: window_1$1 } = globals;
+    const file$4 = "src/TecModule.svelte";
 
-    function create_fragment$3(ctx) {
+    function create_fragment$5(ctx) {
+    	let div;
     	let canvas;
     	let t;
+    	let div_resize_listener;
     	let mounted;
     	let dispose;
 
     	const block = {
     		c: function create() {
+    			div = element("div");
     			canvas = element("canvas");
     			t = text("Your browser does not support this element.");
     			attr_dev(canvas, "width", /*width*/ ctx[0]);
     			attr_dev(canvas, "height", /*height*/ ctx[1]);
-    			add_location(canvas, file$3, 119, 0, 3707);
+    			add_location(canvas, file$4, 121, 1, 3828);
+    			add_render_callback(() => /*div_elementresize_handler*/ ctx[13].call(div));
+    			add_location(div, file$4, 120, 0, 3786);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
     		},
     		m: function mount(target, anchor) {
-    			insert_dev(target, canvas, anchor);
+    			insert_dev(target, div, anchor);
+    			append_dev(div, canvas);
     			append_dev(canvas, t);
-    			/*canvas_binding*/ ctx[8](canvas);
+    			/*canvas_binding*/ ctx[10](canvas);
+    			div_resize_listener = add_resize_listener(div, /*div_elementresize_handler*/ ctx[13].bind(div));
 
     			if (!mounted) {
     				dispose = [
-    					listen_dev(window_1$1, "resize", /*resize*/ ctx[4], false, false, false),
-    					listen_dev(canvas, "pointerdown", /*pointerdown_handler*/ ctx[9], false, false, false),
-    					listen_dev(canvas, "pointerup", /*pointerup_handler*/ ctx[10], false, false, false)
+    					listen_dev(window_1$1, "resize", /*resize*/ ctx[6], false, false, false),
+    					listen_dev(canvas, "pointerdown", /*pointerdown_handler*/ ctx[11], false, false, false),
+    					listen_dev(canvas, "pointerup", /*pointerup_handler*/ ctx[12], false, false, false)
     				];
 
     				mounted = true;
     			}
     		},
-    		p: function update(ctx, [dirty]) {
-    			if (dirty & /*width*/ 1) {
+    		p: function update(ctx, dirty) {
+    			if (dirty[0] & /*width*/ 1) {
     				attr_dev(canvas, "width", /*width*/ ctx[0]);
     			}
 
-    			if (dirty & /*height*/ 2) {
+    			if (dirty[0] & /*height*/ 2) {
     				attr_dev(canvas, "height", /*height*/ ctx[1]);
     			}
     		},
     		i: noop,
     		o: noop,
     		d: function destroy(detaching) {
-    			if (detaching) detach_dev(canvas);
-    			/*canvas_binding*/ ctx[8](null);
+    			if (detaching) detach_dev(div);
+    			/*canvas_binding*/ ctx[10](null);
+    			div_resize_listener();
     			mounted = false;
     			run_all(dispose);
     		}
@@ -60425,7 +60483,7 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_fragment$3.name,
+    		id: create_fragment$5.name,
     		type: "component",
     		source: "",
     		ctx
@@ -60447,10 +60505,11 @@ var app = (function () {
     	}
     }
 
-    function instance$3($$self, $$props, $$invalidate) {
+    function instance$5($$self, $$props, $$invalidate) {
     	let { $$slots: slots = {}, $$scope } = $$props;
     	validate_slots('TecModule', slots, []);
     	let { width, height, bg_color, cube_color, lights_color } = $$props;
+    	let clientWidth, clientHeight;
 
     	let camera,
     		scene,
@@ -60462,7 +60521,7 @@ var app = (function () {
 
     	const clock = new Clock();
     	let delta = 0, interval = 1 / 60;
-    	camera = new OrthographicCamera(width / -scale_c, width / scale_c, height / scale_c, height / -scale_c, 0.01, 10);
+    	camera = new OrthographicCamera(clientWidth / -scale_c, clientWidth / scale_c, clientHeight / scale_c, clientHeight / -scale_c, 0.01, 10);
     	camera.position.set(1, 1, 1);
     	camera.lookAt(0, 0, 0);
     	scene = new Scene();
@@ -60554,8 +60613,8 @@ var app = (function () {
     	};
 
     	const resize = () => {
-    		renderer.setSize(width, height);
-    		camera.aspect = width / height;
+    		renderer.setSize(clientWidth, clientHeight);
+    		camera.aspect = clientWidth / clientHeight;
     		camera.updateProjectionMatrix();
     	};
 
@@ -60577,30 +60636,37 @@ var app = (function () {
     	const writable_props = ['width', 'height', 'bg_color', 'cube_color', 'lights_color'];
 
     	Object.keys($$props).forEach(key => {
-    		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== '$$' && key !== 'slot') console_1$1.warn(`<TecModule> was created with unknown prop '${key}'`);
+    		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== '$$' && key !== 'slot') console_1$2.warn(`<TecModule> was created with unknown prop '${key}'`);
     	});
 
     	function canvas_binding($$value) {
     		binding_callbacks[$$value ? 'unshift' : 'push'](() => {
     			el = $$value;
-    			$$invalidate(2, el);
+    			$$invalidate(4, el);
     		});
     	}
 
     	const pointerdown_handler = () => {
-    		$$invalidate(3, do_rotation = false);
+    		$$invalidate(5, do_rotation = false);
     	};
 
     	const pointerup_handler = () => {
-    		$$invalidate(3, do_rotation = true);
+    		$$invalidate(5, do_rotation = true);
     	};
+
+    	function div_elementresize_handler() {
+    		clientWidth = this.clientWidth;
+    		clientHeight = this.clientHeight;
+    		$$invalidate(2, clientWidth);
+    		$$invalidate(3, clientHeight);
+    	}
 
     	$$self.$$set = $$props => {
     		if ('width' in $$props) $$invalidate(0, width = $$props.width);
     		if ('height' in $$props) $$invalidate(1, height = $$props.height);
-    		if ('bg_color' in $$props) $$invalidate(5, bg_color = $$props.bg_color);
-    		if ('cube_color' in $$props) $$invalidate(6, cube_color = $$props.cube_color);
-    		if ('lights_color' in $$props) $$invalidate(7, lights_color = $$props.lights_color);
+    		if ('bg_color' in $$props) $$invalidate(7, bg_color = $$props.bg_color);
+    		if ('cube_color' in $$props) $$invalidate(8, cube_color = $$props.cube_color);
+    		if ('lights_color' in $$props) $$invalidate(9, lights_color = $$props.lights_color);
     	};
 
     	$$self.$capture_state = () => ({
@@ -60610,6 +60676,8 @@ var app = (function () {
     		bg_color,
     		cube_color,
     		lights_color,
+    		clientWidth,
+    		clientHeight,
     		THREE,
     		ArcballControls,
     		GLTFLoader,
@@ -60641,15 +60709,17 @@ var app = (function () {
     	$$self.$inject_state = $$props => {
     		if ('width' in $$props) $$invalidate(0, width = $$props.width);
     		if ('height' in $$props) $$invalidate(1, height = $$props.height);
-    		if ('bg_color' in $$props) $$invalidate(5, bg_color = $$props.bg_color);
-    		if ('cube_color' in $$props) $$invalidate(6, cube_color = $$props.cube_color);
-    		if ('lights_color' in $$props) $$invalidate(7, lights_color = $$props.lights_color);
+    		if ('bg_color' in $$props) $$invalidate(7, bg_color = $$props.bg_color);
+    		if ('cube_color' in $$props) $$invalidate(8, cube_color = $$props.cube_color);
+    		if ('lights_color' in $$props) $$invalidate(9, lights_color = $$props.lights_color);
+    		if ('clientWidth' in $$props) $$invalidate(2, clientWidth = $$props.clientWidth);
+    		if ('clientHeight' in $$props) $$invalidate(3, clientHeight = $$props.clientHeight);
     		if ('camera' in $$props) camera = $$props.camera;
     		if ('scene' in $$props) scene = $$props.scene;
     		if ('renderer' in $$props) renderer = $$props.renderer;
-    		if ('el' in $$props) $$invalidate(2, el = $$props.el);
+    		if ('el' in $$props) $$invalidate(4, el = $$props.el);
     		if ('arcball_controls' in $$props) arcball_controls = $$props.arcball_controls;
-    		if ('do_rotation' in $$props) $$invalidate(3, do_rotation = $$props.do_rotation);
+    		if ('do_rotation' in $$props) $$invalidate(5, do_rotation = $$props.do_rotation);
     		if ('scale_c' in $$props) scale_c = $$props.scale_c;
     		if ('delta' in $$props) delta = $$props.delta;
     		if ('interval' in $$props) interval = $$props.interval;
@@ -60663,6 +60733,8 @@ var app = (function () {
     	return [
     		width,
     		height,
+    		clientWidth,
+    		clientHeight,
     		el,
     		do_rotation,
     		resize,
@@ -60671,7 +60743,8 @@ var app = (function () {
     		lights_color,
     		canvas_binding,
     		pointerdown_handler,
-    		pointerup_handler
+    		pointerup_handler,
+    		div_elementresize_handler
     	];
     }
 
@@ -60679,42 +60752,51 @@ var app = (function () {
     	constructor(options) {
     		super(options);
 
-    		init(this, options, instance$3, create_fragment$3, safe_not_equal, {
-    			width: 0,
-    			height: 1,
-    			bg_color: 5,
-    			cube_color: 6,
-    			lights_color: 7
-    		});
+    		init(
+    			this,
+    			options,
+    			instance$5,
+    			create_fragment$5,
+    			safe_not_equal,
+    			{
+    				width: 0,
+    				height: 1,
+    				bg_color: 7,
+    				cube_color: 8,
+    				lights_color: 9
+    			},
+    			null,
+    			[-1, -1]
+    		);
 
     		dispatch_dev("SvelteRegisterComponent", {
     			component: this,
     			tagName: "TecModule",
     			options,
-    			id: create_fragment$3.name
+    			id: create_fragment$5.name
     		});
 
     		const { ctx } = this.$$;
     		const props = options.props || {};
 
     		if (/*width*/ ctx[0] === undefined && !('width' in props)) {
-    			console_1$1.warn("<TecModule> was created without expected prop 'width'");
+    			console_1$2.warn("<TecModule> was created without expected prop 'width'");
     		}
 
     		if (/*height*/ ctx[1] === undefined && !('height' in props)) {
-    			console_1$1.warn("<TecModule> was created without expected prop 'height'");
+    			console_1$2.warn("<TecModule> was created without expected prop 'height'");
     		}
 
-    		if (/*bg_color*/ ctx[5] === undefined && !('bg_color' in props)) {
-    			console_1$1.warn("<TecModule> was created without expected prop 'bg_color'");
+    		if (/*bg_color*/ ctx[7] === undefined && !('bg_color' in props)) {
+    			console_1$2.warn("<TecModule> was created without expected prop 'bg_color'");
     		}
 
-    		if (/*cube_color*/ ctx[6] === undefined && !('cube_color' in props)) {
-    			console_1$1.warn("<TecModule> was created without expected prop 'cube_color'");
+    		if (/*cube_color*/ ctx[8] === undefined && !('cube_color' in props)) {
+    			console_1$2.warn("<TecModule> was created without expected prop 'cube_color'");
     		}
 
-    		if (/*lights_color*/ ctx[7] === undefined && !('lights_color' in props)) {
-    			console_1$1.warn("<TecModule> was created without expected prop 'lights_color'");
+    		if (/*lights_color*/ ctx[9] === undefined && !('lights_color' in props)) {
+    			console_1$2.warn("<TecModule> was created without expected prop 'lights_color'");
     		}
     	}
 
@@ -60795,7 +60877,7 @@ var app = (function () {
     }
 
     /* src/PageNumber.svelte generated by Svelte v3.46.4 */
-    const file$2 = "src/PageNumber.svelte";
+    const file$3 = "src/PageNumber.svelte";
 
     // (43:0) {#key page}
     function create_key_block(ctx) {
@@ -60811,7 +60893,7 @@ var app = (function () {
     			t = text(/*page*/ ctx[3]);
     			attr_dev(div, "class", "page_number svelte-1raidyr");
     			toggle_class(div, "hidden", /*hidden*/ ctx[1]);
-    			add_location(div, file$2, 43, 1, 730);
+    			add_location(div, file$3, 43, 1, 750);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div, anchor);
@@ -60860,7 +60942,7 @@ var app = (function () {
     	return block;
     }
 
-    function create_fragment$2(ctx) {
+    function create_fragment$4(ctx) {
     	let scrolling = false;
 
     	let clear_scrolling = () => {
@@ -60939,7 +61021,7 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_fragment$2.name,
+    		id: create_fragment$4.name,
     		type: "component",
     		source: "",
     		ctx
@@ -60948,7 +61030,7 @@ var app = (function () {
     	return block;
     }
 
-    function instance$2($$self, $$props, $$invalidate) {
+    function instance$4($$self, $$props, $$invalidate) {
     	let { $$slots: slots = {}, $$scope } = $$props;
     	validate_slots('PageNumber', slots, []);
     	let { headings, presentation_mode } = $$props;
@@ -61012,7 +61094,7 @@ var app = (function () {
     						break;
     					}
     				}
-    			}
+    			} else $$invalidate(1, hidden = true);
     		}
     	};
 
@@ -61031,13 +61113,13 @@ var app = (function () {
     class PageNumber extends SvelteComponentDev {
     	constructor(options) {
     		super(options);
-    		init(this, options, instance$2, create_fragment$2, safe_not_equal, { headings: 4, presentation_mode: 5 });
+    		init(this, options, instance$4, create_fragment$4, safe_not_equal, { headings: 4, presentation_mode: 5 });
 
     		dispatch_dev("SvelteRegisterComponent", {
     			component: this,
     			tagName: "PageNumber",
     			options,
-    			id: create_fragment$2.name
+    			id: create_fragment$4.name
     		});
 
     		const { ctx } = this.$$;
@@ -61070,10 +61152,10 @@ var app = (function () {
     }
 
     /* src/ScrollToSlide.svelte generated by Svelte v3.46.4 */
-    const file$1 = "src/ScrollToSlide.svelte";
+    const file$2 = "src/ScrollToSlide.svelte";
 
-    // (65:0) {#if !hidden}
-    function create_if_block(ctx) {
+    // (55:0) {#if !hidden}
+    function create_if_block$1(ctx) {
     	let input;
     	let input_transition;
     	let current;
@@ -61087,7 +61169,7 @@ var app = (function () {
     			attr_dev(input, "type", "number");
     			attr_dev(input, "placeholder", "Enter slide number");
     			input.autofocus = true;
-    			add_location(input, file$1, 65, 1, 1419);
+    			add_location(input, file$2, 55, 1, 1139);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, input, anchor);
@@ -61132,21 +61214,21 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_if_block.name,
+    		id: create_if_block$1.name,
     		type: "if",
-    		source: "(65:0) {#if !hidden}",
+    		source: "(55:0) {#if !hidden}",
     		ctx
     	});
 
     	return block;
     }
 
-    function create_fragment$1(ctx) {
+    function create_fragment$3(ctx) {
     	let if_block_anchor;
     	let current;
     	let mounted;
     	let dispose;
-    	let if_block = !/*hidden*/ ctx[0] && create_if_block(ctx);
+    	let if_block = !/*hidden*/ ctx[0] && create_if_block$1(ctx);
 
     	const block = {
     		c: function create() {
@@ -61175,7 +61257,7 @@ var app = (function () {
     						transition_in(if_block, 1);
     					}
     				} else {
-    					if_block = create_if_block(ctx);
+    					if_block = create_if_block$1(ctx);
     					if_block.c();
     					transition_in(if_block, 1);
     					if_block.m(if_block_anchor.parentNode, if_block_anchor);
@@ -61209,7 +61291,7 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_fragment$1.name,
+    		id: create_fragment$3.name,
     		type: "component",
     		source: "",
     		ctx
@@ -61228,22 +61310,12 @@ var app = (function () {
     	el.scrollIntoView({ behavior: "smooth" });
     }
 
-    function instance$1($$self, $$props, $$invalidate) {
+    function instance$3($$self, $$props, $$invalidate) {
     	let { $$slots: slots = {}, $$scope } = $$props;
     	validate_slots('ScrollToSlide', slots, []);
     	let { headings, presentation_mode } = $$props;
     	let hidden = true, page_input, value;
 
-    	// $: for (let i = 0; i < headings.length; i++) {
-    	// 	if (headings[i].offsetTop > y - 25 && headings[i].offsetTop < y + 25) {
-    	// 		page = i + 1;
-    	// 		hidden = false;
-    	// 		break;
-    	// 	} else if (y - 25 < headings[0].offsetTop) {
-    	// 		hidden = true;
-    	// 		break;
-    	// 	}
-    	// }
     	function handle_keys(e) {
     		if (!presentation_mode) return;
 
@@ -61318,13 +61390,13 @@ var app = (function () {
     class ScrollToSlide extends SvelteComponentDev {
     	constructor(options) {
     		super(options);
-    		init(this, options, instance$1, create_fragment$1, safe_not_equal, { headings: 4, presentation_mode: 5 });
+    		init(this, options, instance$3, create_fragment$3, safe_not_equal, { headings: 4, presentation_mode: 5 });
 
     		dispatch_dev("SvelteRegisterComponent", {
     			component: this,
     			tagName: "ScrollToSlide",
     			options,
-    			id: create_fragment$1.name
+    			id: create_fragment$3.name
     		});
 
     		const { ctx } = this.$$;
@@ -61356,12 +61428,684 @@ var app = (function () {
     	}
     }
 
+    /* src/Presentation.svelte generated by Svelte v3.46.4 */
+
+    const { console: console_1$1 } = globals;
+
+    function create_fragment$2(ctx) {
+    	const block = {
+    		c: noop,
+    		l: function claim(nodes) {
+    			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
+    		},
+    		m: noop,
+    		p: noop,
+    		i: noop,
+    		o: noop,
+    		d: noop
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_fragment$2.name,
+    		type: "component",
+    		source: "",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    function instance$2($$self, $$props, $$invalidate) {
+    	let { $$slots: slots = {}, $$scope } = $$props;
+    	validate_slots('Presentation', slots, []);
+    	let { presentation_mode } = $$props;
+    	const writable_props = ['presentation_mode'];
+
+    	Object.keys($$props).forEach(key => {
+    		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== '$$' && key !== 'slot') console_1$1.warn(`<Presentation> was created with unknown prop '${key}'`);
+    	});
+
+    	$$self.$$set = $$props => {
+    		if ('presentation_mode' in $$props) $$invalidate(0, presentation_mode = $$props.presentation_mode);
+    	};
+
+    	$$self.$capture_state = () => ({ presentation_mode });
+
+    	$$self.$inject_state = $$props => {
+    		if ('presentation_mode' in $$props) $$invalidate(0, presentation_mode = $$props.presentation_mode);
+    	};
+
+    	if ($$props && "$$inject" in $$props) {
+    		$$self.$inject_state($$props.$$inject);
+    	}
+
+    	$$self.$$.update = () => {
+    		if ($$self.$$.dirty & /*presentation_mode*/ 1) {
+    			if (presentation_mode) {
+    				console.log("Presentation mode");
+    				document.querySelector("body").style.cursor = `url("../Cursor.png"), pointer`;
+    			} else {
+    				console.log("Leaving presentation mode");
+    				document.querySelector("body").style.cursor = ``;
+    			}
+    		}
+    	};
+
+    	return [presentation_mode];
+    }
+
+    class Presentation extends SvelteComponentDev {
+    	constructor(options) {
+    		super(options);
+    		init(this, options, instance$2, create_fragment$2, safe_not_equal, { presentation_mode: 0 });
+
+    		dispatch_dev("SvelteRegisterComponent", {
+    			component: this,
+    			tagName: "Presentation",
+    			options,
+    			id: create_fragment$2.name
+    		});
+
+    		const { ctx } = this.$$;
+    		const props = options.props || {};
+
+    		if (/*presentation_mode*/ ctx[0] === undefined && !('presentation_mode' in props)) {
+    			console_1$1.warn("<Presentation> was created without expected prop 'presentation_mode'");
+    		}
+    	}
+
+    	get presentation_mode() {
+    		throw new Error("<Presentation>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set presentation_mode(value) {
+    		throw new Error("<Presentation>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+    }
+
+    /* node_modules/svelte-magnifier/Magnifier.svelte generated by Svelte v3.46.4 */
+
+    const file$1 = "node_modules/svelte-magnifier/Magnifier.svelte";
+
+    // (58:1) {#if imgBounds}
+    function create_if_block(ctx) {
+    	let div;
+
+    	const block = {
+    		c: function create() {
+    			div = element("div");
+    			attr_dev(div, "class", "magnifying-glass svelte-xiv61x");
+    			set_style(div, "width", /*mgWidth*/ ctx[7] + "px");
+    			set_style(div, "height", /*mgHeight*/ ctx[8] + "px");
+    			set_style(div, "left", "calc(" + /*relX*/ ctx[18] * 100 + "% - " + /*mgWidth*/ ctx[7] / 2 + "px + " + /*mgOffsetX*/ ctx[16] + "px - " + /*mgBorderWidth*/ ctx[9] + "px)");
+    			set_style(div, "top", "calc(" + /*relY*/ ctx[19] * 100 + "% - " + /*mgHeight*/ ctx[8] / 2 + "px + " + /*mgOffsetY*/ ctx[17] + "px - " + /*mgBorderWidth*/ ctx[9] + "px)");
+    			set_style(div, "background-image", "url('" + (/*zoomImgSrc*/ ctx[5] || /*src*/ ctx[0]) + "')");
+    			set_style(div, "background-position", "calc(" + /*relX*/ ctx[18] * 100 + "% + " + /*mgWidth*/ ctx[7] / 2 + "px - " + /*relX*/ ctx[18] * /*mgWidth*/ ctx[7] + "px) calc(" + /*relY*/ ctx[19] * 100 + "% + " + /*mgHeight*/ ctx[8] / 2 + "px - " + /*relY*/ ctx[19] * /*mgWidth*/ ctx[7] + "px)");
+    			set_style(div, "background-size", /*zoomFactor*/ ctx[6] * /*imgBounds*/ ctx[14].width + "% " + /*zoomFactor*/ ctx[6] * /*imgBounds*/ ctx[14].height + "%");
+    			set_style(div, "borderWidth", /*mgBorderWidth*/ ctx[9] + "px");
+    			toggle_class(div, "visible", /*showZoom*/ ctx[15] && !/*disabled*/ ctx[12]);
+    			toggle_class(div, "circle", /*mgShape*/ ctx[10] === 'circle');
+    			add_location(div, file$1, 58, 2, 1986);
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, div, anchor);
+    		},
+    		p: function update(ctx, dirty) {
+    			if (dirty & /*mgWidth*/ 128) {
+    				set_style(div, "width", /*mgWidth*/ ctx[7] + "px");
+    			}
+
+    			if (dirty & /*mgHeight*/ 256) {
+    				set_style(div, "height", /*mgHeight*/ ctx[8] + "px");
+    			}
+
+    			if (dirty & /*relX, mgWidth, mgOffsetX, mgBorderWidth*/ 328320) {
+    				set_style(div, "left", "calc(" + /*relX*/ ctx[18] * 100 + "% - " + /*mgWidth*/ ctx[7] / 2 + "px + " + /*mgOffsetX*/ ctx[16] + "px - " + /*mgBorderWidth*/ ctx[9] + "px)");
+    			}
+
+    			if (dirty & /*relY, mgHeight, mgOffsetY, mgBorderWidth*/ 656128) {
+    				set_style(div, "top", "calc(" + /*relY*/ ctx[19] * 100 + "% - " + /*mgHeight*/ ctx[8] / 2 + "px + " + /*mgOffsetY*/ ctx[17] + "px - " + /*mgBorderWidth*/ ctx[9] + "px)");
+    			}
+
+    			if (dirty & /*zoomImgSrc, src*/ 33) {
+    				set_style(div, "background-image", "url('" + (/*zoomImgSrc*/ ctx[5] || /*src*/ ctx[0]) + "')");
+    			}
+
+    			if (dirty & /*relX, mgWidth, relY, mgHeight*/ 786816) {
+    				set_style(div, "background-position", "calc(" + /*relX*/ ctx[18] * 100 + "% + " + /*mgWidth*/ ctx[7] / 2 + "px - " + /*relX*/ ctx[18] * /*mgWidth*/ ctx[7] + "px) calc(" + /*relY*/ ctx[19] * 100 + "% + " + /*mgHeight*/ ctx[8] / 2 + "px - " + /*relY*/ ctx[19] * /*mgWidth*/ ctx[7] + "px)");
+    			}
+
+    			if (dirty & /*zoomFactor, imgBounds*/ 16448) {
+    				set_style(div, "background-size", /*zoomFactor*/ ctx[6] * /*imgBounds*/ ctx[14].width + "% " + /*zoomFactor*/ ctx[6] * /*imgBounds*/ ctx[14].height + "%");
+    			}
+
+    			if (dirty & /*mgBorderWidth*/ 512) {
+    				set_style(div, "borderWidth", /*mgBorderWidth*/ ctx[9] + "px");
+    			}
+
+    			if (dirty & /*showZoom, disabled*/ 36864) {
+    				toggle_class(div, "visible", /*showZoom*/ ctx[15] && !/*disabled*/ ctx[12]);
+    			}
+
+    			if (dirty & /*mgShape*/ 1024) {
+    				toggle_class(div, "circle", /*mgShape*/ ctx[10] === 'circle');
+    			}
+    		},
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(div);
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_if_block.name,
+    		type: "if",
+    		source: "(58:1) {#if imgBounds}",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    function create_fragment$1(ctx) {
+    	let div;
+    	let img_1;
+    	let img_1_src_value;
+    	let t;
+    	let div_class_value;
+    	let mounted;
+    	let dispose;
+
+    	let img_1_levels = [
+    		{ src: img_1_src_value = /*src*/ ctx[0] },
+    		{ alt: /*alt*/ ctx[1] },
+    		{ class: "magnifier-image" },
+    		/*$$restProps*/ ctx[23]
+    	];
+
+    	let img_1_data = {};
+
+    	for (let i = 0; i < img_1_levels.length; i += 1) {
+    		img_1_data = assign(img_1_data, img_1_levels[i]);
+    	}
+
+    	let if_block = /*imgBounds*/ ctx[14] && create_if_block(ctx);
+
+    	const block = {
+    		c: function create() {
+    			div = element("div");
+    			img_1 = element("img");
+    			t = space();
+    			if (if_block) if_block.c();
+    			set_attributes(img_1, img_1_data);
+    			toggle_class(img_1, "svelte-xiv61x", true);
+    			add_location(img_1, file$1, 42, 1, 1613);
+    			attr_dev(div, "class", div_class_value = "magnifier " + /*className*/ ctx[4] + " svelte-xiv61x");
+    			set_style(div, "width", /*width*/ ctx[2]);
+    			set_style(div, "height", /*height*/ ctx[3]);
+    			toggle_class(div, "no-overflow", /*mgShowOverflow*/ ctx[11]);
+    			add_location(div, file$1, 37, 0, 1496);
+    		},
+    		l: function claim(nodes) {
+    			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, div, anchor);
+    			append_dev(div, img_1);
+    			/*img_1_binding*/ ctx[28](img_1);
+    			append_dev(div, t);
+    			if (if_block) if_block.m(div, null);
+
+    			if (!mounted) {
+    				dispose = [
+    					listen_dev(img_1, "load", /*calcImgBounds*/ ctx[20], false, false, false),
+    					listen_dev(img_1, "mouseenter", /*calcImgBounds*/ ctx[20], false, false, false),
+    					listen_dev(img_1, "touchstart", prevent_default(/*calcImgBounds*/ ctx[20]), false, true, false),
+    					listen_dev(img_1, "mousemove", /*onMouseMove*/ ctx[21], false, false, false),
+    					listen_dev(img_1, "touchmove", /*onTouchMove*/ ctx[22], false, false, false),
+    					listen_dev(img_1, "mouseout", /*mouseout_handler*/ ctx[29], false, false, false),
+    					listen_dev(img_1, "touchend", /*touchend_handler*/ ctx[30], { passive: true }, false, false),
+    					listen_dev(img_1, "blur", blur_handler, false, false, false)
+    				];
+
+    				mounted = true;
+    			}
+    		},
+    		p: function update(ctx, [dirty]) {
+    			set_attributes(img_1, img_1_data = get_spread_update(img_1_levels, [
+    				dirty & /*src*/ 1 && !src_url_equal(img_1.src, img_1_src_value = /*src*/ ctx[0]) && { src: img_1_src_value },
+    				dirty & /*alt*/ 2 && { alt: /*alt*/ ctx[1] },
+    				{ class: "magnifier-image" },
+    				dirty & /*$$restProps*/ 8388608 && /*$$restProps*/ ctx[23]
+    			]));
+
+    			toggle_class(img_1, "svelte-xiv61x", true);
+
+    			if (/*imgBounds*/ ctx[14]) {
+    				if (if_block) {
+    					if_block.p(ctx, dirty);
+    				} else {
+    					if_block = create_if_block(ctx);
+    					if_block.c();
+    					if_block.m(div, null);
+    				}
+    			} else if (if_block) {
+    				if_block.d(1);
+    				if_block = null;
+    			}
+
+    			if (dirty & /*className*/ 16 && div_class_value !== (div_class_value = "magnifier " + /*className*/ ctx[4] + " svelte-xiv61x")) {
+    				attr_dev(div, "class", div_class_value);
+    			}
+
+    			if (dirty & /*width*/ 4) {
+    				set_style(div, "width", /*width*/ ctx[2]);
+    			}
+
+    			if (dirty & /*height*/ 8) {
+    				set_style(div, "height", /*height*/ ctx[3]);
+    			}
+
+    			if (dirty & /*className, mgShowOverflow*/ 2064) {
+    				toggle_class(div, "no-overflow", /*mgShowOverflow*/ ctx[11]);
+    			}
+    		},
+    		i: noop,
+    		o: noop,
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(div);
+    			/*img_1_binding*/ ctx[28](null);
+    			if (if_block) if_block.d();
+    			mounted = false;
+    			run_all(dispose);
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_fragment$1.name,
+    		type: "component",
+    		source: "",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    const blur_handler = () => {
+    	
+    };
+
+    function instance$1($$self, $$props, $$invalidate) {
+    	const omit_props_names = [
+    		"src","alt","width","height","className","zoomImgSrc","zoomFactor","mgWidth","mgHeight","mgBorderWidth","mgShape","mgShowOverflow","mgMouseOffsetX","mgMouseOffsetY","mgTouchOffsetX","mgTouchOffsetY","disabled"
+    	];
+
+    	let $$restProps = compute_rest_props($$props, omit_props_names);
+    	let { $$slots: slots = {}, $$scope } = $$props;
+    	validate_slots('Magnifier', slots, []);
+
+    	let img,
+    		imgBounds,
+    		showZoom = false,
+    		mgOffsetX = 0,
+    		mgOffsetY = 0,
+    		relX = 0,
+    		relY = 0;
+
+    	let { src, alt, width = '100%', height = 'auto', className = '', zoomImgSrc = '', zoomFactor = 1.5, mgWidth = 150, mgHeight = 150, mgBorderWidth = 2, mgShape = 'circle', mgShowOverflow = true, mgMouseOffsetX = 0, mgMouseOffsetY = 0, mgTouchOffsetX = -50, mgTouchOffsetY = -50, disabled = false } = $$props;
+
+    	const calcImgBounds = () => {
+    		if (img) {
+    			$$invalidate(14, imgBounds = img.getBoundingClientRect());
+    		}
+    	};
+
+    	const onMouseMove = e => {
+    		if (imgBounds) {
+    			const target = e.target;
+    			$$invalidate(18, relX = (e.clientX - imgBounds.left) / target.clientWidth);
+    			$$invalidate(19, relY = (e.clientY - imgBounds.top) / target.clientHeight);
+    			$$invalidate(16, mgOffsetX = mgMouseOffsetX);
+    			$$invalidate(17, mgOffsetY = mgMouseOffsetY);
+    			$$invalidate(15, showZoom = true);
+    		}
+    	};
+
+    	const onTouchMove = e => {
+    		if (imgBounds) {
+    			const target = e.target;
+    			const _relX = (e.targetTouches[0].clientX - imgBounds.left) / target.clientWidth;
+    			const _relY = (e.targetTouches[0].clientY - imgBounds.top) / target.clientHeight;
+
+    			// Only show magnifying glass if touch is inside image
+    			if (_relX >= 0 && _relY >= 0 && _relX <= 1 && _relY <= 1) {
+    				$$invalidate(16, mgOffsetX = mgTouchOffsetX);
+    				$$invalidate(17, mgOffsetY = mgTouchOffsetY);
+    				$$invalidate(18, relX = _relX);
+    				$$invalidate(19, relY = _relY);
+    				$$invalidate(15, showZoom = true);
+    			} else {
+    				$$invalidate(15, showZoom = false);
+    			}
+    		}
+    	};
+
+    	function img_1_binding($$value) {
+    		binding_callbacks[$$value ? 'unshift' : 'push'](() => {
+    			img = $$value;
+    			$$invalidate(13, img);
+    		});
+    	}
+
+    	const mouseout_handler = () => $$invalidate(15, showZoom = false);
+    	const touchend_handler = () => $$invalidate(15, showZoom = false);
+
+    	$$self.$$set = $$new_props => {
+    		$$props = assign(assign({}, $$props), exclude_internal_props($$new_props));
+    		$$invalidate(23, $$restProps = compute_rest_props($$props, omit_props_names));
+    		if ('src' in $$new_props) $$invalidate(0, src = $$new_props.src);
+    		if ('alt' in $$new_props) $$invalidate(1, alt = $$new_props.alt);
+    		if ('width' in $$new_props) $$invalidate(2, width = $$new_props.width);
+    		if ('height' in $$new_props) $$invalidate(3, height = $$new_props.height);
+    		if ('className' in $$new_props) $$invalidate(4, className = $$new_props.className);
+    		if ('zoomImgSrc' in $$new_props) $$invalidate(5, zoomImgSrc = $$new_props.zoomImgSrc);
+    		if ('zoomFactor' in $$new_props) $$invalidate(6, zoomFactor = $$new_props.zoomFactor);
+    		if ('mgWidth' in $$new_props) $$invalidate(7, mgWidth = $$new_props.mgWidth);
+    		if ('mgHeight' in $$new_props) $$invalidate(8, mgHeight = $$new_props.mgHeight);
+    		if ('mgBorderWidth' in $$new_props) $$invalidate(9, mgBorderWidth = $$new_props.mgBorderWidth);
+    		if ('mgShape' in $$new_props) $$invalidate(10, mgShape = $$new_props.mgShape);
+    		if ('mgShowOverflow' in $$new_props) $$invalidate(11, mgShowOverflow = $$new_props.mgShowOverflow);
+    		if ('mgMouseOffsetX' in $$new_props) $$invalidate(24, mgMouseOffsetX = $$new_props.mgMouseOffsetX);
+    		if ('mgMouseOffsetY' in $$new_props) $$invalidate(25, mgMouseOffsetY = $$new_props.mgMouseOffsetY);
+    		if ('mgTouchOffsetX' in $$new_props) $$invalidate(26, mgTouchOffsetX = $$new_props.mgTouchOffsetX);
+    		if ('mgTouchOffsetY' in $$new_props) $$invalidate(27, mgTouchOffsetY = $$new_props.mgTouchOffsetY);
+    		if ('disabled' in $$new_props) $$invalidate(12, disabled = $$new_props.disabled);
+    	};
+
+    	$$self.$capture_state = () => ({
+    		img,
+    		imgBounds,
+    		showZoom,
+    		mgOffsetX,
+    		mgOffsetY,
+    		relX,
+    		relY,
+    		src,
+    		alt,
+    		width,
+    		height,
+    		className,
+    		zoomImgSrc,
+    		zoomFactor,
+    		mgWidth,
+    		mgHeight,
+    		mgBorderWidth,
+    		mgShape,
+    		mgShowOverflow,
+    		mgMouseOffsetX,
+    		mgMouseOffsetY,
+    		mgTouchOffsetX,
+    		mgTouchOffsetY,
+    		disabled,
+    		calcImgBounds,
+    		onMouseMove,
+    		onTouchMove
+    	});
+
+    	$$self.$inject_state = $$new_props => {
+    		if ('img' in $$props) $$invalidate(13, img = $$new_props.img);
+    		if ('imgBounds' in $$props) $$invalidate(14, imgBounds = $$new_props.imgBounds);
+    		if ('showZoom' in $$props) $$invalidate(15, showZoom = $$new_props.showZoom);
+    		if ('mgOffsetX' in $$props) $$invalidate(16, mgOffsetX = $$new_props.mgOffsetX);
+    		if ('mgOffsetY' in $$props) $$invalidate(17, mgOffsetY = $$new_props.mgOffsetY);
+    		if ('relX' in $$props) $$invalidate(18, relX = $$new_props.relX);
+    		if ('relY' in $$props) $$invalidate(19, relY = $$new_props.relY);
+    		if ('src' in $$props) $$invalidate(0, src = $$new_props.src);
+    		if ('alt' in $$props) $$invalidate(1, alt = $$new_props.alt);
+    		if ('width' in $$props) $$invalidate(2, width = $$new_props.width);
+    		if ('height' in $$props) $$invalidate(3, height = $$new_props.height);
+    		if ('className' in $$props) $$invalidate(4, className = $$new_props.className);
+    		if ('zoomImgSrc' in $$props) $$invalidate(5, zoomImgSrc = $$new_props.zoomImgSrc);
+    		if ('zoomFactor' in $$props) $$invalidate(6, zoomFactor = $$new_props.zoomFactor);
+    		if ('mgWidth' in $$props) $$invalidate(7, mgWidth = $$new_props.mgWidth);
+    		if ('mgHeight' in $$props) $$invalidate(8, mgHeight = $$new_props.mgHeight);
+    		if ('mgBorderWidth' in $$props) $$invalidate(9, mgBorderWidth = $$new_props.mgBorderWidth);
+    		if ('mgShape' in $$props) $$invalidate(10, mgShape = $$new_props.mgShape);
+    		if ('mgShowOverflow' in $$props) $$invalidate(11, mgShowOverflow = $$new_props.mgShowOverflow);
+    		if ('mgMouseOffsetX' in $$props) $$invalidate(24, mgMouseOffsetX = $$new_props.mgMouseOffsetX);
+    		if ('mgMouseOffsetY' in $$props) $$invalidate(25, mgMouseOffsetY = $$new_props.mgMouseOffsetY);
+    		if ('mgTouchOffsetX' in $$props) $$invalidate(26, mgTouchOffsetX = $$new_props.mgTouchOffsetX);
+    		if ('mgTouchOffsetY' in $$props) $$invalidate(27, mgTouchOffsetY = $$new_props.mgTouchOffsetY);
+    		if ('disabled' in $$props) $$invalidate(12, disabled = $$new_props.disabled);
+    	};
+
+    	if ($$props && "$$inject" in $$props) {
+    		$$self.$inject_state($$props.$$inject);
+    	}
+
+    	return [
+    		src,
+    		alt,
+    		width,
+    		height,
+    		className,
+    		zoomImgSrc,
+    		zoomFactor,
+    		mgWidth,
+    		mgHeight,
+    		mgBorderWidth,
+    		mgShape,
+    		mgShowOverflow,
+    		disabled,
+    		img,
+    		imgBounds,
+    		showZoom,
+    		mgOffsetX,
+    		mgOffsetY,
+    		relX,
+    		relY,
+    		calcImgBounds,
+    		onMouseMove,
+    		onTouchMove,
+    		$$restProps,
+    		mgMouseOffsetX,
+    		mgMouseOffsetY,
+    		mgTouchOffsetX,
+    		mgTouchOffsetY,
+    		img_1_binding,
+    		mouseout_handler,
+    		touchend_handler
+    	];
+    }
+
+    class Magnifier extends SvelteComponentDev {
+    	constructor(options) {
+    		super(options);
+
+    		init(this, options, instance$1, create_fragment$1, safe_not_equal, {
+    			src: 0,
+    			alt: 1,
+    			width: 2,
+    			height: 3,
+    			className: 4,
+    			zoomImgSrc: 5,
+    			zoomFactor: 6,
+    			mgWidth: 7,
+    			mgHeight: 8,
+    			mgBorderWidth: 9,
+    			mgShape: 10,
+    			mgShowOverflow: 11,
+    			mgMouseOffsetX: 24,
+    			mgMouseOffsetY: 25,
+    			mgTouchOffsetX: 26,
+    			mgTouchOffsetY: 27,
+    			disabled: 12
+    		});
+
+    		dispatch_dev("SvelteRegisterComponent", {
+    			component: this,
+    			tagName: "Magnifier",
+    			options,
+    			id: create_fragment$1.name
+    		});
+
+    		const { ctx } = this.$$;
+    		const props = options.props || {};
+
+    		if (/*src*/ ctx[0] === undefined && !('src' in props)) {
+    			console.warn("<Magnifier> was created without expected prop 'src'");
+    		}
+
+    		if (/*alt*/ ctx[1] === undefined && !('alt' in props)) {
+    			console.warn("<Magnifier> was created without expected prop 'alt'");
+    		}
+    	}
+
+    	get src() {
+    		throw new Error("<Magnifier>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set src(value) {
+    		throw new Error("<Magnifier>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get alt() {
+    		throw new Error("<Magnifier>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set alt(value) {
+    		throw new Error("<Magnifier>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get width() {
+    		throw new Error("<Magnifier>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set width(value) {
+    		throw new Error("<Magnifier>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get height() {
+    		throw new Error("<Magnifier>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set height(value) {
+    		throw new Error("<Magnifier>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get className() {
+    		throw new Error("<Magnifier>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set className(value) {
+    		throw new Error("<Magnifier>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get zoomImgSrc() {
+    		throw new Error("<Magnifier>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set zoomImgSrc(value) {
+    		throw new Error("<Magnifier>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get zoomFactor() {
+    		throw new Error("<Magnifier>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set zoomFactor(value) {
+    		throw new Error("<Magnifier>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get mgWidth() {
+    		throw new Error("<Magnifier>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set mgWidth(value) {
+    		throw new Error("<Magnifier>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get mgHeight() {
+    		throw new Error("<Magnifier>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set mgHeight(value) {
+    		throw new Error("<Magnifier>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get mgBorderWidth() {
+    		throw new Error("<Magnifier>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set mgBorderWidth(value) {
+    		throw new Error("<Magnifier>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get mgShape() {
+    		throw new Error("<Magnifier>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set mgShape(value) {
+    		throw new Error("<Magnifier>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get mgShowOverflow() {
+    		throw new Error("<Magnifier>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set mgShowOverflow(value) {
+    		throw new Error("<Magnifier>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get mgMouseOffsetX() {
+    		throw new Error("<Magnifier>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set mgMouseOffsetX(value) {
+    		throw new Error("<Magnifier>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get mgMouseOffsetY() {
+    		throw new Error("<Magnifier>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set mgMouseOffsetY(value) {
+    		throw new Error("<Magnifier>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get mgTouchOffsetX() {
+    		throw new Error("<Magnifier>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set mgTouchOffsetX(value) {
+    		throw new Error("<Magnifier>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get mgTouchOffsetY() {
+    		throw new Error("<Magnifier>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set mgTouchOffsetY(value) {
+    		throw new Error("<Magnifier>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get disabled() {
+    		throw new Error("<Magnifier>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set disabled(value) {
+    		throw new Error("<Magnifier>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+    }
+
     /* src/App.svelte generated by Svelte v3.46.4 */
 
     const { console: console_1, window: window_1 } = globals;
     const file = "src/App.svelte";
 
-    // (200:2) <svelte:fragment slot="slide-title">
+    // (201:2) <svelte:fragment slot="slide-title">
     function create_slide_title_slot_16(ctx) {
     	let t;
 
@@ -61381,14 +62125,14 @@ var app = (function () {
     		block,
     		id: create_slide_title_slot_16.name,
     		type: "slot",
-    		source: "(200:2) <svelte:fragment slot=\\\"slide-title\\\">",
+    		source: "(201:2) <svelte:fragment slot=\\\"slide-title\\\">",
     		ctx
     	});
 
     	return block;
     }
 
-    // (203:2) <svelte:fragment slot="byline">
+    // (204:2) <svelte:fragment slot="byline">
     function create_byline_slot(ctx) {
     	let t0;
     	let br;
@@ -61399,7 +62143,7 @@ var app = (function () {
     			t0 = text("By Maryam K, Mohammed A, and Yaseen A ");
     			br = element("br");
     			t1 = text(" Advised by Dr. Maen Alkhader");
-    			add_location(br, file, 203, 41, 6292);
+    			add_location(br, file, 204, 41, 6338);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, t0, anchor);
@@ -61417,28 +62161,58 @@ var app = (function () {
     		block,
     		id: create_byline_slot.name,
     		type: "slot",
-    		source: "(203:2) <svelte:fragment slot=\\\"byline\\\">",
+    		source: "(204:2) <svelte:fragment slot=\\\"byline\\\">",
     		ctx
     	});
 
     	return block;
     }
 
-    // (206:2) <svelte:fragment slot="slide-content">
+    // (207:2) <svelte:fragment slot="slide-content">
     function create_slide_content_slot_16(ctx) {
     	let p;
+    	let t1;
+    	let magnifier;
+    	let current;
+
+    	magnifier = new Magnifier({
+    			props: {
+    				src: "/android-chrome-512x512.png",
+    				width: "256px",
+    				alt: "",
+    				mgShowOverflow: false
+    			},
+    			$$inline: true
+    		});
 
     	const block = {
     		c: function create() {
     			p = element("p");
     			p.textContent = "Intro goes here.";
-    			add_location(p, file, 206, 3, 6393);
+    			t1 = space();
+    			create_component(magnifier.$$.fragment);
+    			add_location(p, file, 207, 3, 6439);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, p, anchor);
+    			insert_dev(target, t1, anchor);
+    			mount_component(magnifier, target, anchor);
+    			current = true;
+    		},
+    		p: noop,
+    		i: function intro(local) {
+    			if (current) return;
+    			transition_in(magnifier.$$.fragment, local);
+    			current = true;
+    		},
+    		o: function outro(local) {
+    			transition_out(magnifier.$$.fragment, local);
+    			current = false;
     		},
     		d: function destroy(detaching) {
     			if (detaching) detach_dev(p);
+    			if (detaching) detach_dev(t1);
+    			destroy_component(magnifier, detaching);
     		}
     	};
 
@@ -61446,14 +62220,14 @@ var app = (function () {
     		block,
     		id: create_slide_content_slot_16.name,
     		type: "slot",
-    		source: "(206:2) <svelte:fragment slot=\\\"slide-content\\\">",
+    		source: "(207:2) <svelte:fragment slot=\\\"slide-content\\\">",
     		ctx
     	});
 
     	return block;
     }
 
-    // (214:2) <svelte:fragment slot="slide-title"    >
+    // (216:2) <svelte:fragment slot="slide-title"    >
     function create_slide_title_slot_15(ctx) {
     	let t;
 
@@ -61473,14 +62247,14 @@ var app = (function () {
     		block,
     		id: create_slide_title_slot_15.name,
     		type: "slot",
-    		source: "(214:2) <svelte:fragment slot=\\\"slide-title\\\"    >",
+    		source: "(216:2) <svelte:fragment slot=\\\"slide-title\\\"    >",
     		ctx
     	});
 
     	return block;
     }
 
-    // (217:2) <svelte:fragment slot="slide-content">
+    // (219:2) <svelte:fragment slot="slide-content">
     function create_slide_content_slot_15(ctx) {
     	let ul;
     	let li0;
@@ -61495,9 +62269,9 @@ var app = (function () {
     			t1 = space();
     			li1 = element("li");
     			li1.textContent = "AUS Example";
-    			add_location(li0, file, 218, 4, 6685);
-    			add_location(li1, file, 219, 4, 6728);
-    			add_location(ul, file, 217, 3, 6676);
+    			add_location(li0, file, 220, 4, 6825);
+    			add_location(li1, file, 221, 4, 6868);
+    			add_location(ul, file, 219, 3, 6816);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, ul, anchor);
@@ -61514,14 +62288,14 @@ var app = (function () {
     		block,
     		id: create_slide_content_slot_15.name,
     		type: "slot",
-    		source: "(217:2) <svelte:fragment slot=\\\"slide-content\\\">",
+    		source: "(219:2) <svelte:fragment slot=\\\"slide-content\\\">",
     		ctx
     	});
 
     	return block;
     }
 
-    // (228:2) <svelte:fragment slot="slide-title"    >
+    // (230:2) <svelte:fragment slot="slide-title"    >
     function create_slide_title_slot_14(ctx) {
     	let t;
 
@@ -61541,14 +62315,14 @@ var app = (function () {
     		block,
     		id: create_slide_title_slot_14.name,
     		type: "slot",
-    		source: "(228:2) <svelte:fragment slot=\\\"slide-title\\\"    >",
+    		source: "(230:2) <svelte:fragment slot=\\\"slide-title\\\"    >",
     		ctx
     	});
 
     	return block;
     }
 
-    // (231:2) <svelte:fragment slot="slide-content">
+    // (233:2) <svelte:fragment slot="slide-content">
     function create_slide_content_slot_14(ctx) {
     	let p;
     	let t1;
@@ -61573,11 +62347,11 @@ var app = (function () {
     			t5 = space();
     			li2 = element("li");
     			li2.textContent = "The design of turbomachinery is directly related to the material\n\t\t\t\t\tperformance";
-    			add_location(p, file, 231, 3, 7028);
-    			add_location(li0, file, 233, 4, 7092);
-    			add_location(li1, file, 234, 4, 7167);
-    			add_location(li2, file, 238, 4, 7291);
-    			add_location(ul, file, 232, 3, 7083);
+    			add_location(p, file, 233, 3, 7168);
+    			add_location(li0, file, 235, 4, 7232);
+    			add_location(li1, file, 236, 4, 7307);
+    			add_location(li2, file, 240, 4, 7431);
+    			add_location(ul, file, 234, 3, 7223);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, p, anchor);
@@ -61600,14 +62374,14 @@ var app = (function () {
     		block,
     		id: create_slide_content_slot_14.name,
     		type: "slot",
-    		source: "(231:2) <svelte:fragment slot=\\\"slide-content\\\">",
+    		source: "(233:2) <svelte:fragment slot=\\\"slide-content\\\">",
     		ctx
     	});
 
     	return block;
     }
 
-    // (247:2) <svelte:fragment slot="slide-title">
+    // (249:2) <svelte:fragment slot="slide-title">
     function create_slide_title_slot_13(ctx) {
     	let t;
 
@@ -61627,14 +62401,14 @@ var app = (function () {
     		block,
     		id: create_slide_title_slot_13.name,
     		type: "slot",
-    		source: "(247:2) <svelte:fragment slot=\\\"slide-title\\\">",
+    		source: "(249:2) <svelte:fragment slot=\\\"slide-title\\\">",
     		ctx
     	});
 
     	return block;
     }
 
-    // (248:2) <svelte:fragment slot="slide-content">
+    // (250:2) <svelte:fragment slot="slide-content">
     function create_slide_content_slot_13(ctx) {
     	let p;
     	let t1;
@@ -61658,7 +62432,7 @@ var app = (function () {
     			p.textContent = "A TEC module, also known as a thermoelectric, or a Peltier module, is\n\t\t\t\tbasically a heat pump.";
     			t1 = space();
     			create_component(tecmodule.$$.fragment);
-    			add_location(p, file, 248, 3, 7635);
+    			add_location(p, file, 250, 3, 7775);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, p, anchor);
@@ -61687,14 +62461,14 @@ var app = (function () {
     		block,
     		id: create_slide_content_slot_13.name,
     		type: "slot",
-    		source: "(248:2) <svelte:fragment slot=\\\"slide-content\\\">",
+    		source: "(250:2) <svelte:fragment slot=\\\"slide-content\\\">",
     		ctx
     	});
 
     	return block;
     }
 
-    // (267:2) <svelte:fragment slot="slide-title">
+    // (269:2) <svelte:fragment slot="slide-title">
     function create_slide_title_slot_12(ctx) {
     	let t;
 
@@ -61714,14 +62488,14 @@ var app = (function () {
     		block,
     		id: create_slide_title_slot_12.name,
     		type: "slot",
-    		source: "(267:2) <svelte:fragment slot=\\\"slide-title\\\">",
+    		source: "(269:2) <svelte:fragment slot=\\\"slide-title\\\">",
     		ctx
     	});
 
     	return block;
     }
 
-    // (268:2) <svelte:fragment slot="slide-content">
+    // (270:2) <svelte:fragment slot="slide-content">
     function create_slide_content_slot_12(ctx) {
     	let p;
 
@@ -61729,7 +62503,7 @@ var app = (function () {
     		c: function create() {
     			p = element("p");
     			p.textContent = "Our idea is to use a bunch to heat and cool stuff to see if it breaks";
-    			add_location(p, file, 268, 3, 8162);
+    			add_location(p, file, 270, 3, 8302);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, p, anchor);
@@ -61743,14 +62517,14 @@ var app = (function () {
     		block,
     		id: create_slide_content_slot_12.name,
     		type: "slot",
-    		source: "(268:2) <svelte:fragment slot=\\\"slide-content\\\">",
+    		source: "(270:2) <svelte:fragment slot=\\\"slide-content\\\">",
     		ctx
     	});
 
     	return block;
     }
 
-    // (278:2) <svelte:fragment slot="slide-title"    >
+    // (280:2) <svelte:fragment slot="slide-title"    >
     function create_slide_title_slot_11(ctx) {
     	let t;
 
@@ -61770,14 +62544,14 @@ var app = (function () {
     		block,
     		id: create_slide_title_slot_11.name,
     		type: "slot",
-    		source: "(278:2) <svelte:fragment slot=\\\"slide-title\\\"    >",
+    		source: "(280:2) <svelte:fragment slot=\\\"slide-title\\\"    >",
     		ctx
     	});
 
     	return block;
     }
 
-    // (281:2) <svelte:fragment slot="slide-content">
+    // (283:2) <svelte:fragment slot="slide-content">
     function create_slide_content_slot_11(ctx) {
     	let ul;
     	let li0;
@@ -61797,10 +62571,10 @@ var app = (function () {
     			t3 = space();
     			li2 = element("li");
     			li2.textContent = "The UAE is home to one of the largest commercial plane hubs in the\n\t\t\t\t\tword, and the planes often see temperatures of -40°C to -60°C in the\n\t\t\t\t\tair, and temperatures of 50°C on the ground.";
-    			add_location(li0, file, 282, 4, 8523);
-    			add_location(li1, file, 286, 4, 8640);
-    			add_location(li2, file, 287, 4, 8708);
-    			add_location(ul, file, 281, 3, 8514);
+    			add_location(li0, file, 284, 4, 8663);
+    			add_location(li1, file, 288, 4, 8780);
+    			add_location(li2, file, 289, 4, 8848);
+    			add_location(ul, file, 283, 3, 8654);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, ul, anchor);
@@ -61819,14 +62593,14 @@ var app = (function () {
     		block,
     		id: create_slide_content_slot_11.name,
     		type: "slot",
-    		source: "(281:2) <svelte:fragment slot=\\\"slide-content\\\">",
+    		source: "(283:2) <svelte:fragment slot=\\\"slide-content\\\">",
     		ctx
     	});
 
     	return block;
     }
 
-    // (300:2) <svelte:fragment slot="slide-title"    >
+    // (302:2) <svelte:fragment slot="slide-title"    >
     function create_slide_title_slot_10(ctx) {
     	let t;
 
@@ -61846,14 +62620,14 @@ var app = (function () {
     		block,
     		id: create_slide_title_slot_10.name,
     		type: "slot",
-    		source: "(300:2) <svelte:fragment slot=\\\"slide-title\\\"    >",
+    		source: "(302:2) <svelte:fragment slot=\\\"slide-title\\\"    >",
     		ctx
     	});
 
     	return block;
     }
 
-    // (303:2) <svelte:fragment slot="slide-content">
+    // (305:2) <svelte:fragment slot="slide-content">
     function create_slide_content_slot_10(ctx) {
     	let p;
     	let t1;
@@ -61878,11 +62652,11 @@ var app = (function () {
     			t5 = space();
     			li2 = element("li");
     			li2.textContent = "Can study smaller specimens, unlike furnaces which need large\n\t\t\t\t\tspecimens";
-    			add_location(p, file, 303, 3, 9195);
-    			add_location(li0, file, 305, 4, 9252);
-    			add_location(li1, file, 309, 4, 9381);
-    			add_location(li2, file, 310, 4, 9454);
-    			add_location(ul, file, 304, 3, 9243);
+    			add_location(p, file, 305, 3, 9335);
+    			add_location(li0, file, 307, 4, 9392);
+    			add_location(li1, file, 311, 4, 9521);
+    			add_location(li2, file, 312, 4, 9594);
+    			add_location(ul, file, 306, 3, 9383);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, p, anchor);
@@ -61905,14 +62679,14 @@ var app = (function () {
     		block,
     		id: create_slide_content_slot_10.name,
     		type: "slot",
-    		source: "(303:2) <svelte:fragment slot=\\\"slide-content\\\">",
+    		source: "(305:2) <svelte:fragment slot=\\\"slide-content\\\">",
     		ctx
     	});
 
     	return block;
     }
 
-    // (323:2) <svelte:fragment slot="slide-title">
+    // (325:2) <svelte:fragment slot="slide-title">
     function create_slide_title_slot_9(ctx) {
     	let t;
 
@@ -61932,14 +62706,14 @@ var app = (function () {
     		block,
     		id: create_slide_title_slot_9.name,
     		type: "slot",
-    		source: "(323:2) <svelte:fragment slot=\\\"slide-title\\\">",
+    		source: "(325:2) <svelte:fragment slot=\\\"slide-title\\\">",
     		ctx
     	});
 
     	return block;
     }
 
-    // (324:2) <svelte:fragment slot="slide-content">
+    // (326:2) <svelte:fragment slot="slide-content">
     function create_slide_content_slot_9(ctx) {
     	let p;
 
@@ -61947,7 +62721,7 @@ var app = (function () {
     		c: function create() {
     			p = element("p");
     			p.textContent = "Problem";
-    			add_location(p, file, 324, 3, 9819);
+    			add_location(p, file, 326, 3, 9959);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, p, anchor);
@@ -61961,14 +62735,14 @@ var app = (function () {
     		block,
     		id: create_slide_content_slot_9.name,
     		type: "slot",
-    		source: "(324:2) <svelte:fragment slot=\\\"slide-content\\\">",
+    		source: "(326:2) <svelte:fragment slot=\\\"slide-content\\\">",
     		ctx
     	});
 
     	return block;
     }
 
-    // (329:2) <svelte:fragment slot="slide-title">
+    // (331:2) <svelte:fragment slot="slide-title">
     function create_slide_title_slot_8(ctx) {
     	let t;
 
@@ -61988,14 +62762,14 @@ var app = (function () {
     		block,
     		id: create_slide_title_slot_8.name,
     		type: "slot",
-    		source: "(329:2) <svelte:fragment slot=\\\"slide-title\\\">",
+    		source: "(331:2) <svelte:fragment slot=\\\"slide-title\\\">",
     		ctx
     	});
 
     	return block;
     }
 
-    // (330:2) <svelte:fragment slot="slide-content">
+    // (332:2) <svelte:fragment slot="slide-content">
     function create_slide_content_slot_8(ctx) {
     	let p;
 
@@ -62003,7 +62777,7 @@ var app = (function () {
     		c: function create() {
     			p = element("p");
     			p.textContent = "Problem";
-    			add_location(p, file, 330, 3, 10053);
+    			add_location(p, file, 332, 3, 10193);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, p, anchor);
@@ -62017,14 +62791,14 @@ var app = (function () {
     		block,
     		id: create_slide_content_slot_8.name,
     		type: "slot",
-    		source: "(330:2) <svelte:fragment slot=\\\"slide-content\\\">",
+    		source: "(332:2) <svelte:fragment slot=\\\"slide-content\\\">",
     		ctx
     	});
 
     	return block;
     }
 
-    // (338:2) <svelte:fragment slot="slide-title">
+    // (340:2) <svelte:fragment slot="slide-title">
     function create_slide_title_slot_7(ctx) {
     	let t;
 
@@ -62044,14 +62818,14 @@ var app = (function () {
     		block,
     		id: create_slide_title_slot_7.name,
     		type: "slot",
-    		source: "(338:2) <svelte:fragment slot=\\\"slide-title\\\">",
+    		source: "(340:2) <svelte:fragment slot=\\\"slide-title\\\">",
     		ctx
     	});
 
     	return block;
     }
 
-    // (339:2) <svelte:fragment slot="slide-content">
+    // (341:2) <svelte:fragment slot="slide-content">
     function create_slide_content_slot_7(ctx) {
     	let p;
 
@@ -62059,7 +62833,7 @@ var app = (function () {
     		c: function create() {
     			p = element("p");
     			p.textContent = "Existing solutions";
-    			add_location(p, file, 339, 3, 10311);
+    			add_location(p, file, 341, 3, 10451);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, p, anchor);
@@ -62073,14 +62847,14 @@ var app = (function () {
     		block,
     		id: create_slide_content_slot_7.name,
     		type: "slot",
-    		source: "(339:2) <svelte:fragment slot=\\\"slide-content\\\">",
+    		source: "(341:2) <svelte:fragment slot=\\\"slide-content\\\">",
     		ctx
     	});
 
     	return block;
     }
 
-    // (344:2) <svelte:fragment slot="slide-title"    >
+    // (346:2) <svelte:fragment slot="slide-title"    >
     function create_slide_title_slot_6(ctx) {
     	let t;
 
@@ -62100,14 +62874,14 @@ var app = (function () {
     		block,
     		id: create_slide_title_slot_6.name,
     		type: "slot",
-    		source: "(344:2) <svelte:fragment slot=\\\"slide-title\\\"    >",
+    		source: "(346:2) <svelte:fragment slot=\\\"slide-title\\\"    >",
     		ctx
     	});
 
     	return block;
     }
 
-    // (347:2) <svelte:fragment slot="slide-content">
+    // (349:2) <svelte:fragment slot="slide-content">
     function create_slide_content_slot_6(ctx) {
     	let ul;
     	let li0;
@@ -62127,10 +62901,10 @@ var app = (function () {
     			t3 = space();
     			li2 = element("li");
     			li2.textContent = "Do so without destroying the TEC module (it's rated for a range and\n\t\t\t\t\tcyclecount)";
-    			add_location(li0, file, 348, 4, 10593);
-    			add_location(li1, file, 352, 4, 10719);
-    			add_location(li2, file, 356, 4, 10820);
-    			add_location(ul, file, 347, 3, 10584);
+    			add_location(li0, file, 350, 4, 10733);
+    			add_location(li1, file, 354, 4, 10859);
+    			add_location(li2, file, 358, 4, 10960);
+    			add_location(ul, file, 349, 3, 10724);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, ul, anchor);
@@ -62149,14 +62923,14 @@ var app = (function () {
     		block,
     		id: create_slide_content_slot_6.name,
     		type: "slot",
-    		source: "(347:2) <svelte:fragment slot=\\\"slide-content\\\">",
+    		source: "(349:2) <svelte:fragment slot=\\\"slide-content\\\">",
     		ctx
     	});
 
     	return block;
     }
 
-    // (369:2) <svelte:fragment slot="slide-title">
+    // (371:2) <svelte:fragment slot="slide-title">
     function create_slide_title_slot_5(ctx) {
     	let t;
 
@@ -62176,14 +62950,14 @@ var app = (function () {
     		block,
     		id: create_slide_title_slot_5.name,
     		type: "slot",
-    		source: "(369:2) <svelte:fragment slot=\\\"slide-title\\\">",
+    		source: "(371:2) <svelte:fragment slot=\\\"slide-title\\\">",
     		ctx
     	});
 
     	return block;
     }
 
-    // (370:2) <svelte:fragment slot="slide-content">
+    // (372:2) <svelte:fragment slot="slide-content">
     function create_slide_content_slot_5(ctx) {
     	let p;
 
@@ -62191,7 +62965,7 @@ var app = (function () {
     		c: function create() {
     			p = element("p");
     			p.textContent = "Put spinny here";
-    			add_location(p, file, 370, 3, 11177);
+    			add_location(p, file, 372, 3, 11317);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, p, anchor);
@@ -62205,14 +62979,14 @@ var app = (function () {
     		block,
     		id: create_slide_content_slot_5.name,
     		type: "slot",
-    		source: "(370:2) <svelte:fragment slot=\\\"slide-content\\\">",
+    		source: "(372:2) <svelte:fragment slot=\\\"slide-content\\\">",
     		ctx
     	});
 
     	return block;
     }
 
-    // (378:2) <svelte:fragment slot="slide-title">
+    // (380:2) <svelte:fragment slot="slide-title">
     function create_slide_title_slot_4(ctx) {
     	let t;
 
@@ -62232,14 +63006,14 @@ var app = (function () {
     		block,
     		id: create_slide_title_slot_4.name,
     		type: "slot",
-    		source: "(378:2) <svelte:fragment slot=\\\"slide-title\\\">",
+    		source: "(380:2) <svelte:fragment slot=\\\"slide-title\\\">",
     		ctx
     	});
 
     	return block;
     }
 
-    // (379:2) <svelte:fragment slot="slide-content">
+    // (381:2) <svelte:fragment slot="slide-content">
     function create_slide_content_slot_4(ctx) {
     	let p;
 
@@ -62247,7 +63021,7 @@ var app = (function () {
     		c: function create() {
     			p = element("p");
     			p.textContent = "Make zoom into it";
-    			add_location(p, file, 379, 3, 11437);
+    			add_location(p, file, 381, 3, 11577);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, p, anchor);
@@ -62261,14 +63035,14 @@ var app = (function () {
     		block,
     		id: create_slide_content_slot_4.name,
     		type: "slot",
-    		source: "(379:2) <svelte:fragment slot=\\\"slide-content\\\">",
+    		source: "(381:2) <svelte:fragment slot=\\\"slide-content\\\">",
     		ctx
     	});
 
     	return block;
     }
 
-    // (384:2) <svelte:fragment slot="slide-title">
+    // (386:2) <svelte:fragment slot="slide-title">
     function create_slide_title_slot_3(ctx) {
     	let t;
 
@@ -62288,14 +63062,14 @@ var app = (function () {
     		block,
     		id: create_slide_title_slot_3.name,
     		type: "slot",
-    		source: "(384:2) <svelte:fragment slot=\\\"slide-title\\\">",
+    		source: "(386:2) <svelte:fragment slot=\\\"slide-title\\\">",
     		ctx
     	});
 
     	return block;
     }
 
-    // (385:2) <svelte:fragment slot="slide-content">
+    // (387:2) <svelte:fragment slot="slide-content">
     function create_slide_content_slot_3(ctx) {
     	let p;
 
@@ -62303,7 +63077,7 @@ var app = (function () {
     		c: function create() {
     			p = element("p");
     			p.textContent = "Make zoom into it";
-    			add_location(p, file, 385, 3, 11692);
+    			add_location(p, file, 387, 3, 11832);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, p, anchor);
@@ -62317,14 +63091,14 @@ var app = (function () {
     		block,
     		id: create_slide_content_slot_3.name,
     		type: "slot",
-    		source: "(385:2) <svelte:fragment slot=\\\"slide-content\\\">",
+    		source: "(387:2) <svelte:fragment slot=\\\"slide-content\\\">",
     		ctx
     	});
 
     	return block;
     }
 
-    // (390:2) <svelte:fragment slot="slide-title">
+    // (392:2) <svelte:fragment slot="slide-title">
     function create_slide_title_slot_2(ctx) {
     	let t;
 
@@ -62344,14 +63118,14 @@ var app = (function () {
     		block,
     		id: create_slide_title_slot_2.name,
     		type: "slot",
-    		source: "(390:2) <svelte:fragment slot=\\\"slide-title\\\">",
+    		source: "(392:2) <svelte:fragment slot=\\\"slide-title\\\">",
     		ctx
     	});
 
     	return block;
     }
 
-    // (391:2) <svelte:fragment slot="slide-content">
+    // (393:2) <svelte:fragment slot="slide-content">
     function create_slide_content_slot_2(ctx) {
     	let p;
 
@@ -62359,7 +63133,7 @@ var app = (function () {
     		c: function create() {
     			p = element("p");
     			p.textContent = "Make zoom into it";
-    			add_location(p, file, 391, 3, 11944);
+    			add_location(p, file, 393, 3, 12084);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, p, anchor);
@@ -62373,14 +63147,14 @@ var app = (function () {
     		block,
     		id: create_slide_content_slot_2.name,
     		type: "slot",
-    		source: "(391:2) <svelte:fragment slot=\\\"slide-content\\\">",
+    		source: "(393:2) <svelte:fragment slot=\\\"slide-content\\\">",
     		ctx
     	});
 
     	return block;
     }
 
-    // (396:2) <svelte:fragment slot="slide-title">
+    // (398:2) <svelte:fragment slot="slide-title">
     function create_slide_title_slot_1(ctx) {
     	let t;
 
@@ -62400,14 +63174,14 @@ var app = (function () {
     		block,
     		id: create_slide_title_slot_1.name,
     		type: "slot",
-    		source: "(396:2) <svelte:fragment slot=\\\"slide-title\\\">",
+    		source: "(398:2) <svelte:fragment slot=\\\"slide-title\\\">",
     		ctx
     	});
 
     	return block;
     }
 
-    // (397:2) <svelte:fragment slot="slide-content">
+    // (399:2) <svelte:fragment slot="slide-content">
     function create_slide_content_slot_1(ctx) {
     	let p;
 
@@ -62415,7 +63189,7 @@ var app = (function () {
     		c: function create() {
     			p = element("p");
     			p.textContent = "Make zoom into it";
-    			add_location(p, file, 397, 3, 12189);
+    			add_location(p, file, 399, 3, 12329);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, p, anchor);
@@ -62429,14 +63203,14 @@ var app = (function () {
     		block,
     		id: create_slide_content_slot_1.name,
     		type: "slot",
-    		source: "(397:2) <svelte:fragment slot=\\\"slide-content\\\">",
+    		source: "(399:2) <svelte:fragment slot=\\\"slide-content\\\">",
     		ctx
     	});
 
     	return block;
     }
 
-    // (402:2) <svelte:fragment slot="slide-title">
+    // (404:2) <svelte:fragment slot="slide-title">
     function create_slide_title_slot(ctx) {
     	let t;
 
@@ -62456,14 +63230,14 @@ var app = (function () {
     		block,
     		id: create_slide_title_slot.name,
     		type: "slot",
-    		source: "(402:2) <svelte:fragment slot=\\\"slide-title\\\">",
+    		source: "(404:2) <svelte:fragment slot=\\\"slide-title\\\">",
     		ctx
     	});
 
     	return block;
     }
 
-    // (403:2) <svelte:fragment slot="slide-content">
+    // (405:2) <svelte:fragment slot="slide-content">
     function create_slide_content_slot(ctx) {
     	let p;
 
@@ -62471,7 +63245,7 @@ var app = (function () {
     		c: function create() {
     			p = element("p");
     			p.textContent = "Make zoom into it";
-    			add_location(p, file, 403, 3, 12433);
+    			add_location(p, file, 405, 3, 12573);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, p, anchor);
@@ -62485,7 +63259,7 @@ var app = (function () {
     		block,
     		id: create_slide_content_slot.name,
     		type: "slot",
-    		source: "(403:2) <svelte:fragment slot=\\\"slide-content\\\">",
+    		source: "(405:2) <svelte:fragment slot=\\\"slide-content\\\">",
     		ctx
     	});
 
@@ -63030,7 +63804,7 @@ var app = (function () {
     			t19 = space();
     			create_component(slide16.$$.fragment);
     			attr_dev(main, "class", "svelte-1778wcc");
-    			add_location(main, file, 196, 0, 5974);
+    			add_location(main, file, 197, 0, 6020);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -63696,11 +64470,12 @@ var app = (function () {
     		onMount,
     		writable,
     		Slide,
-    		Presentation,
     		Logo,
     		TecModule,
     		PageNumber,
     		ScrollToSlide,
+    		Presentation,
+    		Magnifier,
     		storedTheme,
     		theme,
     		y,

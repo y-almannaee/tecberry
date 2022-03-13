@@ -34,7 +34,7 @@
 				break;
 			}
 		}
-	}
+	} else hidden = true;
 </script>
 
 <svelte:window bind:scrollY="{y}" />

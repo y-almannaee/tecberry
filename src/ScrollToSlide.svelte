@@ -20,16 +20,6 @@
 		page_input,
 		value;
 
-	// $: for (let i = 0; i < headings.length; i++) {
-	// 	if (headings[i].offsetTop > y - 25 && headings[i].offsetTop < y + 25) {
-	// 		page = i + 1;
-	// 		hidden = false;
-	// 		break;
-	// 	} else if (y - 25 < headings[0].offsetTop) {
-	// 		hidden = true;
-	// 		break;
-	// 	}
-	// }
 	function handle_keys(e) {
 		if (!presentation_mode) return;
 		if (hidden == true && e.key == "/") {

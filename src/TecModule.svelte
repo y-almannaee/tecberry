@@ -2,6 +2,7 @@
 	import { onMount } from "svelte";
 
 	export let width, height, bg_color, cube_color, lights_color;
+	let clientWidth, clientHeight;
 	import * as THREE from "three";
 	import { ArcballControls } from "three/examples/jsm/controls/ArcballControls.js";
 	import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
@@ -18,10 +19,10 @@
 	let delta = 0,
 		interval = 1 / 60;
 	camera = new THREE.OrthographicCamera(
-		width / -scale_c,
-		width / scale_c,
-		height / scale_c,
-		height / -scale_c,
+		clientWidth / -scale_c,
+		clientWidth / scale_c,
+		clientHeight / scale_c,
+		clientHeight / -scale_c,
 		0.01,
 		10
 	);
@@ -130,8 +131,8 @@
 	};
 
 	const resize = () => {
-		renderer.setSize(width, height);
-		camera.aspect = width / height;
+		renderer.setSize(clientWidth, clientHeight);
+		camera.aspect = clientWidth / clientHeight;
 		camera.updateProjectionMatrix();
 	};
 
@@ -157,16 +158,18 @@
 
 <svelte:window on:resize="{resize}" />
 
-<canvas
-	width="{width}"
-	height="{height}"
-	bind:this="{el}"
-	on:pointerdown="{() => {
-		do_rotation = false;
-	}}"
-	on:pointerup="{() => {
-		do_rotation = true;
-	}}"
->
-	Your browser does not support this element.
-</canvas>
+<div bind:clientWidth bind:clientHeight>
+	<canvas
+		width="{width}"
+		height="{height}"
+		bind:this="{el}"
+		on:pointerdown="{() => {
+			do_rotation = false;
+		}}"
+		on:pointerup="{() => {
+			do_rotation = true;
+		}}"
+	>
+		Your browser does not support this element.
+	</canvas>
+</div>

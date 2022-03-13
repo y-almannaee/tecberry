@@ -83,13 +83,16 @@
 <script lang="ts">
 	import { onMount } from "svelte";
 	import { writable } from "svelte/store";
-	import Slide from "./Slide.svelte";
-	import Presentation from "./Presentation.svelte";
-	import Logo from "./Logo.svelte";
 
+	import Slide from "./Slide.svelte";
+	import Logo from "./Logo.svelte";
 	import TecModule from "./TecModule.svelte";
+
 	import PageNumber from "./PageNumber.svelte";
 	import ScrollToSlide from "./ScrollToSlide.svelte";
+	import Presentation from "./Presentation.svelte";
+
+	import { Magnifier } from 'svelte-magnifier';
 
 	const storedTheme = localStorage.getItem("theme");
 	const theme = writable(storedTheme);
@@ -214,6 +217,7 @@
 		</svelte:fragment>
 		<svelte:fragment slot="slide-content">
 			<p>Intro goes here.</p>
+			<Magnifier src="/android-chrome-512x512.png" width="256px" alt="" mgShowOverflow={false}/>
 		</svelte:fragment>
 	</Slide>
 	<Slide

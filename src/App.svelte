@@ -83,6 +83,8 @@
 <script lang="ts">
 	import { onMount } from "svelte";
 	import { writable } from "svelte/store";
+	import { tweened } from "svelte/motion";
+	import { expoOut } from "svelte/easing";
 
 	import Slide from "./Slide.svelte";
 	import Logo from "./Logo.svelte";
@@ -92,7 +94,11 @@
 	import ScrollToSlide from "./ScrollToSlide.svelte";
 	import Presentation from "./Presentation.svelte";
 
-	import { Magnifier } from 'svelte-magnifier';
+	import { Magnifier } from "svelte-magnifier";
+	let zoom_factor = tweened(1.5, {
+		duration: 400,
+		easing: expoOut,
+	});
 
 	const storedTheme = localStorage.getItem("theme");
 	const theme = writable(storedTheme);
@@ -165,6 +171,13 @@
 			presentation_mode = presentation_mode ? false : true;
 		} else if (e.key == ",") {
 			theme.update(v => (v === "dark" ? "light" : "dark"));
+		} else if (e.key == "-") {
+			zoom_factor.update(n => {
+				if (n - 1 <= 0) return n;
+				else return n - 1;
+			});
+		} else if (e.key == "=") {
+			zoom_factor.update(n => n + 1);
 		}
 	}
 
@@ -204,8 +217,8 @@
 <svelte:window on:keydown="{handle_keys}" bind:scrollY="{y}" />
 
 <Logo bind:headings />
-<PageNumber bind:headings bind:presentation_mode/>
-<ScrollToSlide bind:headings bind:presentation_mode/>
+<PageNumber bind:headings bind:presentation_mode />
+<ScrollToSlide bind:headings bind:presentation_mode />
 <main>
 	<Presentation bind:presentation_mode />
 	<Slide id_slide="title-card" short_name="" capstone="{true}">
@@ -217,7 +230,13 @@
 		</svelte:fragment>
 		<svelte:fragment slot="slide-content">
 			<p>Intro goes here.</p>
-			<Magnifier src="/android-chrome-512x512.png" width="256px" alt="" mgShowOverflow={false}/>
+			<Magnifier
+				src="/android-chrome-512x512.png"
+				width="256px"
+				alt=""
+				mgShowOverflow="{false}"
+				bind:zoomFactor="{$zoom_factor}"
+			/>
 		</svelte:fragment>
 	</Slide>
 	<Slide

@@ -9,10 +9,6 @@
 		margin-bottom: 24px;
 	}
 
-	p {
-		font-size: large;
-	}
-
 	h2 {
 		font-family: "Work Sans", sans-serif;
 		font-weight: 700;
@@ -61,18 +57,22 @@
 	h2 {
 		font-size: x-large;
 	}
+
+	.center {
+		padding-top: 8vh;
+	}
 </style>
 
 <script lang="ts">
 	export let id_slide,
-		short_name,
+		short_name, center = false,
 		capstone = false;
 </script>
 
 <div class="slide">
 	<span class="heading">
 		{#if capstone}
-			<h1 id="{id_slide}">
+			<h1 id="{id_slide}" class:center>
 				<a href="{`#${id_slide}`}" bind:this="{short_name}"
 					><slot name="slide-title">Untitled slide</slot></a
 				>

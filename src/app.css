@@ -1,107 +1,133 @@
-@import '@fontsource/fira-mono';
-
-:root {
-	font-family: Arial, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu,
-		Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-	--font-mono: 'Fira Mono', monospace;
-	--pure-white: #ffffff;
-	--primary-color: #b9c6d2;
-	--secondary-color: #d0dde9;
-	--tertiary-color: #edf0f8;
-	--accent-color: #ff3e00;
-	--heading-color: rgba(0, 0, 0, 0.7);
-	--text-color: #444444;
-	--background-without-opacity: rgba(255, 255, 255, 0.7);
-	--column-width: 42rem;
-	--column-margin-top: 4rem;
-}
-
-body {
-	min-height: 100vh;
-	margin: 0;
-	background-color: var(--primary-color);
-	background: linear-gradient(
-		180deg,
-		var(--primary-color) 0%,
-		var(--secondary-color) 10.45%,
-		var(--tertiary-color) 41.35%
-	);
-}
-
-body::before {
-	content: '';
-	width: 80vw;
-	height: 100vh;
-	position: absolute;
-	top: 0;
-	left: 10vw;
-	z-index: -1;
-	background: radial-gradient(
-		50% 50% at 50% 50%,
-		var(--pure-white) 0%,
-		rgba(255, 255, 255, 0) 100%
-	);
-	opacity: 0.05;
-}
-
-#svelte {
-	min-height: 100vh;
-	display: flex;
-	flex-direction: column;
-}
-
-h1,
-h2,
-p {
-	font-weight: 400;
-	color: var(--heading-color);
-}
-
-p {
-	line-height: 1.5;
-}
-
-a {
-	color: var(--accent-color);
-	text-decoration: none;
-}
-
-a:hover {
-	text-decoration: underline;
-}
-
-h1 {
-	font-size: 2rem;
-	text-align: center;
-}
-
-h2 {
-	font-size: 1rem;
-}
-
-pre {
-	font-size: 16px;
-	font-family: var(--font-mono);
-	background-color: rgba(255, 255, 255, 0.45);
-	border-radius: 3px;
-	box-shadow: 2px 2px 6px rgb(255 255 255 / 25%);
-	padding: 0.5em;
-	overflow-x: auto;
-	color: var(--text-color);
-}
-
-input,
-button {
-	font-size: inherit;
-	font-family: inherit;
-}
-
-button:focus:not(:focus-visible) {
-	outline: none;
-}
-
-@media (min-width: 720px) {
-	h1 {
-		font-size: 2.4rem;
+	/* work-sans-700 - latin */
+	
+	@font-face {
+	    font-family: 'Work Sans';
+	    font-style: normal;
+	    font-weight: 700;
+	    src: url('/fonts/work-sans-v16-latin-700.eot');
+	    /* IE9 Compat Modes */
+	    src: local(''), url('/fonts/work-sans-v16-latin-700.eot?#iefix') format('embedded-opentype'), /* IE6-IE8 */
+	    url('/fonts/work-sans-v16-latin-700.woff2') format('woff2'), /* Super Modern Browsers */
+	    url('/fonts/work-sans-v16-latin-700.woff') format('woff'), /* Modern Browsers */
+	    url('/fonts/work-sans-v16-latin-700.ttf') format('truetype'), /* Safari, Android, iOS */
+	    url('/fonts/work-sans-v16-latin-700.svg#WorkSans') format('svg');
+	    /* Legacy iOS */
 	}
-}
+	/* work-sans-900 - latin */
+	
+	@font-face {
+	    font-family: 'Work Sans';
+	    font-style: normal;
+	    font-weight: 900;
+	    src: url('/fonts/work-sans-v16-latin-900.eot');
+	    /* IE9 Compat Modes */
+	    src: local(''), url('/fonts/work-sans-v16-latin-900.eot?#iefix') format('embedded-opentype'), /* IE6-IE8 */
+	    url('/fonts/work-sans-v16-latin-900.woff2') format('woff2'), /* Super Modern Browsers */
+	    url('/fonts/work-sans-v16-latin-900.woff') format('woff'), /* Modern Browsers */
+	    url('/fonts/work-sans-v16-latin-900.ttf') format('truetype'), /* Safari, Android, iOS */
+	    url('/fonts/work-sans-v16-latin-900.svg#WorkSans') format('svg');
+	    /* Legacy iOS */
+	}
+	
+	@media (prefers-color-scheme: dark) {
+	     :root {
+	        --bg: #011627;
+	        --darks: #eef;
+	        --main: #ff3366;
+	        --accent: #4d6cfa;
+	    }
+	}
+	
+	@media (prefers-color-scheme: light) {
+	     :root {
+	        --bg: #eef;
+	        --darks: #011627;
+	        --main: #4d6cfa;
+	        --accent: #ff3366;
+	    }
+	}
+	
+	:global(::selection) {
+	    background: var(--main);
+	    color: var(--bg);
+	}
+	/*main {
+		flex: 1;
+		display: flex;
+		flex-direction: column;
+		padding: 1rem;
+		width: 100%;
+		max-width: 1024px;
+		margin: 0 auto;
+		box-sizing: border-box;
+	}*/
+	
+	body {
+	    background-color: var(--bg);
+	    min-height: 100vh;
+	    margin: 0;
+	    font-family: 'Avant Garde', sans-serif;
+	    text-align: left;
+	    color: var(--darks);
+	    padding: 0 1em;
+	    margin: 0 0.4vw;
+	}
+	
+	@media (min-width: 640px) {
+	    body {
+	        max-width: 80vw;
+	        margin: 0 auto;
+	    }
+	}
+	
+	body::before {
+	    content: '';
+	    width: 80vw;
+	    height: 100vh;
+	    position: absolute;
+	    top: 0;
+	    left: 10vw;
+	    z-index: -1;
+	    background: radial-gradient( 50% 50% at 50% 50%, var(--pure-white) 0%, rgba(255, 255, 255, 0) 100%);
+	    opacity: 0.05;
+	}
+	
+	p {
+	    line-height: 1.5;
+	}
+	
+	a {
+	    color: var(--accent);
+	    text-decoration: none;
+	}
+	
+	a:hover {
+	    text-decoration: underline;
+	}
+	
+	pre {
+	    font-size: 16px;
+	    font-family: var(--font-mono);
+	    background-color: rgba(255, 255, 255, 0.45);
+	    border-radius: 3px;
+	    box-shadow: 2px 2px 6px rgb(255 255 255 / 25%);
+	    padding: 0.5em;
+	    overflow-x: auto;
+	    color: var(--text-color);
+	}
+	
+	input,
+	button {
+	    font-size: inherit;
+	    font-family: inherit;
+	}
+	
+	button:focus:not(:focus-visible) {
+	    outline: none;
+	}
+	
+	@media (min-width: 720px) {
+	    h1 {
+	        font-size: 2.4rem;
+	    }
+	}

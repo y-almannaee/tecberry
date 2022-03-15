@@ -1,7 +1,6 @@
 name: Deploy Sveltekit to GH Pages
 
 on:
-  push:
   workflow_dispatch:
 
 jobs:

@@ -109,7 +109,7 @@
 <PageNumber bind:headings bind:presentation_mode />
 <ScrollToSlide bind:headings bind:presentation_mode />
 <Presentation bind:presentation_mode />
-<Slide id_slide="title-card" short_name="" capstone={true} center={true}>
+<Slide id_slide="title-card" short_name="" capstone={true} center={true} highlighted={true}>
 	<svelte:fragment slot="slide-title">
 		TEC modules for rapid and automated thermomechanical fatigue testing
 	</svelte:fragment>
@@ -117,14 +117,7 @@
 		By Maryam K, Mohammed A, and Yaseen A <br /> Advised by Dr. Maen Alkhader
 	</svelte:fragment>
 	<svelte:fragment slot="slide-content">
-		<p>Intro goes here.</p>
-		<Magnifier
-			src="/android-chrome-512x512.png"
-			width="256px"
-			alt=""
-			mgShowOverflow={false}
-			bind:zoomFactor={$zoom_factor}
-		/>
+			<img style="z-index:-2;width:100vw; position:absolute; top: 0px; left:0px" src="/images/raspberry_industry.webp" alt="A man looking at a Raspberry Pi in a lab">
 	</svelte:fragment>
 </Slide>
 <Slide id_slide="introduction-to-fatigue" bind:short_name={headings[headings.length]}>
@@ -133,6 +126,7 @@
 		<ul>
 			<li>Thermal fatigue testing types</li>
 			<li>AUS Example</li>
+			<li><a href="https://google.com">Google.com</a></li>
 		</ul>
 	</svelte:fragment>
 </Slide>
@@ -169,6 +163,13 @@
 	<svelte:fragment slot="slide-title">Our Idea</svelte:fragment>
 	<svelte:fragment slot="slide-content">
 		<p>Our idea is to use a bunch to heat and cool stuff to see if it breaks</p>
+		<Magnifier
+			src="/android-chrome-512x512.png"
+			width="256px"
+			alt=""
+			mgShowOverflow={false}
+			bind:zoomFactor={$zoom_factor}
+		/>
 	</svelte:fragment>
 </Slide>
 <Slide id_slide="relevance-to-region" bind:short_name={headings[headings.length]}>

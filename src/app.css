@@ -71,6 +71,7 @@
 	    color: var(--darks);
 	    padding: 0 1em;
 	    margin: 0 0.4vw;
+	    overflow-x: hidden;
 	}
 	
 	@media (min-width: 640px) {
@@ -124,4 +125,18 @@
 	
 	button:focus:not(:focus-visible) {
 	    outline: none;
+	}
+	
+	a[href^="http://"]:after,
+	a[href^="https://"]:after {
+	    content: url("/external.svg");
+	    fill: var(--accent);
+	    color: var(--accent);
+	    opacity: 0.9;
+	    margin: 0 2px 0 5px;
+	}
+	
+	a[href*="yase.cf/"]:after {
+	    content: '';
+	    margin: 0;
 	}

@@ -60,7 +60,7 @@
 	}
 	h1::before {
 		content: '';
-		background-image: url('../android-chrome-192x192.png');
+		background-image: url('/android-chrome-192x192.png');
 		background-size: 1em;
 		background-repeat: no-repeat;
 		width: 1em;

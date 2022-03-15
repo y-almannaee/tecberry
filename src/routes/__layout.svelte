@@ -1,20 +1,18 @@
 <script lang="ts">
-	import Header from '$lib/header/Header.svelte';
 	import '../app.css';
 </script>
-
-<Header />
 
 <main>
 	<slot />
 </main>
 
 <footer>
-	<p>visit <a href="https://kit.svelte.dev">kit.svelte.dev</a> to learn SvelteKit</p>
+	<p>Built with <a href="https://kit.svelte.dev">SvelteKit</a> and <a href="https://threejs.org">Three</a>
+	<br>©Yaseen AlMannaee, 2022. Source code GPLv3, code will be released with v1.0</p>
 </footer>
 
 <style>
-	main {
+	/*main {
 		flex: 1;
 		display: flex;
 		flex-direction: column;
@@ -23,6 +21,20 @@
 		max-width: 1024px;
 		margin: 0 auto;
 		box-sizing: border-box;
+	}*/
+	main {
+		font-family: 'Avant Garde', sans-serif;
+		text-align: left;
+		color: var(--darks);
+		padding: 0 1em;
+		max-width: 240px;
+		margin: 0 auto;
+	}
+
+	@media (min-width: 640px) {
+		main {
+			max-width: 80vw;
+		}
 	}
 
 	footer {

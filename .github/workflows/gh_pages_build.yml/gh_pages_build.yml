@@ -1,12 +1,8 @@
 name: Deploy Sveltekit to GH Pages
 
-
 on:
   push:
-    branches:
-      - 'gh-pages-sveltekit'
   workflow_dispatch:
-
 
 jobs:
   build:

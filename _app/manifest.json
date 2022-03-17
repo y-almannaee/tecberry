@@ -1,6 +1,6 @@
 {
   ".svelte-kit/runtime/client/start.js": {
-    "file": "start-0f2d6f39.js",
+    "file": "start-caf03a51.js",
     "src": ".svelte-kit/runtime/client/start.js",
     "isEntry": true,
     "imports": [
@@ -18,7 +18,7 @@
     ]
   },
   "src/routes/__layout.svelte": {
-    "file": "pages/__layout.svelte-0b26e203.js",
+    "file": "pages/__layout.svelte-1a10f4b1.js",
     "src": "src/routes/__layout.svelte",
     "isEntry": true,
     "isDynamicEntry": true,
@@ -26,7 +26,7 @@
       "_vendor-5cdfdcf6.js"
     ],
     "css": [
-      "assets/pages/__layout.svelte-dd649342.css"
+      "assets/pages/__layout.svelte-0d4ce795.css"
     ]
   },
   ".svelte-kit/runtime/components/error.svelte": {
@@ -39,29 +39,29 @@
     ]
   },
   "src/routes/index.svelte": {
-    "file": "pages/index.svelte-0ac615b6.js",
+    "file": "pages/index.svelte-6921fc8d.js",
     "src": "src/routes/index.svelte",
     "isEntry": true,
     "isDynamicEntry": true,
     "imports": [
       "_vendor-5cdfdcf6.js",
-      "_Logo-66df7ac9.js"
+      "_Logo-faf09c8f.js"
     ],
     "css": [
       "assets/pages/index.svelte-5a645083.css"
     ]
   },
   "src/routes/presentation/1.svelte": {
-    "file": "pages/presentation/1.svelte-5e7223e7.js",
+    "file": "pages/presentation/1.svelte-b67c784f.js",
     "src": "src/routes/presentation/1.svelte",
     "isEntry": true,
     "isDynamicEntry": true,
     "imports": [
       "_vendor-5cdfdcf6.js",
-      "_Logo-66df7ac9.js"
+      "_Logo-faf09c8f.js"
     ],
     "css": [
-      "assets/pages/presentation/1.svelte-10f82dcf.css"
+      "assets/pages/presentation/1.svelte-5200d177.css"
     ]
   },
   "src/routes/presentation/2.svelte": {
@@ -107,13 +107,13 @@
   "_singletons-d1fb5791.js": {
     "file": "chunks/singletons-d1fb5791.js"
   },
-  "_Logo-66df7ac9.js": {
-    "file": "chunks/Logo-66df7ac9.js",
+  "_Logo-faf09c8f.js": {
+    "file": "chunks/Logo-faf09c8f.js",
     "imports": [
       "_vendor-5cdfdcf6.js"
     ],
     "css": [
-      "assets/Logo-45820f7b.css"
+      "assets/Logo-559f63e8.css"
     ]
   }
 }

@@ -7,11 +7,17 @@
 		highlighted = false,
 		capstone = false;
 
-	let highlight_init = false;
+	let highlight_count = 0;
+
+	function highlight_new() {
+		let highlight = document.getElementsByClassName('highlighted')[highlight_count++];
+		if (highlight !== undefined) {
+			highlight.style.backgroundPosition = '-99.99% 0';
+		setTimeout(highlight_new, 300);
+		}
+	}
 	onMount(() => {
-		setTimeout(() => {
-			highlight_init = true;
-		}, 1500);
+		setTimeout(highlight_new, 1500);
 	});
 </script>
 
@@ -19,7 +25,7 @@
 	<span class="heading">
 		{#if capstone}
 			<a href={`#${id_slide}`} bind:this={short_name}
-				><h1 id={id_slide} class:center class:highlighted class:highlight_init>
+				><h1 id={id_slide} class:center class:highlighted>
 					<slot name="slide-title">Untitled slide</slot>
 				</h1></a
 			>
@@ -30,20 +36,21 @@
 				</h2></a
 			>
 		{/if}
-		<h3 class:highlight_init class:highlighted>
+		<h3 class:highlighted>
 			<slot name="byline">
 				<!--No byline-->
 			</slot>
 		</h3>
 	</span>
-	<slot name="slide-content">Untitled slide</slot>
+	<slot name="slide-content"></slot>
 </div>
 
 <style>
 	.slide {
 		height: 100vh;
 		width: 100%;
-		overflow: visible;
+		overflow: hidden;
+		margin: 2vw;
 	}
 
 	.heading {
@@ -83,11 +90,11 @@
 		white-space: pre;
 	}
 
-	h2 a,
+	/* h2 a,
 	h1 a {
 		all: inherit;
 		cursor: pointer;
-	}
+	} */
 
 	h1:empty,
 	h2:empty,
@@ -104,15 +111,12 @@
 	}
 	.highlighted {
 		color: var(--bg);
-		transition: background-position 1.7s cubic-bezier(.95,.05,.35,1.01);
+		transition: background-position 1.7s cubic-bezier(0.95, 0.05, 0.35, 1.01);
 		background-image: linear-gradient(to right, transparent 50%, var(--accent) 30%);
 		background-size: 200% auto;
 		background-position: -0% 0;
 		background-clip: content-box;
 		-moz-background-clip: content-box;
 		-webkit-background-clip: content-box;
-	}
-	.highlight_init {
-		background-position: -99.99% 0;
 	}
 </style>

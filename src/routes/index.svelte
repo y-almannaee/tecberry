@@ -9,6 +9,7 @@
 
 <svelte:head>
 	<title>TECBERRY.ml</title>
+    <meta name="description" content="TECBERRY.ml | TECnology" />
 </svelte:head>
 
 <Logo bind:headings />

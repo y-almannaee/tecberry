@@ -133,7 +133,7 @@
 	    fill: var(--accent);
 	    color: var(--accent);
 	    opacity: 0.9;
-	    margin: 0 2px 0 5px;
+	    margin: 0 2px 0 2px;
 	}
 	
 	a[href*="yase.cf/"]:after {

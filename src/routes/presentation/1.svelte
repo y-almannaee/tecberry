@@ -32,34 +32,42 @@
 		waited = true;
 	});
 
+	function scroll_next() {
+		const location = window.location.toString().split('#')[1];
+		if (location !== undefined) {
+			for (let i = 0; i < headings.length; i++) {
+				if (`#${location}` === headings[i].getAttribute('href')) {
+					if (i + 1 !== headings.length) scroll_to(headings[i + 1].getAttribute('href'));
+					break;
+				}
+			}
+		} else {
+			scroll_to(headings[0].getAttribute('href'));
+		}
+	}
+
+	function scroll_prev() {
+		const location = window.location.toString().split('#')[1];
+		if (location !== undefined) {
+			for (let i = 0; i < headings.length; i++) {
+				if (`#${location}` === headings[i].getAttribute('href')) {
+					if (i - 1 === -1) scroll_to('title-card');
+					else scroll_to(headings[i - 1].getAttribute('href'));
+					break;
+				}
+			}
+		} else {
+			scroll_to('title-card');
+		}
+	}
+
 	function handle_keys(e) {
 		if (e.key == 'ArrowRight' || e.key == 'ArrowDown' || e.key == ' ') {
 			e.preventDefault();
-			const location = window.location.toString().split('#')[1];
-			if (location !== undefined) {
-				for (let i = 0; i < headings.length; i++) {
-					if (`#${location}` === headings[i].getAttribute('href')) {
-						if (i + 1 !== headings.length) scroll_to(headings[i + 1].getAttribute('href'));
-						break;
-					}
-				}
-			} else {
-				scroll_to(headings[0].getAttribute('href'));
-			}
+			scroll_next();
 		} else if (e.key == 'ArrowLeft' || e.key == 'ArrowUp') {
 			e.preventDefault();
-			const location = window.location.toString().split('#')[1];
-			if (location !== undefined) {
-				for (let i = 0; i < headings.length; i++) {
-					if (`#${location}` === headings[i].getAttribute('href')) {
-						if (i - 1 === -1) scroll_to('title-card');
-						else scroll_to(headings[i - 1].getAttribute('href'));
-						break;
-					}
-				}
-			} else {
-				scroll_to('title-card');
-			}
+			scroll_prev();
 		} else if (e.key == '.') {
 			presentation_mode = presentation_mode ? false : true;
 		} else if (e.key == '-') {
@@ -76,9 +84,7 @@
 		target = target.toString().startsWith('#') ? target.toString() : `#${target.toString()}`;
 		const el = document.querySelector(target);
 		if (!el) return;
-		el.scrollIntoView({
-			behavior: 'smooth'
-		});
+		window.scrollTo({ top: el.offsetTop, behavior: 'smooth' });
 	}
 
 	function replace_hash(new_hash: string) {
@@ -105,6 +111,14 @@
 
 <svelte:window on:keydown={handle_keys} bind:scrollY={y} />
 
+<svelte:head>
+	<title>Presentation 1 | TECBERRY.ml</title>
+	<meta
+		name="description"
+		content="TEC modules for rapid and automated thermomechanical fatigue testing"
+	/>
+</svelte:head>
+
 <Logo bind:headings />
 <PageNumber bind:headings bind:presentation_mode />
 <ScrollToSlide bind:headings bind:presentation_mode />
@@ -117,7 +131,7 @@
 		By Maryam K, Mohammed A, and Yaseen A <br /> Advised by Dr. Maen Alkhader
 	</svelte:fragment>
 	<svelte:fragment slot="slide-content">
-			<img style="z-index:-2;width:100vw; position:absolute; top: 0px; left:0px" src="/images/raspberry_industry.webp" alt="A man looking at a Raspberry Pi in a lab">
+		<img alt="Industrial use of Raspberry Pi" src="/images/raspberry_industry.webp" style="position:relative; width: 100%; top: 0; left: 0;z-index: -1">
 	</svelte:fragment>
 </Slide>
 <Slide id_slide="introduction-to-fatigue" bind:short_name={headings[headings.length]}>
@@ -166,6 +180,7 @@
 		<Magnifier
 			src="/android-chrome-512x512.png"
 			width="256px"
+			mgShape="square"
 			alt=""
 			mgShowOverflow={false}
 			bind:zoomFactor={$zoom_factor}
@@ -268,3 +283,10 @@
 		<p>Make zoom into it</p>
 	</svelte:fragment>
 </Slide>
+
+<style>
+	:global(body) {
+		margin: 0;
+		padding: 0;
+	}
+</style>

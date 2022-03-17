@@ -89,5 +89,8 @@
 		.center {
 			padding: 4vh 0 0 4vw;
 		}
+		.hidden {
+			visibility: hidden;
+		}
 	}
 </style>

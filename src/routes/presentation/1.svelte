@@ -78,13 +78,13 @@
 		} else if (e.key == '.') {
 			e.preventDefault();
 			presentation_mode = presentation_mode ? false : true;
-		} else if (e.key == '-') {
+		} else if (e.key == '[') {
 			e.preventDefault();
 			zoom_factor.update((n) => {
 				if (n - 1 <= 0) return n;
 				else return n - 1;
 			});
-		} else if (e.key == '=') {
+		} else if (e.key == ']') {
 			e.preventDefault();
 			zoom_factor.update((n) => n + 1);
 		} else if (e.key == "'") {

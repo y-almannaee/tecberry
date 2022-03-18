@@ -12,6 +12,7 @@
 	import Presentation from '$lib/Presentation.svelte';
 
 	import { Magnifier } from 'svelte-magnifier';
+	import RaspberryPi from '$lib/RaspberryPi.svelte';
 	let zoom_factor = tweened(1.5, {
 		duration: 400,
 		easing: expoOut
@@ -21,14 +22,17 @@
 	let headings = [];
 	let presentation_mode;
 	let waited = false;
+	let inhibited = false;
 
 	onMount(() => {
 		const location = window.location.toString().split('#')[1];
-		if (location !== undefined) {
-			scroll_to(location);
-		} else {
-			scroll_to('title-card');
-		}
+		setTimeout(() => {
+			if (location !== undefined) {
+				scroll_to(location);
+			} else {
+				scroll_to('title-card');
+			}
+		}, 300);
 		waited = true;
 	});
 
@@ -65,18 +69,26 @@
 		if (e.key == 'ArrowRight' || e.key == 'ArrowDown' || e.key == ' ') {
 			e.preventDefault();
 			scroll_next();
+			inhibited = false;
 		} else if (e.key == 'ArrowLeft' || e.key == 'ArrowUp') {
 			e.preventDefault();
 			scroll_prev();
+			inhibited = false;
 		} else if (e.key == '.') {
+			e.preventDefault();
 			presentation_mode = presentation_mode ? false : true;
 		} else if (e.key == '-') {
+			e.preventDefault();
 			zoom_factor.update((n) => {
 				if (n - 1 <= 0) return n;
 				else return n - 1;
 			});
 		} else if (e.key == '=') {
+			e.preventDefault();
 			zoom_factor.update((n) => n + 1);
+		} else if (e.key == "'") {
+			e.preventDefault();
+			inhibited = inhibited ? false : true;
 		}
 	}
 
@@ -125,13 +137,17 @@
 <Presentation bind:presentation_mode />
 <Slide id_slide="title-card" short_name="" capstone={true} center={true} highlighted={true}>
 	<svelte:fragment slot="slide-title">
-		TEC modules for rapid and automated thermomechanical fatigue testing
+		Design of a thermoelectric-based fatigue testing device
 	</svelte:fragment>
 	<svelte:fragment slot="byline">
 		By Maryam K, Mohammed A, and Yaseen A <br /> Advised by Dr. Maen Alkhader
 	</svelte:fragment>
 	<svelte:fragment slot="slide-content">
-		<img alt="Industrial use of Raspberry Pi" src="/images/raspberry_industry.webp" style="position:relative; width: 100%; top: 0; left: 0;z-index: -1">
+		<img
+			alt="Industrial use of Raspberry Pi"
+			src="/images/raspberry_industry.webp"
+			style="position:relative; width: 100%; top: -20em; left: 0;z-index: -1; user-select: none"
+		/>
 	</svelte:fragment>
 </Slide>
 <Slide id_slide="introduction-to-fatigue" bind:short_name={headings[headings.length]}>
@@ -170,6 +186,7 @@
 			bg_color="#eeeeff"
 			cube_color="#ff3366"
 			lights_color="#99ffff"
+			bind:inhibited
 		/>
 	</svelte:fragment>
 </Slide>
@@ -177,13 +194,19 @@
 	<svelte:fragment slot="slide-title">Our Idea</svelte:fragment>
 	<svelte:fragment slot="slide-content">
 		<p>Our idea is to use a bunch to heat and cool stuff to see if it breaks</p>
-		<Magnifier
-			src="/android-chrome-512x512.png"
-			width="256px"
-			mgShape="square"
-			alt=""
-			mgShowOverflow={false}
-			bind:zoomFactor={$zoom_factor}
+	</svelte:fragment>
+</Slide>
+<Slide id_slide="the-raspberry-pi" bind:short_name={headings[headings.length]} capstone={false}>
+	<svelte:fragment slot="slide-title">Automation & The Raspberry Pi</svelte:fragment>
+	<svelte:fragment slot="slide-content">
+		<p>The Raspberry Pi is an incredibly versatile tool</p>
+		<RaspberryPi
+			width={512}
+			height={512}
+			bg_color="#011627"
+			cube_color="#ff3366"
+			lights_color="#99ffff"
+			bind:inhibited
 		/>
 	</svelte:fragment>
 </Slide>
@@ -196,8 +219,9 @@
 			</li>
 			<li>UAE uses concrete in many buildings and infrastructure</li>
 			<li>
-				The UAE is home to one of the largest commercial plane hubs in the word, and the planes
-				often see temperatures of -40°C to -60°C in the air, and temperatures of 50°C on the ground.
+				The UAE is home to <em>one of the largest commercial plane hubs in the world</em>, and the
+				planes often see temperatures of -40°C to -60°C in the air, and temperatures of 50°C on the
+				ground.
 			</li>
 		</ul>
 	</svelte:fragment>
@@ -272,7 +296,7 @@
 	</svelte:fragment>
 </Slide>
 <Slide id_slide="gantt-chart" bind:short_name={headings[headings.length]}>
-	<svelte:fragment slot="slide-title">Gant chart</svelte:fragment>
+	<svelte:fragment slot="slide-title">Gantt chart</svelte:fragment>
 	<svelte:fragment slot="slide-content">
 		<p>Make zoom into it</p>
 	</svelte:fragment>

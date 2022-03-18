@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from "svelte";
 
-	export let width, height, bg_color, cube_color, lights_color;
+	export let width, height, bg_color, cube_color, lights_color, inhibited;
 	import * as THREE from "three";
 	import { ArcballControls } from "three/examples/jsm/controls/ArcballControls.js";
 	import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
@@ -75,7 +75,7 @@
 	const cube = new THREE.Mesh(geometry, material);
 	//scene.add(cube);
 
-	const light = new THREE.AmbientLight(new THREE.Color(bg_color), 0.7);
+	const light = new THREE.AmbientLight(new THREE.Color(bg_color), 0.3);
 
 	const directional_lights = [];
 
@@ -114,7 +114,7 @@
 	scene.add(light);
 
 	const framelock_animate = () => {
-		if (do_rotation) {
+		if (do_rotation && !inhibited) {
 			if (TEC !== undefined) TEC.rotation.y += 0.005;
 		}
 		renderer.render(scene, camera);
@@ -167,6 +167,7 @@
 	on:pointerup="{() => {
 		do_rotation = true;
 	}}"
+	{...$$restProps}
 >
 	Your browser does not support this element.
 </canvas>

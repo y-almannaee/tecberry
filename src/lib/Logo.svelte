@@ -84,8 +84,12 @@
 		padding: 20vh 0 0 17vw;
 		font-size: 2.2vh;
 		cursor: auto;
+		visibility: visible !important;
 	}
 	@media (max-width: 640px) {
+		.title {
+			visibility: hidden;
+		}
 		.center {
 			padding: 4vh 0 0 4vw;
 		}

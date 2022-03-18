@@ -29,7 +29,7 @@
 	<p>
 		Built with <a href="https://kit.svelte.dev">SvelteKit</a> and
 		<a href="https://threejs.org">Three</a>
-		<br />©Yaseen AlMannaee, 2022. Source code GPLv3, code will be released with v1.0
+		<br />©Yaseen AlMannaee, 2022
 	</p>
 </footer>
 

@@ -16,16 +16,16 @@
 
 <section>
 	<div>
+		<h1><a href="/demo">TECBERRY Online Demo</a></h1>
+		<span class="tooltip" style="visibility:hidden">Placeholder</span>
+	</div>
+	<div>
 		<h1><a href="/presentation/1">Design Presentation 1</a></h1>
 		<span class="tooltip" style="visibility:hidden">Placeholder</span>
 	</div>
 	<div>
 		<h1><a class="disabled">Design Presentation 2</a></h1>
 		<span class="tooltip">It's still Spring semester 😅</span>
-	</div>
-	<div>
-		<h1><a class="disabled">TECBERRY Online Demo</a></h1>
-		<span class="tooltip">Soon</span>
 	</div>
 	<div>
 		<h1><a class="disabled">TECBERRY Setup</a></h1>
@@ -122,7 +122,7 @@
 
 	a.disabled {
 		opacity: 45%;
-		color: #ff3366;
+		color: var(--accent);
 		cursor: not-allowed;
 		user-select: none;
 	}

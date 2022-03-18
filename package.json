@@ -36,6 +36,7 @@
     "@sveltejs/adapter-static": "^1.0.0-next.29",
     "cookie": "^0.4.1",
     "gsap": "^3.9.1",
+    "svelte-chartjs": "^1.1.4",
     "svelte-magnifier": "^0.0.1",
     "svelte-scrolling": "^1.1.1",
     "three": "^0.138.3"

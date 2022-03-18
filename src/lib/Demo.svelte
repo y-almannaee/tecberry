@@ -24,12 +24,14 @@
 		temp_ambient =
 			26 + Math.round((Math.sin((t++ * Math.PI) / 180) + Number.EPSILON) * 10) / 10 - 0.5;
 		t %= 360;
+		time_left=Math.round(10*(time_left - 3500/60000))/10;
 	}, 3500);
 
 	let action_id,
 		action_directive,
 		action_seconds,
 		action_to,
+		time_left = 74,
 		start_from = 24;
 
 	onMount(() => {
@@ -136,6 +138,9 @@
 		directives = directives;
 		create_data();
 	}
+
+	$: {action_id = 1 + directives[directives.length-1].id;
+	}
 </script>
 
 <div class="row">
@@ -204,7 +209,7 @@
 				</p>
 			{/each}
 			<p>
-				New action <input type="number" bind:value={action_id} />:
+				New action {action_id}:
 				<select bind:value={action_directive}
 					><option>rise</option><option>dwell</option><option>return</option></select
 				>
@@ -222,7 +227,7 @@
 	<div class="column">
 		<span class="controls"
 			><h3>Statistics</h3>
-			Time left
+			<p>Time left: {time_left} mins</p>
 		</span>
 	</div>
 </div>

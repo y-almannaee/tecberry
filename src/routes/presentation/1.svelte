@@ -4,6 +4,7 @@
 	import { expoOut } from 'svelte/easing';
 
 	import Slide from '$lib/Slide.svelte';
+	import Demo from '$lib/Demo.svelte';
 	import Logo from '$lib/Logo.svelte';
 	import TecModule from '$lib/TecModule.svelte';
 
@@ -208,6 +209,12 @@
 			lights_color="#99ffff"
 			bind:inhibited
 		/>
+	</svelte:fragment>
+</Slide>
+<Slide id_slide="interactive-demo" bind:short_name={headings[headings.length]}>
+	<svelte:fragment slot="slide-title">Demo Controls</svelte:fragment>
+	<svelte:fragment slot="slide-content">
+	<Demo/>
 	</svelte:fragment>
 </Slide>
 <Slide id_slide="relevance-to-region" bind:short_name={headings[headings.length]}>

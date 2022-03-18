@@ -1,10 +1,10 @@
 {
   ".svelte-kit/runtime/client/start.js": {
-    "file": "start-caf03a51.js",
+    "file": "start-46fbc8e3.js",
     "src": ".svelte-kit/runtime/client/start.js",
     "isEntry": true,
     "imports": [
-      "_vendor-5cdfdcf6.js",
+      "_vendor-ff4666a2.js",
       "_singletons-d1fb5791.js"
     ],
     "dynamicImports": [
@@ -13,93 +13,93 @@
       "src/routes/index.svelte",
       "src/routes/presentation/1.svelte",
       "src/routes/presentation/2.svelte",
-      "src/routes/about.svelte",
-      "src/routes/todos/index.svelte"
+      "src/routes/todos/index.svelte",
+      "src/routes/demo.svelte"
     ]
   },
   "src/routes/__layout.svelte": {
-    "file": "pages/__layout.svelte-1a10f4b1.js",
+    "file": "pages/__layout.svelte-4c483d32.js",
     "src": "src/routes/__layout.svelte",
     "isEntry": true,
     "isDynamicEntry": true,
     "imports": [
-      "_vendor-5cdfdcf6.js"
+      "_vendor-ff4666a2.js"
     ],
     "css": [
-      "assets/pages/__layout.svelte-0d4ce795.css"
+      "assets/pages/__layout.svelte-64861f39.css"
     ]
   },
   ".svelte-kit/runtime/components/error.svelte": {
-    "file": "error.svelte-7043df0d.js",
+    "file": "error.svelte-edba8ffc.js",
     "src": ".svelte-kit/runtime/components/error.svelte",
     "isEntry": true,
     "isDynamicEntry": true,
     "imports": [
-      "_vendor-5cdfdcf6.js"
+      "_vendor-ff4666a2.js"
     ]
   },
   "src/routes/index.svelte": {
-    "file": "pages/index.svelte-6921fc8d.js",
+    "file": "pages/index.svelte-e7ea3b91.js",
     "src": "src/routes/index.svelte",
     "isEntry": true,
     "isDynamicEntry": true,
     "imports": [
-      "_vendor-5cdfdcf6.js",
-      "_Logo-faf09c8f.js"
+      "_vendor-ff4666a2.js",
+      "_Logo-23e95d9f.js"
     ],
     "css": [
-      "assets/pages/index.svelte-5a645083.css"
+      "assets/pages/index.svelte-ba1f76da.css"
     ]
   },
   "src/routes/presentation/1.svelte": {
-    "file": "pages/presentation/1.svelte-b67c784f.js",
+    "file": "pages/presentation/1.svelte-88141b76.js",
     "src": "src/routes/presentation/1.svelte",
     "isEntry": true,
     "isDynamicEntry": true,
     "imports": [
-      "_vendor-5cdfdcf6.js",
-      "_Logo-faf09c8f.js"
+      "_vendor-ff4666a2.js",
+      "_Logo-23e95d9f.js"
     ],
     "css": [
       "assets/pages/presentation/1.svelte-5200d177.css"
     ]
   },
   "src/routes/presentation/2.svelte": {
-    "file": "pages/presentation/2.svelte-b65add13.js",
+    "file": "pages/presentation/2.svelte-86a715b1.js",
     "src": "src/routes/presentation/2.svelte",
     "isEntry": true,
     "isDynamicEntry": true,
     "imports": [
-      "_vendor-5cdfdcf6.js"
-    ]
-  },
-  "src/routes/about.svelte": {
-    "file": "pages/about.svelte-2dee4eff.js",
-    "src": "src/routes/about.svelte",
-    "isEntry": true,
-    "isDynamicEntry": true,
-    "imports": [
-      "_vendor-5cdfdcf6.js"
-    ],
-    "css": [
-      "assets/pages/about.svelte-bf4528fa.css"
+      "_vendor-ff4666a2.js"
     ]
   },
   "src/routes/todos/index.svelte": {
-    "file": "pages/todos/index.svelte-ea60d4f8.js",
+    "file": "pages/todos/index.svelte-50b6e96e.js",
     "src": "src/routes/todos/index.svelte",
     "isEntry": true,
     "isDynamicEntry": true,
     "imports": [
-      "_vendor-5cdfdcf6.js",
+      "_vendor-ff4666a2.js",
       "_singletons-d1fb5791.js"
     ],
     "css": [
       "assets/pages/todos/index.svelte-a910a02d.css"
     ]
   },
-  "_vendor-5cdfdcf6.js": {
-    "file": "chunks/vendor-5cdfdcf6.js",
+  "src/routes/demo.svelte": {
+    "file": "pages/demo.svelte-175a0381.js",
+    "src": "src/routes/demo.svelte",
+    "isEntry": true,
+    "isDynamicEntry": true,
+    "imports": [
+      "_vendor-ff4666a2.js"
+    ],
+    "css": [
+      "assets/pages/demo.svelte-da2a79d7.css"
+    ]
+  },
+  "_vendor-ff4666a2.js": {
+    "file": "chunks/vendor-ff4666a2.js",
     "css": [
       "assets/vendor-16be71ec.css"
     ]
@@ -107,13 +107,13 @@
   "_singletons-d1fb5791.js": {
     "file": "chunks/singletons-d1fb5791.js"
   },
-  "_Logo-faf09c8f.js": {
-    "file": "chunks/Logo-faf09c8f.js",
+  "_Logo-23e95d9f.js": {
+    "file": "chunks/Logo-23e95d9f.js",
     "imports": [
-      "_vendor-5cdfdcf6.js"
+      "_vendor-ff4666a2.js"
     ],
     "css": [
-      "assets/Logo-559f63e8.css"
+      "assets/Logo-4a6a47c3.css"
     ]
   }
 }

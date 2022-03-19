@@ -12,7 +12,7 @@
     <meta name="description" content="TECBERRY.ml | TECnology" />
 </svelte:head>
 
-<Logo bind:headings />
+<Logo bind:headings center />
 
 <section>
 	<div>

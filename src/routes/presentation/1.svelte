@@ -82,11 +82,11 @@
 			e.preventDefault();
 			zoom_factor.update((n) => {
 				if (n - 1 <= 0) return n;
-				else return n - 1;
+				else return n - 0.25;
 			});
 		} else if (e.key == ']') {
 			e.preventDefault();
-			zoom_factor.update((n) => n + 1);
+			zoom_factor.update((n) => n + 0.25);
 		} else if (e.key == "'") {
 			e.preventDefault();
 			inhibited = inhibited ? false : true;
@@ -184,9 +184,9 @@
 		<TecModule
 			width={512}
 			height={512}
-			bg_color="#eeeeff"
+			bg_color="#cde6f2"
 			cube_color="#ff3366"
-			lights_color="#99ffff"
+			lights_color="#f2f2f2"
 			bind:inhibited
 		/>
 	</svelte:fragment>
@@ -202,19 +202,14 @@
 	<svelte:fragment slot="slide-content">
 		<p>The Raspberry Pi is an incredibly versatile tool</p>
 		<RaspberryPi
-			width={512}
-			height={512}
-			bg_color="#011627"
+			width={400}
+			height={400}
+			bg_color="#cde6f2"
 			cube_color="#ff3366"
-			lights_color="#99ffff"
+			lights_color="#f2f2f2"
+			style="float: right;"
 			bind:inhibited
 		/>
-	</svelte:fragment>
-</Slide>
-<Slide id_slide="interactive-demo" bind:short_name={headings[headings.length]}>
-	<svelte:fragment slot="slide-title">Demo Controls</svelte:fragment>
-	<svelte:fragment slot="slide-content">
-	<Demo/>
 	</svelte:fragment>
 </Slide>
 <Slide id_slide="relevance-to-region" bind:short_name={headings[headings.length]}>
@@ -282,6 +277,42 @@
 	<svelte:fragment slot="slide-title">CAD Model</svelte:fragment>
 	<svelte:fragment slot="slide-content">
 		<p>Put spinny here</p>
+	</svelte:fragment>
+</Slide>
+<Slide id_slide="process-flow" bind:short_name={headings[headings.length]}>
+	<svelte:fragment slot="slide-title">Process Flow</svelte:fragment>
+	<svelte:fragment slot="slide-content">
+		<Magnifier
+			src="/images/process_flow.png"
+			width="600px"
+			alt="Preliminary process flow diagram"
+			mgShowOverflow={false}
+			mgShape="square"
+			mgWidth={250}
+			mgHeight={250}
+			bind:zoomFactor={$zoom_factor}
+		/>
+	</svelte:fragment>
+</Slide>
+<Slide id_slide="wiring-diagram" bind:short_name={headings[headings.length]}>
+	<svelte:fragment slot="slide-title">Wiring Diagram</svelte:fragment>
+	<svelte:fragment slot="slide-content">
+		<Magnifier
+			src="/images/wiring_diagram.png"
+			width="600px"
+			alt="Preliminary process flow diagram"
+			mgShowOverflow={false}
+			mgShape="square"
+			mgWidth={250}
+			mgHeight={250}
+			bind:zoomFactor={$zoom_factor}
+		/>
+	</svelte:fragment>
+</Slide>
+<Slide id_slide="interactive-demo" bind:short_name={headings[headings.length]}>
+	<svelte:fragment slot="slide-title">Demo Controls</svelte:fragment>
+	<svelte:fragment slot="slide-content">
+		<Demo />
 	</svelte:fragment>
 </Slide>
 <Slide id_slide="house-of-quality" bind:short_name={headings[headings.length]}>

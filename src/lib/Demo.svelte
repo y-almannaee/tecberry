@@ -159,9 +159,9 @@
 			<div class="column">
 				<span class="controls">
 					<h3>Active GPIO Devices</h3>
-					<p>Peltier-1: heating&emsp;Peltier-2: heating</p>
-					<p>Peltier-3: heating&emsp;Peltier-4: heating</p>
-					<p>Peltier-5: heating&emsp;Peltier-6: heating</p>
+					<p>Peltier-1/2: heating</p>
+					<p>Peltier-3/4: heating</p>
+					<p>Peltier-5/6: heating</p>
 				</span>
 			</div>
 		</div>
@@ -231,7 +231,7 @@
 		</span>
 	</div>
 </div>
-<p style="font-size: smaller; opacity: 0.7;">
+<p style="font-size: smaller; opacity: 0.7;margin-left:24px">
 	Not feature complete, not indicative of final design
 </p>
 

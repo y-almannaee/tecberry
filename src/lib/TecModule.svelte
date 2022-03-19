@@ -1,10 +1,10 @@
 <script lang="ts">
-	import { onMount } from "svelte";
+	import { onMount } from 'svelte';
 
 	export let width, height, bg_color, cube_color, lights_color, inhibited;
-	import * as THREE from "three";
-	import { ArcballControls } from "three/examples/jsm/controls/ArcballControls.js";
-	import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+	import * as THREE from 'three';
+	import { ArcballControls } from 'three/examples/jsm/controls/ArcballControls.js';
+	import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
 	let camera,
 		scene,
@@ -12,7 +12,7 @@
 		el,
 		arcball_controls,
 		do_rotation = true,
-		scale_c = 490;
+		scale_c = 700;
 
 	const clock = new THREE.Clock();
 	let delta = 0,
@@ -25,32 +25,27 @@
 		0.01,
 		10
 	);
-	camera.position.set(1, 1, 1);
+	camera.position.set(-0.4, 1, 1);
 	camera.lookAt(0, 0, 0);
+	camera.up.set(-1 -0.5, 0);
 
 	scene = new THREE.Scene();
+	scene.background = new THREE.Color(bg_color);
 
 	// LOAD TEC MODULE GLB
 	const loader = new GLTFLoader();
 	let TEC;
 
-	function enable_shadows(obj) {
-		for (const prop in obj) {
-			if (typeof prop === "object" && !Array.isArray(prop) && prop !== null) {
-				enable_shadows(prop);
-			}
-			/*if (prop.isMesh !== undefined && prop.isMesh()) {
-				prop.castShadow = true;
-				prop.receiveShadow = true;
-			}*/
-		}
-	}
-
 	loader.load(
-		"/Peltier.glb",
+		'/Peltier.glb',
 		function (gltf) {
 			TEC = gltf.scene;
-			enable_shadows(TEC);
+			gltf.scene.traverse((child) => {
+				if (child.castShadow === false || child.recieveShadow === false) {
+					child.castShadow = true;
+					child.recieveShadow = true;
+				}
+			});
 			TEC.scale.set(10, 10, 10);
 			scene.add(gltf.scene);
 			console.log(gltf.animations);
@@ -60,17 +55,17 @@
 			console.log(gltf.asset);
 		},
 		function (xhr) {
-			console.log((xhr.loaded / xhr.total) * 100 + "% loaded of Peltier.glb");
+			console.log((xhr.loaded / xhr.total) * 100 + '% loaded of Peltier.glb');
 		},
 		function (error) {
-			console.log("An error has occurred loading Peltier.glb");
+			console.log('An error has occurred loading Peltier.glb');
 			console.error(error);
 		}
 	);
 
 	const geometry = new THREE.BoxGeometry();
 	const material = new THREE.MeshPhongMaterial({
-		color: new THREE.Color(cube_color),
+		color: new THREE.Color(cube_color)
 	});
 	const cube = new THREE.Mesh(geometry, material);
 	//scene.add(cube);
@@ -80,10 +75,7 @@
 	const directional_lights = [];
 
 	for (let i = 0; i < 2; i++) {
-		let directional_light = new THREE.DirectionalLight(
-			new THREE.Color(lights_color),
-			0.2
-		);
+		let directional_light = new THREE.DirectionalLight(new THREE.Color(lights_color), 0.6);
 		directional_light.shadowCameraVisible = true;
 		directional_light.castShadow = true;
 		let x: number, y: number, z: number;
@@ -115,7 +107,10 @@
 
 	const framelock_animate = () => {
 		if (do_rotation && !inhibited) {
-			if (TEC !== undefined) TEC.rotation.y += 0.005;
+			if (TEC !== undefined) {
+				// TEC.rotation.y += 0.005;
+				TEC.rotation.x += 0.002;
+			}
 		}
 		renderer.render(scene, camera);
 	};
@@ -135,18 +130,19 @@
 		camera.updateProjectionMatrix();
 	};
 
-	const create_scene = el => {
+	const create_scene = (el) => {
 		renderer = new THREE.WebGLRenderer({
 			antialias: true,
 			alpha: true,
-			canvas: el,
+			canvas: el
 		});
+		renderer.shadowMap.enabled = true;
+		renderer.shadowMap.type = THREE.VSMShadowMap;
 		renderer.outputEncoding = THREE.sRGBEncoding; // required by GLTFLoader
 		arcball_controls = new ArcballControls(camera, el, scene);
 		arcball_controls.setGizmosVisible(false);
 		resize();
 		renderer.setPixelRatio(window.devicePixelRatio);
-		renderer.shadowMapEnabled = true;
 		animate();
 	};
 
@@ -155,18 +151,18 @@
 	});
 </script>
 
-<svelte:window on:resize="{resize}" />
+<svelte:window on:resize={resize} />
 
 <canvas
-	width="{width}"
-	height="{height}"
-	bind:this="{el}"
-	on:pointerdown="{() => {
+	{width}
+	{height}
+	bind:this={el}
+	on:pointerdown={() => {
 		do_rotation = false;
-	}}"
-	on:pointerup="{() => {
+	}}
+	on:pointerup={() => {
 		do_rotation = true;
-	}}"
+	}}
 	{...$$restProps}
 >
 	Your browser does not support this element.

@@ -1,10 +1,10 @@
 <script lang="ts">
-	import { onMount } from "svelte";
+	import { onMount } from 'svelte';
 
 	export let width, height, bg_color, cube_color, lights_color, inhibited;
-	import * as THREE from "three";
-	import { ArcballControls } from "three/examples/jsm/controls/ArcballControls.js";
-	import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+	import * as THREE from 'three';
+	import { ArcballControls } from 'three/examples/jsm/controls/ArcballControls.js';
+	import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
 	let camera,
 		scene,
@@ -12,7 +12,7 @@
 		el,
 		arcball_controls,
 		do_rotation = true,
-		scale_c = 490;
+		scale_c = 760;
 
 	const clock = new THREE.Clock();
 	let delta = 0,
@@ -27,7 +27,7 @@
 	);
 	camera.position.set(1, 1, 1);
 	camera.lookAt(0, 0, 0);
-	camera.up.set(0,0,1);
+	camera.up.set(0, 0, 1);
 
 	scene = new THREE.Scene();
 	scene.background = new THREE.Color(bg_color);
@@ -36,23 +36,17 @@
 	const loader = new GLTFLoader();
 	let PI_MODEL;
 
-	function enable_shadows(obj) {
-		for (const prop in obj) {
-			if (typeof prop === "object" && !Array.isArray(prop) && prop !== null) {
-				enable_shadows(prop);
-			}
-			if (prop.isMesh !== undefined && prop.isMesh()) {
-				prop.castShadow = true;
-				prop.receiveShadow = true;
-			}
-		}
-	}
-
 	loader.load(
-		"/Pi_small.glb",
+		'/Pi_small.glb',
 		function (gltf) {
 			PI_MODEL = gltf.scene;
-			enable_shadows(PI_MODEL);
+			//enable_shadows(PI_MODEL);
+			gltf.scene.traverse((child)=>{
+				if(child.castShadow === false || child.recieveShadow === false) {
+					child.castShadow = true;
+					child.recieveShadow = true;
+				}
+			})
 			PI_MODEL.scale.set(10, 10, 10);
 			scene.add(gltf.scene);
 			console.log(gltf.animations);
@@ -62,17 +56,17 @@
 			console.log(gltf.asset);
 		},
 		function (xhr) {
-			console.log((xhr.loaded / xhr.total) * 100 + "% loaded of Pi.glb");
+			console.log((xhr.loaded / xhr.total) * 100 + '% loaded of Pi.glb');
 		},
 		function (error) {
-			console.log("An error has occurred loading Pi.glb");
+			console.log('An error has occurred loading Pi.glb');
 			console.error(error);
 		}
 	);
 
 	const geometry = new THREE.BoxGeometry();
 	const material = new THREE.MeshPhongMaterial({
-		color: new THREE.Color(cube_color),
+		color: new THREE.Color(cube_color)
 	});
 	const cube = new THREE.Mesh(geometry, material);
 	//scene.add(cube);
@@ -82,12 +76,12 @@
 	const directional_lights = [];
 
 	for (let i = 0; i < 2; i++) {
-		let directional_light = new THREE.DirectionalLight(
-			new THREE.Color(lights_color),
-			0.7
-		);
-		directional_light.shadowCameraVisible = true;
+		let directional_light = new THREE.DirectionalLight(new THREE.Color(lights_color), 0.7);
 		directional_light.castShadow = true;
+		directional_light.shadow.mapSize.width = 1024;
+		directional_light.shadow.mapSize.height = 1024;
+		directional_light.shadow.camera.near = 0.1;
+		directional_light.shadow.camera.far = 20;
 		let x: number, y: number, z: number;
 		switch (i) {
 			case 0:
@@ -137,18 +131,19 @@
 		camera.updateProjectionMatrix();
 	};
 
-	const create_scene = el => {
+	const create_scene = (el) => {
 		renderer = new THREE.WebGLRenderer({
 			antialias: true,
 			alpha: true,
-			canvas: el,
+			canvas: el
 		});
+		renderer.shadowMap.enabled = true;
+		renderer.shadowMap.type = THREE.VSMShadowMap;
 		renderer.outputEncoding = THREE.sRGBEncoding; // required by GLTFLoader
 		arcball_controls = new ArcballControls(camera, el, scene);
 		arcball_controls.setGizmosVisible(false);
 		resize();
 		renderer.setPixelRatio(window.devicePixelRatio);
-		renderer.shadowMapEnabled = true;
 		animate();
 	};
 
@@ -157,18 +152,18 @@
 	});
 </script>
 
-<svelte:window on:resize="{resize}" />
+<svelte:window on:resize={resize} />
 
 <canvas
-	width="{width}"
-	height="{height}"
-	bind:this="{el}"
-	on:pointerdown="{() => {
+	{width}
+	{height}
+	bind:this={el}
+	on:pointerdown={() => {
 		do_rotation = false;
-	}}"
-	on:pointerup="{() => {
+	}}
+	on:pointerup={() => {
 		do_rotation = true;
-	}}"
+	}}
 	{...$$restProps}
 >
 	Your browser does not support this element.

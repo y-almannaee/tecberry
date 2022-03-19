@@ -1,13 +1,11 @@
 <script>
 	import { onMount } from 'svelte';
 
-	export let headings;
-	let first_slide, y, logo, center=false, hidden;
+	export let headings,center=false;
+	let first_slide, y, logo, hidden;
 	function get_bearings() {
 		if (headings && headings[0] !== undefined) {
 			first_slide = headings[0].offsetTop - 25;
-		} else {
-			center = true;
 		}
 	}
 	onMount(get_bearings);
@@ -80,8 +78,8 @@
 
 	.center {
 		position: relative;
-		margin: 0;
-		padding: 20vh 0 0 17vw;
+		/* margin: 0; */
+		margin: 20vh 0 0 17vw;
 		font-size: 2.2vh;
 		cursor: auto;
 		visibility: visible !important;

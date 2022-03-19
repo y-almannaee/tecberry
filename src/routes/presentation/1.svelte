@@ -265,11 +265,11 @@
 	<svelte:fragment slot="slide-content">
 		<ul>
 			<li>
-				Raise and lower temperature: -30°C to 70°C, which is within 30% of the TEC module
+				Raise and lower temperature: -30°C to 70°C, which is within 30% of the thermoelectric
 				specifications
 			</li>
 			<li>Do so within a reliable timeframe (specific cycle count and cycle time)</li>
-			<li>Do so without destroying the TEC module (it's rated for a range and cyclecount)</li>
+			<li>Do so without destroying the thermoelectric (it's rated for a range and cyclecount)</li>
 		</ul>
 	</svelte:fragment>
 </Slide>
@@ -284,7 +284,7 @@
 	<svelte:fragment slot="slide-content">
 		<Magnifier
 			src="/images/process_flow.png"
-			width="600px"
+			width="700px"
 			alt="Preliminary process flow diagram"
 			mgShowOverflow={false}
 			mgShape="square"
@@ -299,8 +299,8 @@
 	<svelte:fragment slot="slide-content">
 		<Magnifier
 			src="/images/wiring_diagram.png"
-			width="600px"
-			alt="Preliminary process flow diagram"
+			width="500px"
+			alt="Minimum viable wiring diagram"
 			mgShowOverflow={false}
 			mgShape="square"
 			mgWidth={250}
@@ -324,19 +324,105 @@
 <Slide id_slide="methodology" bind:short_name={headings[headings.length]}>
 	<svelte:fragment slot="slide-title">Proposed methodology</svelte:fragment>
 	<svelte:fragment slot="slide-content">
-		<p>Make zoom into it</p>
+		<ul>
+			<li>Ensuring temperature uniformity in tested samples: Temperature analysis using Ansys</li>
+			<li>
+				Determining feasible heat cycle time: Conducting paramtric analysis and a heating/cooling
+				Ansys simulation
+			</li>
+			<li>Designing a thermoelectric system</li>
+			<li>
+				Integrating a data collection system: Microcontroller, optical microscope, videography and
+				thermal imaging
+			</li>
+		</ul>
 	</svelte:fragment>
 </Slide>
 <Slide id_slide="management" bind:short_name={headings[headings.length]}>
-	<svelte:fragment slot="slide-title">Project Management</svelte:fragment>
+	<svelte:fragment slot="slide-title">Project Management: Distribution of Tasks</svelte:fragment>
 	<svelte:fragment slot="slide-content">
-		<p>Make zoom into it</p>
+		<table>
+			<tr>
+				<th>Task</th>
+				<th />
+				<th>Assignees</th>
+			</tr>
+			<tr>
+				<td>Budgeting</td>
+				<td>&#x2192;</td>
+				<td>Mohammed &#38; Yaseen</td>
+			</tr>
+			<tr>
+				<td>Research, review</td>
+				<td>&#x2192;</td>
+				<td>Maryam, Mohammed &#38; Yaseen</td>
+			</tr>
+			<tr>
+				<td>Information Collection</td>
+				<td>&#x2192;</td>
+				<td>Maryam &#38; Yaseen</td>
+			</tr>
+			<tr>
+				<td>Information Collection</td>
+				<td>&#x2192;</td>
+				<td>Maryam &#38; Yaseen</td>
+			</tr>
+			<tr>
+				<td>Choosing most suitable equipment</td>
+				<td>&#x2192;</td>
+				<td>Mohammed &#38; Yaseen</td>
+			</tr>
+			<tr>
+				<td>Meeting minutes</td>
+				<td>&#x2192;</td>
+				<td>Maryam &#38; Mohammed</td>
+			</tr>
+			<tr>
+				<td>Programming</td>
+				<td>&#x2192;</td>
+				<td>Mohammed &#38; Yaseen</td>
+			</tr>
+			<tr>
+				<td>Internal wiring connections</td>
+				<td>&#x2192;</td>
+				<td>Maryam &#38; Yaseen</td>
+			</tr>
+			<tr>
+				<td>Main assembly: CAD, Design</td>
+				<td>&#x2192;</td>
+				<td>Maryam, Mohammed &#38; Yaseen</td>
+			</tr>
+			<tr>
+				<td>Website design </td>
+				<td>&#x2192;</td>
+				<td>Yaseen</td>
+			</tr>
+			<tr>
+				<td>3D Printing</td>
+				<td>&#x2192;</td>
+				<td>Maryam, Mohammed &#38; Yaseen</td>
+			</tr>
+			<tr>
+				<td>Gantt Chart, House of Quality</td>
+				<td>&#x2192;</td>
+				<td>Maryam &#38; Mohammed</td>
+			</tr>
+		</table>
 	</svelte:fragment>
 </Slide>
 <Slide id_slide="gantt-chart" bind:short_name={headings[headings.length]}>
 	<svelte:fragment slot="slide-title">Gantt chart</svelte:fragment>
 	<svelte:fragment slot="slide-content">
-		<p>Make zoom into it</p>
+		<Magnifier
+			src="/images/gantt_chart.png"
+			width="500px"
+			alt="Gantt chart diagram"
+			mgShowOverflow={false}
+			mgShape="square"
+			mgWidth={250}
+			mgHeight={250}
+			bind:zoomFactor={$zoom_factor}
+		/>
 	</svelte:fragment>
 </Slide>
 <Slide id_slide="references" bind:short_name={headings[headings.length]}>

@@ -12,7 +12,7 @@
 		el,
 		arcball_controls,
 		do_rotation = true,
-		scale_c = 700;
+		scale_c = 760;
 
 	const clock = new THREE.Clock();
 	let delta = 0,
@@ -25,28 +25,29 @@
 		0.01,
 		10
 	);
-	camera.position.set(-0.4, 1, 1);
+	camera.position.set(1, 1, 1);
 	camera.lookAt(0, 0, 0);
-	camera.up.set(-1 - 0.5, 0);
+	camera.up.set(0, 1, 0);
 
 	scene = new THREE.Scene();
 	scene.background = new THREE.Color(bg_color);
 
-	// LOAD TEC MODULE GLB
+	// LOAD PI GLB
 	const loader = new GLTFLoader();
-	let TEC;
+	let CAD_MODEL;
 
 	loader.load(
-		'/Peltier.glb',
+		'/CAD.glb',
 		function (gltf) {
-			TEC = gltf.scene;
-			gltf.scene.traverse((child) => {
-				if (child.castShadow === false || child.recieveShadow === false) {
+			CAD_MODEL = gltf.scene;
+			//enable_shadows(CAD_MODEL);
+			gltf.scene.traverse((child)=>{
+				if(child.castShadow === false || child.recieveShadow === false) {
 					child.castShadow = true;
 					child.recieveShadow = true;
 				}
-			});
-			TEC.scale.set(10, 10, 10);
+			})
+			CAD_MODEL.scale.set(2, 2, 2);
 			scene.add(gltf.scene);
 			console.log(gltf.animations);
 			console.log(gltf.scene);
@@ -55,10 +56,10 @@
 			console.log(gltf.asset);
 		},
 		function (xhr) {
-			console.log((xhr.loaded / xhr.total) * 100 + '% loaded of Peltier.glb');
+			console.log((xhr.loaded / xhr.total) * 100 + '% loaded of CAD.glb');
 		},
 		function (error) {
-			console.log('An error has occurred loading Peltier.glb');
+			console.log('An error has occurred loading CAD.glb');
 			console.error(error);
 		}
 	);
@@ -70,14 +71,17 @@
 	const cube = new THREE.Mesh(geometry, material);
 	//scene.add(cube);
 
-	const light = new THREE.AmbientLight(new THREE.Color(bg_color), 0.3);
+	const light = new THREE.AmbientLight(new THREE.Color(bg_color), 0.2);
 
 	const directional_lights = [];
 
 	for (let i = 0; i < 2; i++) {
-		let directional_light = new THREE.DirectionalLight(new THREE.Color(lights_color), 0.6);
-		directional_light.shadowCameraVisible = true;
+		let directional_light = new THREE.DirectionalLight(new THREE.Color(lights_color), 0.5);
 		directional_light.castShadow = true;
+		directional_light.shadow.mapSize.width = 1024;
+		directional_light.shadow.mapSize.height = 1024;
+		directional_light.shadow.camera.near = 0.1;
+		directional_light.shadow.camera.far = 20;
 		let x: number, y: number, z: number;
 		switch (i) {
 			case 0:
@@ -107,10 +111,7 @@
 
 	const framelock_animate = () => {
 		if (do_rotation && !inhibited) {
-			if (TEC !== undefined) {
-				// TEC.rotation.y += 0.005;
-				TEC.rotation.x += 0.002;
-			}
+			if (CAD_MODEL !== undefined) CAD_MODEL.rotation.y += 0.005;
 		}
 		renderer.render(scene, camera);
 	};
@@ -142,11 +143,10 @@
 		renderer.outputEncoding = THREE.sRGBEncoding; // required by GLTFLoader
 		arcball_controls = new ArcballControls(camera, el, scene);
 		arcball_controls.setGizmosVisible(false);
-		arcball_controls.addEventListener('change', animate);
+		arcball_controls.addEventListener('change',animate);
 		resize();
 		renderer.setPixelRatio(window.devicePixelRatio);
 		animate();
-		setTimeout(animate, 3000);
 	};
 
 	onMount(() => {
@@ -156,7 +156,7 @@
 	$: {
 		inhibited = inhibited;
 		resize();
-		setTimeout(resize,500);
+		setTimeout(resize,1500);
 	}
 </script>
 

@@ -14,6 +14,7 @@
 
 	import { Magnifier } from 'svelte-magnifier';
 	import RaspberryPi from '$lib/RaspberryPi.svelte';
+import ModelChassis from '$lib/ModelChassis.svelte';
 	let zoom_factor = tweened(1.5, {
 		duration: 400,
 		easing: expoOut
@@ -179,14 +180,16 @@
 	<svelte:fragment slot="slide-title">What is a TEC module?</svelte:fragment>
 	<svelte:fragment slot="slide-content">
 		<p>
-			A TEC module, also known as a thermoelectric, or a Peltier module, is basically a heat pump.
+			A thermoelectric, also known as a TEC or a Peltier module, is basically a heat pump. It
+			operates on the principles of the Peltier effect, using electricity to move heat.
 		</p>
 		<TecModule
-			width={512}
-			height={512}
+			width={420}
+			height={420}
 			bg_color="#cde6f2"
 			cube_color="#ff3366"
 			lights_color="#f2f2f2"
+			style="float: right;"
 			bind:inhibited
 		/>
 	</svelte:fragment>
@@ -202,7 +205,7 @@
 	<svelte:fragment slot="slide-content">
 		<p>The Raspberry Pi is an incredibly versatile tool</p>
 		<RaspberryPi
-			width={400}
+			width={480}
 			height={400}
 			bg_color="#cde6f2"
 			cube_color="#ff3366"
@@ -221,9 +224,9 @@
 			</li>
 			<li>UAE uses concrete in many buildings and infrastructure</li>
 			<li>
-				The UAE is home to <em>one of the largest commercial plane hubs in the world</em>, and the
-				planes often see temperatures of -40°C to -60°C in the air, and temperatures of 50°C on the
-				ground.
+				The UAE is home to one of the largest commercial plane hubs in the world, and the planes
+				often see temperature variations of <em>-40°C to -60°C in the air</em>, and temperatures of
+				<em>50°C on the ground</em>
 			</li>
 		</ul>
 	</svelte:fragment>
@@ -231,27 +234,38 @@
 <Slide id_slide="environmental-impact" bind:short_name={headings[headings.length]}>
 	<svelte:fragment slot="slide-title">Environmental Impact of our Project</svelte:fragment>
 	<svelte:fragment slot="slide-content">
-		<p>Big chambers = more big environmental</p>
 		<ul>
 			<li>
 				Our project is a tool to create more sustainable materials that last longer and need less
 				replacing
 			</li>
-			<li>Less materials needed to manufacture this than big machines</li>
+			<li>Less materials needed to manufacture this than the larger machines</li>
 			<li>Can study smaller specimens, unlike furnaces which need large specimens</li>
+			<li>Larger furnaces waste heat by heating a larger chamber</li>
+			<li>One drawback is that the Peltier effect is not very efficient</li>
 		</ul>
 	</svelte:fragment>
 </Slide>
 <Slide id_slide="problem-statement" bind:short_name={headings[headings.length]} capstone={true}>
 	<svelte:fragment slot="slide-title">Problem Statement</svelte:fragment>
 	<svelte:fragment slot="slide-content">
-		<p>Problem</p>
+		<p style="margin: 24px 0 0 64px; font-size: larger;text-align: justify;">
+			There is a need for a small-scale, affordable, and quick thermal fatigue testing apparatus
+			that is capable of being automated. The existence of thermoelectrics makes for an interesting
+			solution to this identified need, as they are small, relatively affordable, and are easily
+			automatable. The solution should be easy to set up and be as straightforward as possible, so
+			it may be used as a tool for testing thermal fatigue for smaller research groups.
+		</p>
 	</svelte:fragment>
 </Slide>
 <Slide id_slide="objectives" bind:short_name={headings[headings.length]}>
 	<svelte:fragment slot="slide-title">Objectives</svelte:fragment>
 	<svelte:fragment slot="slide-content">
-		<p>Problem</p>
+		<p style="margin: 24px 0 0 64px; font-size: larger;text-align: justify;">
+			Create a thermoelectric-based fatigue testing device that could endure a large number of
+			cycles, collect data in an autonomous manner, and reach temperatures that are productive for
+			the specimen studied.
+		</p>
 	</svelte:fragment>
 </Slide>
 <Slide id_slide="preeminent-literature" bind:short_name={headings[headings.length]}>
@@ -270,13 +284,42 @@
 			</li>
 			<li>Do so within a reliable timeframe (specific cycle count and cycle time)</li>
 			<li>Do so without destroying the thermoelectric (it's rated for a range and cyclecount)</li>
+			<li>
+				Allow us to carry out in-situ measurements - monitor the interfaces and damage due to
+				fatigue in real-time
+			</li>
+			<li>The apparatus should do these tests autonomously with sparse supervision</li>
 		</ul>
 	</svelte:fragment>
 </Slide>
 <Slide id_slide="cad-model" bind:short_name={headings[headings.length]} capstone={true}>
 	<svelte:fragment slot="slide-title">CAD Model</svelte:fragment>
 	<svelte:fragment slot="slide-content">
-		<p>Put spinny here</p>
+		<Magnifier
+			src="/images/chassis_drawing.png"
+			width="700px"
+			alt="AutoCAD drawing of chassis"
+			mgShowOverflow={false}
+			mgShape="square"
+			mgWidth={250}
+			mgHeight={250}
+			className="chart_center_20"
+			bind:zoomFactor={$zoom_factor}
+		/>
+	</svelte:fragment>
+</Slide>
+<Slide id_slide="cad-render" bind:short_name={headings[headings.length]}>
+	<svelte:fragment slot="slide-title">CAD Render</svelte:fragment>
+	<svelte:fragment slot="slide-content">
+		<ModelChassis
+			width={620}
+			height={500}
+			bg_color="#cde6f2"
+			cube_color="#ff3366"
+			lights_color="#f2f2f2"
+			style="margin: 0 0 0 20vw;"
+			bind:inhibited
+		/>
 	</svelte:fragment>
 </Slide>
 <Slide id_slide="process-flow" bind:short_name={headings[headings.length]}>
@@ -290,6 +333,7 @@
 			mgShape="square"
 			mgWidth={250}
 			mgHeight={250}
+			className="chart_center_20"
 			bind:zoomFactor={$zoom_factor}
 		/>
 	</svelte:fragment>
@@ -305,6 +349,7 @@
 			mgShape="square"
 			mgWidth={250}
 			mgHeight={250}
+			className="chart_center_30"
 			bind:zoomFactor={$zoom_factor}
 		/>
 	</svelte:fragment>
@@ -341,7 +386,7 @@
 <Slide id_slide="management" bind:short_name={headings[headings.length]}>
 	<svelte:fragment slot="slide-title">Project Management: Distribution of Tasks</svelte:fragment>
 	<svelte:fragment slot="slide-content">
-		<table>
+		<table style="margin: 24px 0 0 24px; font-size: x-large">
 			<tr>
 				<th>Task</th>
 				<th />
@@ -393,7 +438,12 @@
 				<td>Maryam, Mohammed &#38; Yaseen</td>
 			</tr>
 			<tr>
-				<td>Website design </td>
+				<td>Testing and Experimentation</td>
+				<td>&#x2192;</td>
+				<td>Maryam, Mohammed &#38; Yaseen</td>
+			</tr>
+			<tr>
+				<td>Website design & Documentation</td>
 				<td>&#x2192;</td>
 				<td>Yaseen</td>
 			</tr>
@@ -415,12 +465,13 @@
 	<svelte:fragment slot="slide-content">
 		<Magnifier
 			src="/images/gantt_chart.png"
-			width="500px"
+			width="620px"
 			alt="Gantt chart diagram"
 			mgShowOverflow={false}
 			mgShape="square"
 			mgWidth={250}
 			mgHeight={250}
+			className="chart_center_20"
 			bind:zoomFactor={$zoom_factor}
 		/>
 	</svelte:fragment>
@@ -436,5 +487,13 @@
 	:global(body) {
 		margin: 0;
 		padding: 0;
+	}
+
+	:global(.chart_center_20) {
+		margin: 0 0 0 20vw;
+	}
+
+	:global(.chart_center_30) {
+		margin: 0 0 0 30vw;
 	}
 </style>

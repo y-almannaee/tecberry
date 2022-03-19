@@ -16,7 +16,7 @@
 
 	const clock = new THREE.Clock();
 	let delta = 0,
-		interval = 1 / 60;
+		interval = 1 / 30;
 	camera = new THREE.OrthographicCamera(
 		width / -scale_c,
 		width / scale_c,
@@ -41,12 +41,12 @@
 		function (gltf) {
 			PI_MODEL = gltf.scene;
 			//enable_shadows(PI_MODEL);
-			gltf.scene.traverse((child)=>{
-				if(child.castShadow === false || child.recieveShadow === false) {
+			gltf.scene.traverse((child) => {
+				if (child.castShadow === false || child.recieveShadow === false) {
 					child.castShadow = true;
 					child.recieveShadow = true;
 				}
-			})
+			});
 			PI_MODEL.scale.set(10, 10, 10);
 			scene.add(gltf.scene);
 			console.log(gltf.animations);
@@ -104,8 +104,8 @@
 	cube.castShadow = true;
 	cube.receiveShadow = true;
 
-	const axesHelper = new THREE.AxesHelper(5);
-	scene.add(axesHelper);
+	// const axesHelper = new THREE.AxesHelper(5);
+	// scene.add(axesHelper);
 
 	scene.add(light);
 
@@ -117,7 +117,7 @@
 	};
 
 	const animate = () => {
-		requestAnimationFrame(animate);
+		if (!inhibited) requestAnimationFrame(animate);
 		delta += clock.getDelta();
 		if (delta > interval) {
 			framelock_animate();
@@ -126,6 +126,7 @@
 	};
 
 	const resize = () => {
+		if(!renderer) return;
 		renderer.setSize(width, height);
 		camera.aspect = width / height;
 		camera.updateProjectionMatrix();
@@ -142,14 +143,22 @@
 		renderer.outputEncoding = THREE.sRGBEncoding; // required by GLTFLoader
 		arcball_controls = new ArcballControls(camera, el, scene);
 		arcball_controls.setGizmosVisible(false);
+		arcball_controls.addEventListener('change', animate);
 		resize();
 		renderer.setPixelRatio(window.devicePixelRatio);
 		animate();
+		setTimeout(animate, 3000);
 	};
 
 	onMount(() => {
 		create_scene(el);
 	});
+
+	$: {
+		inhibited = inhibited;
+		resize();
+		setTimeout(resize,1500);
+	}
 </script>
 
 <svelte:window on:resize={resize} />

@@ -194,10 +194,26 @@ import ModelChassis from '$lib/ModelChassis.svelte';
 		/>
 	</svelte:fragment>
 </Slide>
-<Slide id_slide="our-idea" bind:short_name={headings[headings.length]} capstone={true}>
-	<svelte:fragment slot="slide-title">Our Idea</svelte:fragment>
+<Slide id_slide="problem-statement" bind:short_name={headings[headings.length]} capstone={true}>
+	<svelte:fragment slot="slide-title">Problem Statement</svelte:fragment>
 	<svelte:fragment slot="slide-content">
-		<p>Our idea is to use a bunch to heat and cool stuff to see if it breaks</p>
+		<p style="margin: 24px 0 0 64px; font-size: larger;text-align: justify;">
+			There is a need for a small-scale, affordable, and quick thermal fatigue testing apparatus
+			that is capable of being automated. The existence of thermoelectrics makes for an interesting
+			solution to this identified need, as they are small, relatively affordable, and are easily
+			automatable. The solution should be easy to set up and be as straightforward as possible, so
+			it may be used as a tool for testing thermal fatigue for smaller research groups.
+		</p>
+	</svelte:fragment>
+</Slide>
+<Slide id_slide="objectives" bind:short_name={headings[headings.length]}>
+	<svelte:fragment slot="slide-title">Objectives</svelte:fragment>
+	<svelte:fragment slot="slide-content">
+		<p style="margin: 24px 0 0 64px; font-size: larger;text-align: justify;">
+			Create a thermoelectric-based fatigue testing device that could endure a large number of
+			cycles, collect data in an autonomous manner, and reach temperatures that are productive for
+			the specimen studied.
+		</p>
 	</svelte:fragment>
 </Slide>
 <Slide id_slide="the-raspberry-pi" bind:short_name={headings[headings.length]} capstone={false}>
@@ -244,28 +260,6 @@ import ModelChassis from '$lib/ModelChassis.svelte';
 			<li>Larger furnaces waste heat by heating a larger chamber</li>
 			<li>One drawback is that the Peltier effect is not very efficient</li>
 		</ul>
-	</svelte:fragment>
-</Slide>
-<Slide id_slide="problem-statement" bind:short_name={headings[headings.length]} capstone={true}>
-	<svelte:fragment slot="slide-title">Problem Statement</svelte:fragment>
-	<svelte:fragment slot="slide-content">
-		<p style="margin: 24px 0 0 64px; font-size: larger;text-align: justify;">
-			There is a need for a small-scale, affordable, and quick thermal fatigue testing apparatus
-			that is capable of being automated. The existence of thermoelectrics makes for an interesting
-			solution to this identified need, as they are small, relatively affordable, and are easily
-			automatable. The solution should be easy to set up and be as straightforward as possible, so
-			it may be used as a tool for testing thermal fatigue for smaller research groups.
-		</p>
-	</svelte:fragment>
-</Slide>
-<Slide id_slide="objectives" bind:short_name={headings[headings.length]}>
-	<svelte:fragment slot="slide-title">Objectives</svelte:fragment>
-	<svelte:fragment slot="slide-content">
-		<p style="margin: 24px 0 0 64px; font-size: larger;text-align: justify;">
-			Create a thermoelectric-based fatigue testing device that could endure a large number of
-			cycles, collect data in an autonomous manner, and reach temperatures that are productive for
-			the specimen studied.
-		</p>
 	</svelte:fragment>
 </Slide>
 <Slide id_slide="preeminent-literature" bind:short_name={headings[headings.length]}>

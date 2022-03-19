@@ -48,6 +48,7 @@
 				}
 			});
 			PI_MODEL.scale.set(10, 10, 10);
+			PI_MODEL.position.set(0.07,0,0);
 			scene.add(gltf.scene);
 			console.log(gltf.animations);
 			console.log(gltf.scene);

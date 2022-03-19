@@ -47,6 +47,7 @@
 				}
 			});
 			TEC.scale.set(10, 10, 10);
+			TEC.position.set(-0.2,0,0);
 			scene.add(gltf.scene);
 			console.log(gltf.animations);
 			console.log(gltf.scene);

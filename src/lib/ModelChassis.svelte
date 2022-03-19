@@ -17,16 +17,10 @@
 	const clock = new THREE.Clock();
 	let delta = 0,
 		interval = 1 / 30;
-	camera = new THREE.OrthographicCamera(
-		width / -scale_c,
-		width / scale_c,
-		height / scale_c,
-		height / -scale_c,
-		0.01,
-		10
-	);
+	camera = new THREE.PerspectiveCamera(40, width / height, 100, 100);
 	camera.position.set(1, 1, 1);
 	camera.lookAt(0, 0, 0);
+	camera.near = 0.9;
 	camera.up.set(0, 1, 0);
 
 	scene = new THREE.Scene();
@@ -37,17 +31,18 @@
 	let CAD_MODEL;
 
 	loader.load(
-		'/CAD.glb',
+		'/CAD_Model.glb',
 		function (gltf) {
 			CAD_MODEL = gltf.scene;
 			//enable_shadows(CAD_MODEL);
-			gltf.scene.traverse((child)=>{
-				if(child.castShadow === false || child.recieveShadow === false) {
+			gltf.scene.traverse((child) => {
+				if (child.castShadow === false || child.recieveShadow === false) {
 					child.castShadow = true;
 					child.recieveShadow = true;
 				}
-			})
-			CAD_MODEL.scale.set(2, 2, 2);
+			});
+			CAD_MODEL.scale.set(1.6, 1.6, 1.6);
+			CAD_MODEL.position.set(0,-0.1,0);
 			scene.add(gltf.scene);
 			console.log(gltf.animations);
 			console.log(gltf.scene);
@@ -76,7 +71,7 @@
 	const directional_lights = [];
 
 	for (let i = 0; i < 2; i++) {
-		let directional_light = new THREE.DirectionalLight(new THREE.Color(lights_color), 0.5);
+		let directional_light = new THREE.DirectionalLight(new THREE.Color(lights_color), 0.7);
 		directional_light.castShadow = true;
 		directional_light.shadow.mapSize.width = 1024;
 		directional_light.shadow.mapSize.height = 1024;
@@ -126,7 +121,7 @@
 	};
 
 	const resize = () => {
-		if(!renderer) return;
+		if (!renderer) return;
 		renderer.setSize(width, height);
 		camera.aspect = width / height;
 		camera.updateProjectionMatrix();
@@ -134,6 +129,7 @@
 
 	const create_scene = (el) => {
 		renderer = new THREE.WebGLRenderer({
+			logarithmicDeptherBuffer: true,
 			antialias: true,
 			alpha: true,
 			canvas: el
@@ -141,9 +137,10 @@
 		renderer.shadowMap.enabled = true;
 		renderer.shadowMap.type = THREE.VSMShadowMap;
 		renderer.outputEncoding = THREE.sRGBEncoding; // required by GLTFLoader
+
 		arcball_controls = new ArcballControls(camera, el, scene);
 		arcball_controls.setGizmosVisible(false);
-		arcball_controls.addEventListener('change',animate);
+		arcball_controls.addEventListener('change', animate);
 		resize();
 		renderer.setPixelRatio(window.devicePixelRatio);
 		animate();
@@ -156,7 +153,7 @@
 	$: {
 		inhibited = inhibited;
 		resize();
-		setTimeout(resize,1500);
+		setTimeout(resize, 1500);
 	}
 </script>
 

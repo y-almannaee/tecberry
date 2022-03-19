@@ -296,14 +296,14 @@ import ModelChassis from '$lib/ModelChassis.svelte';
 	<svelte:fragment slot="slide-title">CAD Model</svelte:fragment>
 	<svelte:fragment slot="slide-content">
 		<Magnifier
-			src="/images/chassis_drawing.png"
-			width="700px"
+			src="/images/CAD_Drawing.jpg"
+			width="900px"
 			alt="AutoCAD drawing of chassis"
 			mgShowOverflow={false}
 			mgShape="square"
 			mgWidth={250}
 			mgHeight={250}
-			className="chart_center_20"
+			className="chart_center_10"
 			bind:zoomFactor={$zoom_factor}
 		/>
 	</svelte:fragment>
@@ -363,22 +363,33 @@ import ModelChassis from '$lib/ModelChassis.svelte';
 <Slide id_slide="house-of-quality" bind:short_name={headings[headings.length]}>
 	<svelte:fragment slot="slide-title">House of Quality</svelte:fragment>
 	<svelte:fragment slot="slide-content">
-		<p>Make zoom into it</p>
+		<Magnifier
+			src="/images/house_of_quality.png"
+			width="unset"
+			height="90vh"
+			alt="House of Quality"
+			mgShowOverflow={false}
+			mgShape="square"
+			mgWidth={250}
+			mgHeight={250}
+			className="chart_center_30"
+			bind:zoomFactor={$zoom_factor}
+		/>
 	</svelte:fragment>
 </Slide>
 <Slide id_slide="methodology" bind:short_name={headings[headings.length]}>
 	<svelte:fragment slot="slide-title">Proposed methodology</svelte:fragment>
 	<svelte:fragment slot="slide-content">
 		<ul>
-			<li>Ensuring temperature uniformity in tested samples: Temperature analysis using Ansys</li>
+			<li>Ensuring temperature uniformity in tested samples<span>Temperature analysis using Ansys</span></li>
 			<li>
-				Determining feasible heat cycle time: Conducting paramtric analysis and a heating/cooling
-				Ansys simulation
+				Determining feasible heat cycle time<span>Conducting paramtric analysis and a heating/cooling
+				Ansys simulation</span>
 			</li>
 			<li>Designing a thermoelectric system</li>
 			<li>
-				Integrating a data collection system: Microcontroller, optical microscope, videography and
-				thermal imaging
+				Integrating a data collection system<span>Microcontroller, optical microscope, videography and
+				thermal imaging</span>
 			</li>
 		</ul>
 	</svelte:fragment>
@@ -495,5 +506,14 @@ import ModelChassis from '$lib/ModelChassis.svelte';
 
 	:global(.chart_center_30) {
 		margin: 0 0 0 30vw;
+	}
+
+	:global(.chart_center_10) {
+		margin: 0 0 0 10vw;
+	}
+
+	li span::before {
+		content: '\a';
+		white-space: pre;
 	}
 </style>

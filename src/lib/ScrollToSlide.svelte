@@ -13,10 +13,12 @@
 			e.preventDefault();
 		} else if ((hidden === false && e.key == '/') || (hidden === false && e.key == 'Enter')) {
 			hidden = true;
-			if (value == 0) scroll_to('#title-card');
-			else if (!(value > headings.length || value < 0))
-				scroll_to(headings[value - 1].getAttribute('href'));
-			value = '';
+			setTimeout(() => {
+				if (value == 0) scroll_to('#title-card');
+				else if (!(value > headings.length || value < 0))
+					scroll_to(headings[value - 1].getAttribute('href'));
+				value = '';
+			}, 400);
 		}
 	}
 

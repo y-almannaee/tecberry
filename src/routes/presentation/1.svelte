@@ -14,7 +14,7 @@
 
 	import { Magnifier } from 'svelte-magnifier';
 	import RaspberryPi from '$lib/RaspberryPi.svelte';
-import ModelChassis from '$lib/ModelChassis.svelte';
+	import ModelChassis from '$lib/ModelChassis.svelte';
 	let zoom_factor = tweened(1.5, {
 		duration: 400,
 		easing: expoOut
@@ -375,15 +375,21 @@ import ModelChassis from '$lib/ModelChassis.svelte';
 	<svelte:fragment slot="slide-title">Proposed methodology</svelte:fragment>
 	<svelte:fragment slot="slide-content">
 		<ul>
-			<li>Ensuring temperature uniformity in tested samples<span>Temperature analysis using Ansys</span></li>
 			<li>
-				Determining feasible heat cycle time<span>Conducting paramtric analysis and a heating/cooling
-				Ansys simulation</span>
+				Ensuring temperature uniformity in tested samples<span
+					>Temperature analysis using Ansys</span
+				>
+			</li>
+			<li>
+				Determining feasible heat cycle time<span
+					>Conducting paramtric analysis and a heating/cooling Ansys simulation</span
+				>
 			</li>
 			<li>Designing a thermoelectric system</li>
 			<li>
-				Integrating a data collection system<span>Microcontroller, optical microscope, videography and
-				thermal imaging</span>
+				Integrating a data collection system<span
+					>Microcontroller, optical microscope, videography and thermal imaging</span
+				>
 			</li>
 		</ul>
 	</svelte:fragment>
@@ -509,5 +515,18 @@ import ModelChassis from '$lib/ModelChassis.svelte';
 	li span::before {
 		content: '\a';
 		white-space: pre;
+	}
+
+	li span {
+		font-size: smaller;
+	}
+
+	li {
+		font-size: larger;
+		line-height: 2;
+	}
+
+	p {
+		font-size: larger;
 	}
 </style>

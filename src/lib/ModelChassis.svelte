@@ -17,7 +17,15 @@
 	const clock = new THREE.Clock();
 	let delta = 0,
 		interval = 1 / 30;
-	camera = new THREE.PerspectiveCamera(40, width / height, 100, 100);
+	// camera = new THREE.PerspectiveCamera(40, width / height, 100, 100);
+	camera = new THREE.OrthographicCamera(
+		width / -scale_c,
+		width / scale_c,
+		height / scale_c,
+		height / -scale_c,
+		0.01,
+		10
+	);
 	camera.position.set(1, 1, 1);
 	camera.lookAt(0, 0, 0);
 	camera.near = 0.9;

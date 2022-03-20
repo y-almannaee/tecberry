@@ -201,10 +201,7 @@
 				Variations of the temperature field in aircraft engine components causes thermal stresses to
 				develop on them
 			</li>
-			<li>The design of turbomachinery is directly related to the material performance<video autoplay loop height="300px">
-				<source src="/images/turbine.webm" type="video/webm">
-				<track kind="captions">
-			</video></li>
+			<li>The design of turbomachinery is directly related to the material performance</li>
 		</ul>
 		
 	</svelte:fragment>

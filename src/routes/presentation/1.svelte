@@ -171,8 +171,8 @@
 		</ul>
 	</svelte:fragment>
 </Slide>
-<Slide id_slide="introduction-to-fatigue" bind:short_name={headings[headings.length]}>
-	<svelte:fragment slot="slide-title">What is Thermal Fatigue?</svelte:fragment>
+<Slide id_slide="relation-aus" bind:short_name={headings[headings.length]}>
+	<svelte:fragment slot="slide-title">How does it relate to us?<svelte:fragment>
 	<svelte:fragment slot="slide-content">
 		<p style="float:left;display:inline-block">
 			In AUS, the current tool of thermal fatigue testing is the INSTRON environmental chamber.<img

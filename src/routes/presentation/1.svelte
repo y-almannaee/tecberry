@@ -155,15 +155,19 @@
 <Slide id_slide="introduction-to-fatigue" bind:short_name={headings[headings.length]}>
 	<svelte:fragment slot="slide-title">What is Thermal Fatigue?</svelte:fragment>
 	<svelte:fragment slot="slide-content">
+		<p>It is a severe fatigue failure phenomenon.</p>
+		<p>Induced by cyclic (and usually routine) fluctuations in temperature on a structure</p>
+		<p>What are the consequences?</p>
 		<ul>
-			<li>Thermal fatigue testing types</li>
-			<li>AUS Example</li>
-			<img
-				src="/images/instron_man.png"
-				alt="Man at AUS with an INSTRON chamber"
-				style="float: right"
-			/>
+			<li>Corrosion</li>
+			<li>Cracking</li>
+			<li>Occurence of maximum stresses beyond yield point</li>
 		</ul>
+		<img
+			src="/images/instron_man.png"
+			alt="Man at AUS with an INSTRON chamber"
+			style="position:relative;bottom:340px;right:-900px;width:260px"
+		/>
 	</svelte:fragment>
 </Slide>
 <Slide id_slide="where-is-thermal-fatigue" bind:short_name={headings[headings.length]}>
@@ -222,9 +226,11 @@
 			cycles, collect data in an autonomous manner, and reach temperatures that are productive for
 			the specimen studied.
 		</p>
-		<div style="background-color: #ffa0b8;padding:8px 32px 0 0;width:fit-content;margin: 16px auto">
-		<img src="/images/objective_fc.jpg" alt="Objective flow chart" style="width:520px">
-	</div>
+		<img
+			src="/images/objective_fc.jpg"
+			alt="Objective flow chart"
+			style="width:720px;margin: 16px auto"
+		/>
 	</svelte:fragment>
 </Slide>
 <Slide id_slide="the-raspberry-pi" bind:short_name={headings[headings.length]} capstone={false}>
@@ -246,8 +252,10 @@
 	<svelte:fragment slot="slide-title">How is this relevant to the region?</svelte:fragment>
 	<svelte:fragment slot="slide-content">
 		<ul>
+			<li>Many roads in the UAE are made of poured concrete</li>
 			<li>
-				Concrete fails often due to thermal fatigue from exposure to hot and moist environments
+				Concrete fails often due to thermal fatigue from exposure to hot and moist environments,
+				like the UAE
 			</li>
 			<li>UAE uses concrete in many buildings and infrastructure</li>
 			<li>
@@ -300,9 +308,12 @@
 <Slide id_slide="cad-model" bind:short_name={headings[headings.length]} capstone={true}>
 	<svelte:fragment slot="slide-title">CAD Model</svelte:fragment>
 	<svelte:fragment slot="slide-content">
+		<p>
+			The specimen is placed onto a plate with a suitable specific heat and conductivity in a sealed chamber.
+		</p>
 		<Magnifier
 			src="/images/CAD_Drawing.jpg"
-			width="900px"
+			width="850px"
 			alt="AutoCAD drawing of chassis"
 			mgShowOverflow={false}
 			mgShape="square"
@@ -423,11 +434,6 @@
 				<td>Research, review</td>
 				<td>&#x2192;</td>
 				<td>Maryam, Mohammed &#38; Yaseen</td>
-			</tr>
-			<tr>
-				<td>Information Collection</td>
-				<td>&#x2192;</td>
-				<td>Maryam &#38; Yaseen</td>
 			</tr>
 			<tr>
 				<td>Information Collection</td>

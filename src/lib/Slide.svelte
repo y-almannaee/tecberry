@@ -48,9 +48,9 @@
 <style>
 	.slide {
 		height: 100vh;
-		width: 100vw;
+		width: 90vw;
 		overflow: hidden;
-		overflow-x: scroll;
+		/* overflow-x: scroll; */
 		margin: 2vw;
 		margin-left: calc(2vw + 32px);
 	}

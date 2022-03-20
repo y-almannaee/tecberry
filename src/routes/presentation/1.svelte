@@ -174,16 +174,14 @@
 <Slide id_slide="where-is-thermal-fatigue" bind:short_name={headings[headings.length]}>
 	<svelte:fragment slot="slide-title">Where do you find Thermal Fatigue?</svelte:fragment>
 	<svelte:fragment slot="slide-content">
-		<p>You may find thermal fatigue in many places</p>
+		<p>In aerospace, thermal fatigue testing is critical and is a common occurance</p>
 		<ul>
 			<li>
-				In structural failure of composite structures such as aerospace structures and wind turbine
-				blades
+				Fatigue damage is a root cause of failure in composite structures
 			</li>
-			<li>Thermal fatigue of aircraft components is a common occurrence</li>
+			
 			<li>
-				Variation of the temperature field in turbines causes thermal stress on the turbine
-				components
+				Variations of the temperature field in aircraft engine components causes thermal stresses to develop on them
 			</li>
 			<li>The design of turbomachinery is directly related to the material performance</li>
 		</ul>
@@ -357,9 +355,10 @@
 <Slide id_slide="wiring-diagram" bind:short_name={headings[headings.length]}>
 	<svelte:fragment slot="slide-title">Wiring Diagram</svelte:fragment>
 	<svelte:fragment slot="slide-content">
+		<p>A minimum viable connection between power supply, Raspberry Pi, H-bridge, and thermoelectrics</p>
 		<Magnifier
 			src="/images/wiring_diagram.png"
-			width="500px"
+			width="400px"
 			alt="Minimum viable wiring diagram"
 			mgShowOverflow={false}
 			mgShape="square"
@@ -388,7 +387,7 @@
 			mgShape="square"
 			mgWidth={250}
 			mgHeight={250}
-			className="chart_center_30"
+			className="chart_center_20"
 			bind:zoomFactor={$zoom_factor}
 		/>
 	</svelte:fragment>

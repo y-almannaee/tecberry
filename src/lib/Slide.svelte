@@ -48,7 +48,7 @@
 <style>
 	.slide {
 		height: 100vh;
-		width: 100%;
+		width: fit-content;
 		overflow: hidden;
 		margin: 2vw;
 	}

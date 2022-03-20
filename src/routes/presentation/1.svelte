@@ -172,7 +172,7 @@
 	</svelte:fragment>
 </Slide>
 <Slide id_slide="relation-aus" bind:short_name={headings[headings.length]}>
-	<svelte:fragment slot="slide-title">How does it relate to us?<svelte:fragment>
+	<svelte:fragment slot="slide-title">How does it relate to us?</svelte:fragment>
 	<svelte:fragment slot="slide-content">
 		<p style="float:left;display:inline-block">
 			In AUS, the current tool of thermal fatigue testing is the INSTRON environmental chamber.<img
@@ -255,16 +255,21 @@
 <Slide id_slide="the-raspberry-pi" bind:short_name={headings[headings.length]} capstone={false}>
 	<svelte:fragment slot="slide-title">Automation & The Raspberry Pi</svelte:fragment>
 	<svelte:fragment slot="slide-content">
-		<p>The Raspberry Pi is an incredibly versatile tool</p>
+		<p>The Raspberry Pi is an incredibly versatile tool:</p>
+		<ul>
+			<li>Single-board computer or Microcontroller</li>
+			<li>Capable of interfacing through its I/O</li>
+			<li>Runs full computer operating system</li>
+		</ul>
 		<RaspberryPi
-			width={480}
-			height={400}
-			bg_color="#cde6f2"
-			cube_color="#ff3366"
-			lights_color="#f2f2f2"
-			style="float: right;"
-			bind:inhibited
-		/>
+				width={480}
+				height={400}
+				bg_color="#cde6f2"
+				cube_color="#ff3366"
+				lights_color="#f2f2f2"
+				style="margin: 12px auto;display:block"
+				bind:inhibited
+			/>
 	</svelte:fragment>
 </Slide>
 <Slide id_slide="relevance-to-region" bind:short_name={headings[headings.length]}>

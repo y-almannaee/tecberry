@@ -48,9 +48,11 @@
 <style>
 	.slide {
 		height: 100vh;
-		width: fit-content;
+		width: 100vw;
 		overflow: hidden;
+		overflow-x: scroll;
 		margin: 2vw;
+		margin-left: calc(2vw + 32px);
 	}
 
 	.heading {

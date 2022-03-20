@@ -32,7 +32,7 @@
 			if (location !== undefined) {
 				scroll_to(location);
 			} else {
-				scroll_to('title-card');
+				window.scrollTo({ top: 0, behavior: 'smooth' });
 			}
 		}, 300);
 		waited = true;
@@ -158,15 +158,23 @@
 		<ul>
 			<li>Thermal fatigue testing types</li>
 			<li>AUS Example</li>
-			<li><a href="https://google.com">Google.com</a></li>
+			<img
+				src="/images/instron_man.png"
+				alt="Man at AUS with an INSTRON chamber"
+				style="float: right"
+			/>
 		</ul>
 	</svelte:fragment>
 </Slide>
 <Slide id_slide="where-is-thermal-fatigue" bind:short_name={headings[headings.length]}>
 	<svelte:fragment slot="slide-title">Where do you find Thermal Fatigue?</svelte:fragment>
 	<svelte:fragment slot="slide-content">
-		<p>You may find thermal fatigue in many places.</p>
+		<p>You may find thermal fatigue in many places</p>
 		<ul>
+			<li>
+				Fatigue damage is one of the most important root causes of structural failure of composite
+				structures such as aerospace structures and wind turbine blades
+			</li>
 			<li>Thermal fatigue of aircraft components is a common occurrence</li>
 			<li>
 				Variation of the temperature field in turbines causes thermal stress on the turbine
@@ -214,6 +222,9 @@
 			cycles, collect data in an autonomous manner, and reach temperatures that are productive for
 			the specimen studied.
 		</p>
+		<div style="background-color: #ffa0b8;padding:8px 32px 0 0;width:fit-content;margin: 16px auto">
+		<img src="/images/objective_fc.jpg" alt="Objective flow chart" style="width:520px">
+	</div>
 	</svelte:fragment>
 </Slide>
 <Slide id_slide="the-raspberry-pi" bind:short_name={headings[headings.length]} capstone={false}>
@@ -376,19 +387,19 @@
 	<svelte:fragment slot="slide-content">
 		<ul>
 			<li>
-				Ensuring temperature uniformity in tested samples<span
-					> Temperature analysis using Ansys</span
+				Ensuring temperature uniformity in tested samples<span>
+					Temperature analysis using Ansys</span
 				>
 			</li>
 			<li>
-				Determining feasible heat cycle time<span
-					> Conducting paramtric analysis and a heating/cooling Ansys simulation</span
+				Determining feasible heat cycle time<span>
+					Conducting paramtric analysis and a heating/cooling Ansys simulation</span
 				>
 			</li>
 			<li>Designing a thermoelectric system</li>
 			<li>
-				Integrating a data collection system<span
-					> Microcontroller, optical microscope, videography and thermal imaging</span
+				Integrating a data collection system<span>
+					Microcontroller, optical microscope, videography and thermal imaging</span
 				>
 			</li>
 		</ul>
@@ -532,10 +543,10 @@
 	}
 
 	em {
-	    font-style: normal;
-	    font-weight: 700;
-	    font-family: "Work Sans", "Trebuchet MS", sans-serif;
-	    color: var(--main);
-	    font-size: 2rem;
+		font-style: normal;
+		font-weight: 700;
+		font-family: 'Work Sans', 'Trebuchet MS', sans-serif;
+		color: var(--main);
+		font-size: 2rem;
 	}
 </style>

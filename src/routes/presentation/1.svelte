@@ -331,7 +331,7 @@
 			bg_color="#cde6f2"
 			cube_color="#ff3366"
 			lights_color="#f2f2f2"
-			style="margin: 0 0 0 20vw;"
+			style="margin: 32px 0 0 20vw;"
 			bind:inhibited
 		/>
 	</svelte:fragment>
@@ -347,7 +347,7 @@
 			mgShape="square"
 			mgWidth={250}
 			mgHeight={250}
-			className="chart_center_20"
+			className="chart_center_20 chart_down_32"
 			bind:zoomFactor={$zoom_factor}
 		/>
 	</svelte:fragment>
@@ -418,7 +418,7 @@
 <Slide id_slide="management" bind:short_name={headings[headings.length]}>
 	<svelte:fragment slot="slide-title">Project Management: Distribution of Tasks</svelte:fragment>
 	<svelte:fragment slot="slide-content">
-		<table style="margin: 24px 0 0 24px; font-size: x-large">
+		<table style="margin: 24px auto; font-size: x-large">
 			<tr>
 				<th>Task</th>
 				<th />
@@ -527,6 +527,10 @@
 
 	:global(.chart_center_10) {
 		margin: 0 0 0 10vw;
+	}
+
+	:global(.chart_down_32) {
+		margin-top: 32px;
 	}
 
 	li span::before {

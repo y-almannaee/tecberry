@@ -498,6 +498,7 @@
 	:global(body) {
 		margin: 0;
 		padding: 0;
+		width: fit-content;
 	}
 
 	:global(.chart_center_20) {

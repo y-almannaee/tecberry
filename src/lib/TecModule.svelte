@@ -130,6 +130,7 @@
 		renderer.setSize(width, height);
 		camera.aspect = width / height;
 		camera.updateProjectionMatrix();
+		renderer.setPixelRatio(window.devicePixelRatio);
 	};
 
 	const create_scene = (el) => {

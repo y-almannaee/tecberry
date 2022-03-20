@@ -155,19 +155,34 @@
 <Slide id_slide="introduction-to-fatigue" bind:short_name={headings[headings.length]}>
 	<svelte:fragment slot="slide-title">What is Thermal Fatigue?</svelte:fragment>
 	<svelte:fragment slot="slide-content">
+		<p>
+			It is a severe fatigue failure phenomenon.<br />
+			Induced by cyclic (and usually routine) fluctuations in temperature on a structure<br />
+			What are the consequences?
+		</p>
+		<ul>
+			<li>Corrosion</li>
+			<li>Cracking</li>
+			<li>Occurence of maximum stresses beyond yield point</li>
+		</ul>
+	</svelte:fragment>
+</Slide>
+<Slide id_slide="introduction-to-fatigue" bind:short_name={headings[headings.length]}>
+	<svelte:fragment slot="slide-title">What is Thermal Fatigue?</svelte:fragment>
+	<svelte:fragment slot="slide-content">
 		<p style="float:left;display:inline-block">
-			It is a severe fatigue failure phenomenon.<img
+			In AUS, the current tool of thermal fatigue testing is the INSTRON environmental chamber.<img
 				src="/images/instron_man.png"
 				alt="Man at AUS with an INSTRON chamber"
 				style="float:right;display:inline-block;width:240px"
 			/><br />
-			Induced by cyclic (and usually routine) fluctuations in temperature on a structure<br />
-			What are the consequences?
+			Why not just use it everywhere?
 		</p>
-		<ul style="list-style-position: inside;display: inline-block;margin-top: -9em;">
-			<li>Corrosion</li>
-			<li>Cracking</li>
-			<li>Occurence of maximum stresses beyond yield point</li>
+		<ul style="list-style-position: inside;display: inline-block;margin-top: -13em;">
+			<li>Expensive</li>
+			<li>Comes with a bulk of other functions</li>
+			<li>Huge size</li>
+			<li>Is not time efficient</li>
 		</ul>
 	</svelte:fragment>
 </Slide>
@@ -176,12 +191,11 @@
 	<svelte:fragment slot="slide-content">
 		<p>In aerospace, thermal fatigue testing is critical and is a common occurance</p>
 		<ul>
+			<li>Fatigue damage is a root cause of failure in composite structures</li>
+
 			<li>
-				Fatigue damage is a root cause of failure in composite structures
-			</li>
-			
-			<li>
-				Variations of the temperature field in aircraft engine components causes thermal stresses to develop on them
+				Variations of the temperature field in aircraft engine components causes thermal stresses to
+				develop on them
 			</li>
 			<li>The design of turbomachinery is directly related to the material performance</li>
 		</ul>
@@ -281,7 +295,17 @@
 <Slide id_slide="preeminent-literature" bind:short_name={headings[headings.length]}>
 	<svelte:fragment slot="slide-title">Literature Review</svelte:fragment>
 	<svelte:fragment slot="slide-content">
-		<p>Existing solutions</p>
+		<ul>
+			<li>
+				Well type furnaces/environmental chambers are used to heat up the sample for a short period
+				of time then take out the sample and let it cool for awhile and the process is repeated till
+				a certain number of cycles is reached
+			</li>
+			<li>
+				conventional fatigue testing methods do not provide direct observations of how
+				microstructures influence the fatigue life of the sample
+			</li>
+		</ul>
 	</svelte:fragment>
 </Slide>
 <Slide id_slide="design-specs" bind:short_name={headings[headings.length]}>
@@ -355,7 +379,9 @@
 <Slide id_slide="wiring-diagram" bind:short_name={headings[headings.length]}>
 	<svelte:fragment slot="slide-title">Wiring Diagram</svelte:fragment>
 	<svelte:fragment slot="slide-content">
-		<p>A minimum viable connection between power supply, Raspberry Pi, H-bridge, and thermoelectrics</p>
+		<p>
+			A minimum viable connection between power supply, Raspberry Pi, H-bridge, and thermoelectrics
+		</p>
 		<Magnifier
 			src="/images/wiring_diagram.png"
 			width="400px"

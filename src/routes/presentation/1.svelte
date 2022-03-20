@@ -242,7 +242,7 @@
 			<li>
 				The UAE is home to one of the largest commercial plane hubs in the world, and the planes
 				often see temperature variations of <em>-40°C to -60°C in the air</em>, and temperatures of
-				<em>50°C on the ground</em>
+				up to <em>50°C on the ground</em>
 			</li>
 		</ul>
 	</svelte:fragment>
@@ -377,18 +377,18 @@
 		<ul>
 			<li>
 				Ensuring temperature uniformity in tested samples<span
-					>Temperature analysis using Ansys</span
+					> Temperature analysis using Ansys</span
 				>
 			</li>
 			<li>
 				Determining feasible heat cycle time<span
-					>Conducting paramtric analysis and a heating/cooling Ansys simulation</span
+					> Conducting paramtric analysis and a heating/cooling Ansys simulation</span
 				>
 			</li>
 			<li>Designing a thermoelectric system</li>
 			<li>
 				Integrating a data collection system<span
-					>Microcontroller, optical microscope, videography and thermal imaging</span
+					> Microcontroller, optical microscope, videography and thermal imaging</span
 				>
 			</li>
 		</ul>
@@ -514,20 +514,28 @@
 	}
 
 	li span::before {
-		content: '\a';
+		content: '\a\2192';
 		white-space: pre;
 	}
 
 	li span {
-		font-size: smaller;
+		font-size: 1.6rem;
 	}
 
 	li {
-		font-size: larger;
+		font-size: 1.9rem;
 		line-height: 2;
 	}
 
 	p {
-		font-size: larger;
+		font-size: 1.9rem;
+	}
+
+	em {
+	    font-style: normal;
+	    font-weight: 700;
+	    font-family: "Work Sans", "Trebuchet MS", sans-serif;
+	    color: var(--main);
+	    font-size: 2rem;
 	}
 </style>

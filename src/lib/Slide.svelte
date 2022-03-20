@@ -69,7 +69,7 @@
 
 	h1 {
 		color: var(--accent);
-		font-size: xx-large;
+		font-size: 3rem;
 		font-weight: 900;
 		font-family: 'Work Sans', sans-serif;
 		text-transform: uppercase;
@@ -81,7 +81,7 @@
 
 	h3 {
 		display: inline;
-		font-size: larger;
+		font-size: 2rem;
 		font-weight: 400;
 	}
 
@@ -103,7 +103,7 @@
 	}
 
 	h2 {
-		font-size: x-large;
+		font-size: 2.7rem;
 	}
 
 	.center {
@@ -119,4 +119,5 @@
 		-moz-background-clip: content-box;
 		-webkit-background-clip: content-box;
 	}
+
 </style>

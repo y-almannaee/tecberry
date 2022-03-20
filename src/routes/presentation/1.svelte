@@ -155,15 +155,19 @@
 <Slide id_slide="introduction-to-fatigue" bind:short_name={headings[headings.length]}>
 	<svelte:fragment slot="slide-title">What is Thermal Fatigue?</svelte:fragment>
 	<svelte:fragment slot="slide-content">
-		<p>
-			It is a severe fatigue failure phenomenon.<br />
-			Induced by cyclic (and usually routine) fluctuations in temperature on a structure<br />
+		<p style="float:left;display:inline-block">
+			It is a severe fatigue failure phenomenon.<img
+			src="/images/aus_damaged.webp"
+			alt="Damage at AUS"
+			style="float:right;display:inline-block;width:300px"
+		/><br />
+			Induced by cyclic (and usually routine) fluctuations in temperature on a structure<br /><br/>
 			What are the consequences?
 		</p>
-		<ul>
+		<ul style="list-style-position: inside;display: inline-block;margin-top: -18em;">
 			<li>Corrosion</li>
 			<li>Cracking</li>
-			<li>Occurence of maximum stresses beyond yield point</li>
+			<li>Occurence of maximum stresses beyond yielding</li>
 		</ul>
 	</svelte:fragment>
 </Slide>
@@ -197,8 +201,12 @@
 				Variations of the temperature field in aircraft engine components causes thermal stresses to
 				develop on them
 			</li>
-			<li>The design of turbomachinery is directly related to the material performance</li>
+			<li>The design of turbomachinery is directly related to the material performance<video autoplay loop height="300px">
+				<source src="/images/turbine.webm" type="video/webm">
+				<track kind="captions">
+			</video></li>
 		</ul>
+		
 	</svelte:fragment>
 </Slide>
 <Slide id_slide="what-is-a-tec" bind:short_name={headings[headings.length]}>
@@ -298,14 +306,15 @@
 		<ul>
 			<li>
 				Well type furnaces/environmental chambers are used to heat up the sample for a short period
-				of time then take out the sample and let it cool for awhile and the process is repeated till
-				a certain number of cycles is reached
+				of time then remove it and let it cool for awhile and the process is repeated
 			</li>
 			<li>
-				conventional fatigue testing methods do not provide direct observations of how
+				Conventional fatigue testing methods do not provide direct observations of how
 				microstructures influence the fatigue life of the sample
 			</li>
 		</ul>
+		<img width="240px" style="margin-right:64px; margin-left:64px" src="/images/furnace.jpg" alt="Well-Type furnace">
+		<img width="320px" src="/images/moisture_chamber.jpg" alt="Moisture environmental chamber">
 	</svelte:fragment>
 </Slide>
 <Slide id_slide="design-specs" bind:short_name={headings[headings.length]}>

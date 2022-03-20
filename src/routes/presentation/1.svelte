@@ -155,19 +155,20 @@
 <Slide id_slide="introduction-to-fatigue" bind:short_name={headings[headings.length]}>
 	<svelte:fragment slot="slide-title">What is Thermal Fatigue?</svelte:fragment>
 	<svelte:fragment slot="slide-content">
-		<p>It is a severe fatigue failure phenomenon.</p>
-		<p>Induced by cyclic (and usually routine) fluctuations in temperature on a structure</p>
-		<p>What are the consequences?</p>
-		<ul>
+		<p style="float:left;display:inline-block">
+			It is a severe fatigue failure phenomenon.<img
+				src="/images/instron_man.png"
+				alt="Man at AUS with an INSTRON chamber"
+				style="float:right;display:inline-block;width:240px"
+			/><br />
+			Induced by cyclic (and usually routine) fluctuations in temperature on a structure<br />
+			What are the consequences?
+		</p>
+		<ul style="list-style-position: inside;display: inline-block;margin-top: -9em;">
 			<li>Corrosion</li>
 			<li>Cracking</li>
 			<li>Occurence of maximum stresses beyond yield point</li>
 		</ul>
-		<img
-			src="/images/instron_man.png"
-			alt="Man at AUS with an INSTRON chamber"
-			style="position:relative;bottom:340px;right:-900px;width:260px"
-		/>
 	</svelte:fragment>
 </Slide>
 <Slide id_slide="where-is-thermal-fatigue" bind:short_name={headings[headings.length]}>
@@ -176,8 +177,8 @@
 		<p>You may find thermal fatigue in many places</p>
 		<ul>
 			<li>
-				Fatigue damage is one of the most important root causes of structural failure of composite
-				structures such as aerospace structures and wind turbine blades
+				In structural failure of composite structures such as aerospace structures and wind turbine
+				blades
 			</li>
 			<li>Thermal fatigue of aircraft components is a common occurrence</li>
 			<li>
@@ -209,7 +210,7 @@
 <Slide id_slide="problem-statement" bind:short_name={headings[headings.length]} capstone={true}>
 	<svelte:fragment slot="slide-title">Problem Statement</svelte:fragment>
 	<svelte:fragment slot="slide-content">
-		<p style="margin: 24px 0 0 64px; font-size: larger;text-align: justify;">
+		<p style="margin: 24px 64px 0 64px;text-align: justify;">
 			There is a need for a small-scale, affordable, and quick thermal fatigue testing apparatus
 			that is capable of being automated. The existence of thermoelectrics makes for an interesting
 			solution to this identified need, as they are small, relatively affordable, and are easily
@@ -221,16 +222,14 @@
 <Slide id_slide="objectives" bind:short_name={headings[headings.length]}>
 	<svelte:fragment slot="slide-title">Objectives</svelte:fragment>
 	<svelte:fragment slot="slide-content">
-		<p style="margin: 24px 0 0 64px; font-size: larger;text-align: justify;">
+		<p style="margin: 24px 64px 0 64px;text-align: justify;">
 			Create a thermoelectric-based fatigue testing device that could endure a large number of
 			cycles, collect data in an autonomous manner, and reach temperatures that are productive for
 			the specimen studied.
 		</p>
-		<img
-			src="/images/objective_fc.jpg"
-			alt="Objective flow chart"
-			style="width:720px;margin: 16px auto"
-		/>
+		<div style="margin: 16px auto;width:fit-content">
+			<img src="/images/objective_fc.png" alt="Objective flow chart" style="width:720px" />
+		</div>
 	</svelte:fragment>
 </Slide>
 <Slide id_slide="the-raspberry-pi" bind:short_name={headings[headings.length]} capstone={false}>
@@ -309,7 +308,8 @@
 	<svelte:fragment slot="slide-title">CAD Model</svelte:fragment>
 	<svelte:fragment slot="slide-content">
 		<p>
-			The specimen is placed onto a plate with a suitable specific heat and conductivity in a sealed chamber.
+			The specimen is placed onto a plate with a suitable specific heat and conductivity in a sealed
+			chamber.
 		</p>
 		<Magnifier
 			src="/images/CAD_Drawing.jpg"
@@ -531,7 +531,7 @@
 	}
 
 	li span::before {
-		content: '\a\2192';
+		content: '\a\21B3';
 		white-space: pre;
 	}
 

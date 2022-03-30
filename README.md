@@ -1,5 +1,4 @@
-![](/html-src/assets/banner_light.png#gh-light-mode-only) 
-![](/html-src/assets/banner_dark.png#gh-dark-mode-only) 
+![](/sveltekit-src/static/logos/android-chrome-192x192.png)
 
 # Raspberry Pi - Dockerized Peltier Controller
 

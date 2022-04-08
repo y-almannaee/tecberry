@@ -80,7 +80,7 @@ COPY run-py.sh /etc/service/pyserver/run
 RUN chmod +x /etc/service/pyserver/run
 
 RUN /bin/bash -c 'rm -r /etc/nginx/html || : && mkdir -p /etc/nginx/html'
-COPY build /etc/nginx/html
+COPY demo-sveltekit-src/build /etc/nginx/html
 
 # Clean up APT when done.
 RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*

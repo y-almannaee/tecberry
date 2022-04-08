@@ -3,6 +3,7 @@
 	import { ArrowDownRight } from "@steeze-ui/feather-icons";
 	import { Icon } from "@steeze-ui/svelte-icon";
 	import { onMount } from "svelte";
+	import { stored_value } from "$lib/authentication.js";
 
 	let markdown,
 		scripts_fetched = 0,
@@ -29,7 +30,8 @@
 		});
 	}
 
-	function scour_directory(url, default_dir) {
+	function scour_directory(url, default_dir=undefined) {
+		default_dir = default_dir || url;
 		fetch(url).then((res) => {
 			res.json().then(async (json_res) => {
 				for (const item of json_res) {
@@ -70,11 +72,12 @@
 	}
 
 	async function enter() {
-		await scour_directory("https://192.168.1.25/docs", "https://192.168.1.25/docs");
+		await scour_directory("/docs");
 		//display_md(await get_text_from_url("/docs/default.md"));
 	}
 
 	onMount(async () => {
+		stored_value.update((n)=>n+1);
 		for (const script of scripts) {
 			console.log(script);
 			script.addEventListener("load", async () => {
@@ -111,7 +114,7 @@
 
 <div class="flex h-full w-full">
 	<div
-		class="flex-col flex pr-10 pl-4 pt-2 shadow h-full bg-slate-50 dark:bg-slate-800 dark:text-slate-50 ">
+		class="flex-col flex pr-10 pl-4 pt-2 shadow h-full bg-white dark:bg-slate-800 dark:text-slate-50 ">
 		{#each directories as dir (dir.id)}
 			<div class="font-semibold">
 				<span><Icon src={FolderOpen} class="h-6 w-6 inline align-bottom mr-1" />{dir.name}</span>
@@ -138,13 +141,17 @@
 				class="hover:underline decoration-rose-700 dark:decoration-sky-500 decoration-2"
 				>{document.name}</a>
 		{/each}
-		{#if directories.length==0 && documents.length==0}
-				<p class="text-xs mt-4 italic text-slate-400">There is no documentation here...</p>
+		{#if directories.length == 0 && documents.length == 0}
+			<p class="text-xs mt-4 italic text-slate-400">There is no documentation here...</p>
 		{/if}
 	</div>
-	<div class="bg-gray-50 h-full w-full ml-4 overflow-y-scroll">
-		<div class="aspect-[70/99] px-6 py-12 my-4 mx-2 bg-white shadow-xl shadow-slate-700/10 ring-1 ring-gray-900/5 md:max-w-3xl md:mx-auto lg:max-w-4xl lg:pt-16 lg:pb-28">
-			<div bind:this={markdown} class="max-w-prose mx-auto lg:text-lg prose prose-rose lg:prose-lg" />
+	<div class="bg-gray-50 dark:bg-slate-900 h-full w-full ml-4 overflow-y-scroll">
+		<div
+			class="aspect-[70/99] px-6 py-12 my-4 mx-2 bg-white shadow-xl shadow-slate-700/10 dark:shadow-slate-50/10 ring-1 ring-gray-900/5 dark:ring-white/5 md:max-w-3xl md:mx-auto lg:max-w-4xl lg:pt-16 lg:pb-28">
+			<div bind:this={markdown} class="max-w-prose mx-auto lg:text-lg prose prose-rose lg:prose-lg">
+				{$stored_value}
+				<button on:click="{()=>stored_value.update((n)=>n+2)}">Pres</button>
+			</div>
 		</div>
 	</div>
 </div>

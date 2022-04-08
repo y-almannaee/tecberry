@@ -43,7 +43,7 @@
 	<header
 		class="{moved_down
 			? 'text-lg py-2'
-			: 'text-2xl py-4'} transition-all will-change-transform sticky top-0 z-20 gap-2 items-center px-2 bg-slate-50 dark:bg-slate-700 shadow-md hidden md:flex text-slate-900 dark:text-slate-200">
+			: 'text-2xl py-4'} transition-all will-change-transform sticky top-0 z-20 gap-2 items-center px-2 bg-white dark:bg-slate-800 shadow-md hidden md:flex text-slate-900 dark:text-slate-200">
 		<Logotype class="{moved_down ? 'text-lg' : 'text-3xl'} transition-all duration-300" />
 		{#each links as link (link.id)}
 			<Dropdown
@@ -73,7 +73,7 @@
 	<header
 		class="{moved_down
 			? 'text-lg'
-			: 'text-2xl'} transition-all will-change-transform sticky top-0 z-20 flex gap-8 items-center p-2 bg-slate-50 dark:bg-slate-700 shadow-md md:hidden text-slate-900">
+			: 'text-2xl'} transition-all will-change-transform sticky top-0 z-20 flex gap-8 items-center p-2 bg-white dark:bg-slate-800 shadow-md md:hidden text-slate-900">
 		<Logotype class="text-3xl" />
 		<button
 			class="ml-auto"
@@ -93,7 +93,7 @@
 				}}>
 				<div
 					transition:fly={{ easing: backOut, duration: 400, y: 50, opacity: 0 }}
-					class="mx-auto max-w-xs p-4 rounded will-change-transform bg-slate-50 dark:bg-slate-800 mt-16">
+					class="mx-auto max-w-xs p-4 rounded will-change-transform bg-white dark:bg-slate-800 mt-16">
 					<button
 						class="absolute top-5 right-4"
 						on:click={() => {
@@ -122,7 +122,7 @@
 	<main class="mb-auto" style="min-height: calc(100% - 96px - 70px)">
 		<slot />
 	</main>
-	<footer class="bg-slate-50 dark:bg-slate-800 shadow-2xl w-full z-10 relative">
+	<footer class="bg-white dark:bg-slate-800 shadow-2xl w-full z-10 relative">
 		<div class="p-4 mx-auto md:p-6">
 			<span class="text-sm text-gray-500 sm:text-center dark:text-gray-400">
 				© 2022 <a

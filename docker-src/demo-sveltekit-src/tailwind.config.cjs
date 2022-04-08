@@ -4,6 +4,9 @@ const config = {
     darkMode: 'class',
 
     theme: {
+        fontFamily: {
+            'sans': ['Ubuntu', 'sans-serif']
+        },
         extend: {}
     },
 

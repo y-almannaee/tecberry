@@ -3,10 +3,11 @@ services:
     controller:
         restart: always
         image: yalmannaee/peltier-controller:latest
+        depends_on:
+          - redis_db
         ports:
             - "80:80"
             - "443:443"
-            - "6379:6379"
         devices:
             - /dev/gpiomem:/dev/gpiomem
         volumes:
@@ -23,10 +24,12 @@ services:
         environment:
             DUCKDNS_TOKEN: ${USER_DUCKDNS_TOKEN}
         command: ["--accept-tos", "--path", "/var/lib/", "--email", "${USER_EMAIL}", "--dns", "duckdns", "--domains", "${USER_HOSTNAME}", "--domains", "*.${USER_HOSTNAME}", "renew"]
-    # redis_db:build: 
-    #     image: redislabs/redistimeseries
-    #     volumes:
-    #         - ./app_data/redis:/data
-    #     ports:
-    #         - "6379:6379"
-    #     command: ["redis-server", "--save 60 1", "--loglevel notice"]
+    redis_db: 
+        restart: always
+        image: redis
+        volumes:
+            - ./app_data/redis/data:/data
+            - ./app_data/redis:/redis
+        ports:
+            - "6379:6379"
+        command: ["redis-server", "--loadmodule /redis/redistimeseries.so", "--save 60 1", "--loglevel notice"]

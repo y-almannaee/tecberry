@@ -294,7 +294,7 @@ run_shell(
 	True,
 )
 run_shell(
-	f'bash -c "curl "https://raw.githubusercontent.com/y-almannaee/tecberry/main/docker-src/google_authentication.py" -o {os.getcwd()}/app_data/authenticators/google_authentication.py',
+	f'bash -c "curl "https://raw.githubusercontent.com/y-almannaee/tecberry/main/docker-src/google_authentication.py" -o {os.getcwd()}/app_data/authenticators/google_authentication.py"',
 	f"{con_colors.OKCYAN}Downloaded default authenticator",
 	f"{con_colors.FAIL}Unable to download default authenticator. {failure_warning}",
 	False,

@@ -1,18 +1,12 @@
 version: '3'
 services:
-    letsencryptgo:
-        image: goacme/lego
-        volumes:
-            - ./app_data:/var/lib
-        environment:
-            DUCKDNS_TOKEN: ${USER_DUCKDNS_TOKEN}
-        command: ["--accept-tos", "--path", "/var/lib/", "--email", "${USER_EMAIL}", "--dns", "duckdns", "--domains", "${USER_HOSTNAME}", "--domains", "*.${USER_HOSTNAME}", "renew"]
     controller:
         restart: always
         image: yalmannaee/peltier-controller:latest
         ports:
             - "80:80"
             - "443:443"
+            - "6379:6379"
         devices:
             - /dev/gpiomem:/dev/gpiomem
         volumes:
@@ -21,3 +15,18 @@ services:
             HOSTNAME: "${USER_HOSTNAME}"
     # By default we assume you're using DuckDNS.org (https://www.duckdns.org)
     # as a hostname. The letsencryptgo service issues an encryption certificate in that domain's name
+
+    letsencryptgo:
+        image: goacme/lego
+        volumes:
+            - ./app_data:/var/lib
+        environment:
+            DUCKDNS_TOKEN: ${USER_DUCKDNS_TOKEN}
+        command: ["--accept-tos", "--path", "/var/lib/", "--email", "${USER_EMAIL}", "--dns", "duckdns", "--domains", "${USER_HOSTNAME}", "--domains", "*.${USER_HOSTNAME}", "renew"]
+    # redis_db:build: 
+    #     image: redislabs/redistimeseries
+    #     volumes:
+    #         - ./app_data/redis:/data
+    #     ports:
+    #         - "6379:6379"
+    #     command: ["redis-server", "--save 60 1", "--loglevel notice"]

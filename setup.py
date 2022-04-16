@@ -45,12 +45,11 @@ def run_shell(
 	error_state="",
 	critical=False,
 	shell=False,
-	stdout_to=subprocess.DEVNULL,
 ):
 	cmd = shlex.split(cmd) if not shell else cmd
 	try:
 		subprocess.check_call(
-			cmd, stdout=stdout_to, stderr=subprocess.DEVNULL, shell=shell
+			cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, shell=shell
 		)
 		print(success_state, con_colors.ENDC)
 		return 0
@@ -313,7 +312,6 @@ run_shell(
 	f"{con_colors.OKCYAN}Pulled latest Docker images",
 	f"{con_colors.FAIL}Unable to pull latest Docker images. Ensure that the docker-compose module was downloaded by Python and that it is in the /usr/local/bin folder. {failure_warning}",
 	True,
-	stdout_to=subprocess.STDOUT,
 )
 if run_shell(
 	f"/usr/bin/docker run --rm -e DUCKDNS_TOKEN={user_duckdns_token} -v {os.getcwd()}/app_data:/var/lib goacme/lego --accept-tos --path /var/lib/ --email {user_email} --dns duckdns --domains {user_hostname} --domains *.{user_hostname} run",

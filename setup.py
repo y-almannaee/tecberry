@@ -1,10 +1,11 @@
 #!/bin/python3
 
 # This is an install script, run it by invoking
-# curl -fsSLO https://raw.github.com/y-almannaee/peltier-controller/main/setup.py && sudo python3 setup.py
+# curl -fsSLO https://raw.github.com/y-almannaee/tecberry/main/setup.py && sudo python3 setup.py
 # on your Raspberry Pi!
 
 import shlex, subprocess, sys, os, time
+from pathlib import Path
 
 
 class con_colors:
@@ -38,11 +39,18 @@ def pip_install(package):
 		raise SystemExit()
 
 
-def run_shell(cmd, success_state="", error_state="", critical=False, shell=False):
+def run_shell(
+	cmd,
+	success_state="",
+	error_state="",
+	critical=False,
+	shell=False,
+	stdout_to=subprocess.DEVNULL,
+):
 	cmd = shlex.split(cmd) if not shell else cmd
 	try:
 		subprocess.check_call(
-			cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, shell=shell
+			cmd, stdout=stdout_to, stderr=subprocess.DEVNULL, shell=shell
 		)
 		print(success_state, con_colors.ENDC)
 		return 0
@@ -267,13 +275,32 @@ run_shell(
 	f"{con_colors.WARNING}Renamed your old docker-compose.yml to docker-compose-old.yml",
 )
 run_shell(
-	f'bash -c "curl "https://raw.githubusercontent.com/y-almannaee/peltier-controller/main/docker-compose-default.yml" > {os.getcwd()}/docker-compose.yml"',
+	f'bash -c "curl "https://raw.githubusercontent.com/y-almannaee/tecberry/main/docker-compose-default.yml" > {os.getcwd()}/docker-compose.yml"',
 	f"{con_colors.OKCYAN}Downloaded latest docker-compose.yml",
 	f"{con_colors.FAIL}Unable to get latest docker-compose.yml. {failure_warning}",
 	True,
 )
+for path in [
+	Path("./app_data/redis/data"),
+	Path("./app_data/public/docs"),
+	Path("./app_data/public/google"),
+	Path("./app_data/authenticators"),
+]:
+	path.resolve().mkdir(mode=774, parents=True, exist_ok=True)
 run_shell(
-	f'bash -c "mkdir -p {os.getcwd()}/app_data; chown -R pi:pi {os.getcwd()}/app_data {os.getcwd()}/docker-compose.yml {os.getcwd()}/.env"',
+	f'bash -c "curl "https://raw.githubusercontent.com/y-almannaee/tecberry/main/docker-src/redistimeseries.so" -o {os.getcwd()}/app_data/redis/redistimeseries.so',
+	f"{con_colors.OKCYAN}Downloaded redis time series module",
+	f"{con_colors.FAIL}Unable to download redis time series module. {failure_warning}",
+	True,
+)
+run_shell(
+	f'bash -c "curl "https://raw.githubusercontent.com/y-almannaee/tecberry/main/docker-src/google_authentication.py" -o {os.getcwd()}/app_data/authenticators/google_authentication.py',
+	f"{con_colors.OKCYAN}Downloaded default authenticator",
+	f"{con_colors.FAIL}Unable to download default authenticator. {failure_warning}",
+	False,
+)
+run_shell(
+	f'bash -c "chown -R pi:pi {os.getcwd()}/app_data {os.getcwd()}/docker-compose.yml {os.getcwd()}/.env"',
 	f"{con_colors.OKCYAN}Created ./app_data and transferred ownership of all requisite files to the pi user",
 	f"{con_colors.FAIL}Unable to create ./app_data folder or change ownership of files. {failure_warning}",
 	True,
@@ -286,6 +313,7 @@ run_shell(
 	f"{con_colors.OKCYAN}Pulled latest Docker images",
 	f"{con_colors.FAIL}Unable to pull latest Docker images. Ensure that the docker-compose module was downloaded by Python and that it is in the /usr/local/bin folder. {failure_warning}",
 	True,
+	stdout_to=subprocess.STDOUT,
 )
 if run_shell(
 	f"/usr/bin/docker run --rm -e DUCKDNS_TOKEN={user_duckdns_token} -v {os.getcwd()}/app_data:/var/lib goacme/lego --accept-tos --path /var/lib/ --email {user_email} --dns duckdns --domains {user_hostname} --domains *.{user_hostname} run",
@@ -313,7 +341,7 @@ print(
 	f"\n{con_colors.OKGREEN}Successfully finished setup. Run the containers using {con_colors.ENDC}{con_colors.BOLD}sudo docker-compose pull && sudo docker-compose up -d{con_colors.ENDC}"
 )
 print(
-	f"{con_colors.WARNING}Report any issues to {con_colors.ENDC}{con_colors.BOLD}https://github.com/y-almannaee/peltier-controller/issues{con_colors.ENDC}"
+	f"{con_colors.WARNING}Report any issues to {con_colors.ENDC}{con_colors.BOLD}https://github.com/y-almannaee/tecberry/issues{con_colors.ENDC}"
 )
 if not (len(sys.argv) == 2 and sys.argv[1] == "--no-rm"):
 	print(

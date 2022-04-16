@@ -235,7 +235,7 @@ with open(f"{os.getcwd()}/.env", "w") as file:
 
 run_shell(
 	"apt update",
-	f"{con_colors.OKCYAN}Updated package lists",
+	f"{con_colors.OKCYAN}Updated package lists. Proceeding to upgrade system. This may take a while, and it may look like there's no progress at all. Please sit tight.",
 	f"{con_colors.FAIL}Can't update package lists. {failure_warning}",
 	True,
 )
@@ -288,7 +288,7 @@ for path in [
 ]:
 	path.resolve().mkdir(mode=774, parents=True, exist_ok=True)
 run_shell(
-	f'bash -c "curl "https://raw.githubusercontent.com/y-almannaee/tecberry/main/docker-src/redistimeseries.so" -o {os.getcwd()}/app_data/redis/redistimeseries.so',
+	f'bash -c "curl "https://raw.githubusercontent.com/y-almannaee/tecberry/main/docker-src/redistimeseries.so" -o {os.getcwd()}/app_data/redis/redistimeseries.so"',
 	f"{con_colors.OKCYAN}Downloaded redis time series module",
 	f"{con_colors.FAIL}Unable to download redis time series module. {failure_warning}",
 	True,

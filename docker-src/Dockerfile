@@ -73,7 +73,7 @@ RUN chmod +x /etc/my_init.d/setup_nginx.sh
 RUN mkdir -p /etc/pyserver
 COPY python-src/* /etc/pyserver/
 RUN apt-get update && /sbin/install_clean python3 python3-pip python3-dev libffi-dev
-RUN python3 -m pip install --update pip
+RUN python3 -m pip install --upgrade pip
 RUN python3 -m pip install -r /etc/pyserver/requirements.txt
 RUN mkdir -p /etc/service/pyserver
 COPY run-py.sh /etc/service/pyserver/run

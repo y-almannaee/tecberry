@@ -70,21 +70,21 @@ RUN mkdir -p /etc/my_init.d
 COPY setup_nginx.sh /etc/my_init.d/setup_nginx.sh
 RUN chmod +x /etc/my_init.d/setup_nginx.sh
 
+RUN mkdir -p /etc/pyserver
+COPY python-src/* /etc/pyserver/
+RUN apt-get update && /sbin/install_clean python3 python3-pip python3-dev libffi-dev
+RUN python3 -m pip install --update pip
+RUN python3 -m pip install -r /etc/pyserver/requirements.txt
+RUN mkdir -p /etc/service/pyserver
+COPY run-py.sh /etc/service/pyserver/run
+RUN chmod +x /etc/service/pyserver/run
+
 RUN apt-get update && /sbin/install_clean redis-server
 RUN git clone --depth 1 --recursive https://github.com/RedisTimeSeries/RedisTimeSeries.git
 RUN /bin/bash -c "cd RedisTimeSeries && make setup && make build"
 RUN mkdir -p /etc/service/redis
 COPY run-redis.sh /etc/service/redis/run
 RUN chmod +x /etc/service/redis/run
-
-RUN mkdir -p /etc/pyserver
-COPY python-src/* /etc/pyserver/
-RUN apt-get update && /sbin/install_clean python3 python3-pip python3-dev
-RUN python3 -m pip install --update pip
-RUN python3 -m pip install -r /etc/pyserver/requirements.txt
-RUN mkdir -p /etc/service/pyserver
-COPY run-py.sh /etc/service/pyserver/run
-RUN chmod +x /etc/service/pyserver/run
 
 RUN /bin/bash -c 'rm -r /etc/nginx/html || : && mkdir -p /etc/nginx/html'
 COPY demo-sveltekit-src/build /etc/nginx/html

@@ -226,6 +226,7 @@ with open(f"{os.getcwd()}/.env", "w") as file:
 			f"USER_HOSTNAME={user_hostname}\n",
 			f"USER_EMAIL={user_email}\n",
 			f"USER_DUCKDNS_TOKEN={user_duckdns_token}\n",
+			f"USER_DUCKDNS_HOSTNAME={user_hostname}\n",
 		]
 	)
 	print(

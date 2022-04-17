@@ -78,6 +78,7 @@ RUN python3 -m pip install --ignore-installed --upgrade -r /etc/pyserver/require
 RUN mkdir -p /etc/service/pyserver
 COPY run-py.sh /etc/service/pyserver/run
 RUN chmod +x /etc/service/pyserver/run
+RUN /bin/bash -c "crontab -l > cronjobs && echo '*/15 * * * * /usr/bin/python3 /etc/pyserver/duckdns_handler' >> cronjobs && crontab cronjobs && rm cronjobs"
 
 # RUN apt-get update && /sbin/install_clean redis-server
 # RUN git clone --depth 1 --recursive https://github.com/RedisTimeSeries/RedisTimeSeries.git

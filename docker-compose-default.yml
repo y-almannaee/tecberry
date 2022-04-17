@@ -1,35 +1,77 @@
 version: '3'
 services:
-    controller:
-        restart: always
-        image: yalmannaee/peltier-controller:latest
-        depends_on:
-          - redis_db
-        ports:
-            - "80:80"
-            - "443:443"
-        devices:
-            - /dev/gpiomem:/dev/gpiomem
-        volumes:
-            - ./app_data:/var/lib/peltier_controller
-        environment:
-            HOSTNAME: "${USER_HOSTNAME}"
-    # By default we assume you're using DuckDNS.org (https://www.duckdns.org)
-    # as a hostname. The letsencryptgo service issues an encryption certificate in that domain's name
+  controller:
+    restart: always
+    image: yalmannaee/peltier-controller:latest
+    depends_on:
+      - redis_db
+    ports:
+      - "80:80"
+      - "443:443"
+    devices:
+      - /dev/gpiomem:/dev/gpiomem
+    volumes:
+      - ./app_data:/var/lib/peltier_controller
+    environment:
+      # Environment variables can be specified here or in an .env file
+      # adjacent to this docker-compose file (in the same folder)
+      # This variable is set in the .env, for example
+      HOSTNAME: "${USER_HOSTNAME}"
 
-    letsencryptgo:
-        image: goacme/lego
-        volumes:
-            - ./app_data:/var/lib
-        environment:
-            DUCKDNS_TOKEN: ${USER_DUCKDNS_TOKEN}
-        command: ["--accept-tos", "--path", "/var/lib/", "--email", "${USER_EMAIL}", "--dns", "duckdns", "--domains", "${USER_HOSTNAME}", "--domains", "*.${USER_HOSTNAME}", "renew"]
-    redis_db: 
-        restart: always
-        image: redis
-        volumes:
-            - ./app_data/redis/data:/data
-            - ./app_data/redis:/redis
-        ports:
-            - "6379:6379"
-        command: ["redis-server", "--loadmodule /redis/redistimeseries.so", "--save 60 1", "--loglevel notice"]
+      # Needed for DuckDNS to get latest ip, remove if you're not using DuckDNS
+      DUCKDNS_HOSTNAME: ${USER_DUCKDNS_HOSTNAME}
+      DUCKDNS_TOKEN: ${USER_DUCKDNS_TOKEN}
+
+      # Comment out to run redirects to insecure schema (http)
+      SECURE: "Yes"
+
+      # AUTH_LOCATIONS: "/var/lib/peltier_controller/authenticators"
+      # REDIS_HOST: "redis_db"
+      # REDIS_PORT: 6379
+
+      # STATIC_IPv4_ADDRESS: "" # Specify a static ip here eg. "104.244.42.193"
+      # STATIC_IPv6_ADDRESS: "" # eg. "2606:2800:220:1:248:1893:25c8:1946"
+
+  # By default we assume you're using an DuckDNS.org (https://www.duckdns.org) hostname.
+  # The letsencryptgo service issues an encryption certificate in that domain's name
+  letsencryptgo:
+    image: goacme/lego
+    volumes:
+      - ./app_data:/var/lib
+    environment:
+      DUCKDNS_TOKEN: ${USER_DUCKDNS_TOKEN}
+    command:
+      [
+        "--accept-tos",
+        "--path",
+        "/var/lib/",
+        "--email",
+        "${USER_EMAIL}",
+        "--dns",
+        "duckdns",
+        "--domains",
+        "${USER_HOSTNAME}",
+        "--domains",
+        "*.${USER_HOSTNAME}",
+        "renew"
+      ]
+  
+  # Redis should generally be provided, somehow.
+  # If this is removed, add another redis hostname as an
+  # environment variable to the peltier controller
+  # The redis instance must have the redis time series module
+  redis_db:
+    restart: always
+    image: redis
+    volumes:
+      - ./app_data/redis/data:/data
+      - ./app_data/redis:/redis
+    ports:
+      - "6379:6379"
+    command:
+      [
+        "redis-server",
+        "--loadmodule /redis/redistimeseries.so",
+        "--save 60 1",
+        "--loglevel notice"
+      ]

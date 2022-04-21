@@ -40,29 +40,38 @@ async def verify_credentials(info):
 	return 200
 
 
-async def has_auth(db, uuid):
+async def has_auth(db, uuid, key):
 	try:
 		hkey = (await db.get(f"cookies:{uuid}")).decode()
 	except AttributeError:
 		return ""
+	encrypted_creds = await db.get(f"{hkey}:credentials")
+	if encrypted_creds == None:
+		return ""
+	fernet = Fernet(key)
 	try:
-		credentials = pickle.loads(await db.get(f"{hkey}:credentials"))
+		decrypted_credentials = fernet.decrypt(encrypted_creds)
+	except InvalidToken:
+		return ""
+	try:
+		credentials = pickle.loads(decrypted_credentials)
 	except TypeError:
 		return ""
 	if credentials.valid:
 		await db.expire(f"cookies:{uuid}", timedelta(days=3))
 		return credentials
-	else:
-		try:
-			credentials.refresh(None)
-		except:
-			return ""
-		return credentials
+	try:
+		credentials.refresh(None)
+	except:
+		return ""
+	return credentials
 
 
 async def start_registration(request):
 	if await has_auth(
-		request.app["db"], request.cookies.get("id", "").replace("google:", "")
+		request.app["db"],
+		request.cookies.get("id", "").replace("google:", ""),
+		request.cookies.get("key", "").replace("google:", ""),
 	):
 		return web.Response(status=303, headers={"Location": "/"})
 
@@ -75,7 +84,13 @@ async def start_registration(request):
 		access_type="offline", include_granted_scopes="true"
 	)
 	response = web.Response(status=303, headers={"Location": auth_url})
-	response.set_cookie("for", state)
+	response.set_cookie("for", state, secure=True, httponly=True)
+	response.set_cookie(
+		"prev_state",
+		request.get("Referer", "")
+		if request.get("Referer", "")
+		else request.get("X-Original-State", "/"),
+	)
 	print("Attempt to Google authorize,", state)
 	return response
 
@@ -100,27 +115,30 @@ async def handle_credentials(request):
 	if verified != 200:
 		return web.Response(verified[0], text=verified[1])
 
-	hkey = f"google:{stored_info.get('id')}"
+	hkey = f"google:{stored_info.get('email')}"
 	uuid = uuid4()
+	secret_key = Fernet.generate_key()
+	fernet = Fernet(secret_key)
+	encrypted_creds = fernet.encrypt(pickle.dumps(credentials))
 
 	async with request.app["db"].pipeline(transaction=True) as pipe:
 		ok = await (
 			pipe.hset(hkey, mapping=stored_info)
 			.set(f"cookies:{uuid}", hkey, ex=timedelta(days=3))
-			.set(f"{hkey}:credentials", pickle.dumps(credentials))
+			.set(f"{hkey}:credentials", encrypted_creds)
 			.execute()
 		)
-
-	print(f"Changed {ok[0]} in hash")
 
 	if not all(ok[1:]):
 		return web.Response(
 			status=500, text="Couldn't store your credentials. Try again"
 		)
 
-	response = web.Response(status=303, headers={"Location": "/"})
+	prev_state = URL(request.cookies.get("prev_state", "/")).path
+	response = web.Response(status=303, headers={"Location": prev_state})
 	response.del_cookie("for")
 	response.set_cookie("id", f"google:{uuid}")
+	response.set_cookie("key", f"google:{secret_key.decode()}")
 	return response
 
 

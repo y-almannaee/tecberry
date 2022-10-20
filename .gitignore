@@ -19,7 +19,7 @@ sdist/
 var/
 wheels/
 pip-wheel-metadata/
-share/python-wheels/
+*/share/python-wheels/
 *.egg-info/
 .installed.cfg
 *.egg
@@ -100,6 +100,7 @@ celerybeat.pid
 *.sage.py
 
 # Environments
+.env
 .venv
 env/
 venv/

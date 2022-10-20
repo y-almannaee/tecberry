@@ -1,0 +1,1 @@
+* Run leader.py with AUTH_LOCATIONS="/home/name/tecberry/docker-src/python-src/authenticators" in front of it to specify the authenticator folder

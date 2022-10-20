@@ -32,8 +32,8 @@ services:
       # STATIC_IPv4_ADDRESS: "" # Specify a static ip here eg. "104.244.42.193"
       # STATIC_IPv6_ADDRESS: "" # eg. "2606:2800:220:1:248:1893:25c8:1946"
 
-  # By default we assume you're using an DuckDNS.org (https://www.duckdns.org) hostname.
-  # The letsencryptgo service issues an encryption certificate in that domain's name
+  # By default we assume you're using a DuckDNS.org (https://www.duckdns.org) hostname.
+  # The LetsEncryptGo service below issues an encryption certificate in that domain's name
   letsencryptgo:
     image: goacme/lego
     volumes:

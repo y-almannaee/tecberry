@@ -30,16 +30,16 @@
 
 <div class="w-full flex items-center h-full bg-gray-50">
 	<div
-		class="bg-white dark:bg-slate-800 min-h-2/4 w-2/5 2xl:w-1/4 rounded p-8 shadow-xl mx-auto
+		class="bg-white dark:bg-slate-800 min-h-2/4 w-3/4 sm:w-3/5 2xl:w-1/4 rounded p-8 shadow-xl mx-auto
 		transition-all duration-700 {done ? '-translate-y-20 opacity-100' : 'translate-y-10 opacity-0'}"
 	>
 		<h1 class="font-semibold text-lg dark:text-slate-50">Choose a sign in method</h1>
-		<span class="text-slate-400 italic text-sm w-3/5 block">
+		<span class="text-slate-400 italic text-xs w-4/5 2xl:text-sm 2xl:w-3/5 block">
 			These are specified by your organization, contact your IT if you are not able to log in
 		</span>
 		<div class="p-2 md:p-6 flex gap-4 flex-col items-center w-fit mx-auto">
 			{#each methods as method (method.id)}
-				<div on:click={()=>window.location=method.link}
+				<div on:click={()=>{window.location=method.link}}
 					class="duration-300 cursor-pointer
 				{method.hovercol} rounded py-2 px-4 text-center
 				{method.primarycol} {method.textcol} w-full select-none

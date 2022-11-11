@@ -4,7 +4,7 @@
 </script>
 
 <span class="relative">
-	<div class="peer z-10 relative mx-2 cursor-pointer">
+	<div class="peer z-10 relative mx-2 cursor-default">
 		<span
 			class="font-medium select-none leading-3
 		hover:underline decoration-rose-700 dark:decoration-sky-500 decoration-2">

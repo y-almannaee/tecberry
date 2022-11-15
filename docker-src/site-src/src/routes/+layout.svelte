@@ -22,14 +22,14 @@
 			id: 1,
 			text: 'Configuration',
 			to: [
-				{ href: '/config/program', text: 'Program' },
+				{ href: '/config/scheduler', text: 'Scheduler' },
 				{ href: '/config/devices', text: 'Devices' }
 			]
 		}
 	];
 </script>
 
-<div class="flex flex-col h-screen justify-between">
+<div class="flex flex-col h-screen justify-between" data-sveltekit-prefetch>
 	<header
 		class="text-lg py-2 sticky top-0 z-20 gap-2 items-center px-2 bg-white dark:bg-slate-800 shadow-md hidden md:flex text-slate-900 dark:text-slate-200"
 	>
@@ -51,9 +51,9 @@
 		>
 	</header>
 	<header
-		class="text-lg will-change-transform sticky top-0 z-20 flex gap-8 items-center p-2 bg-white dark:bg-slate-800 shadow-md md:hidden text-slate-900"
+		class="text-lg will-change-transform sticky top-0 z-20 flex gap-8 items-center lg:p-2 p-0.5 bg-white dark:bg-slate-800 shadow-md md:hidden text-slate-900"
 	>
-		<Logotype class="text-3xl" />
+		<Logotype class="lg:text-3xl text-lg" />
 		<button
 			class="ml-auto"
 			on:click={() => {
@@ -62,7 +62,7 @@
 		>
 		{#if expanded}
 			<div
-				class="bg-slate-500/40 backdrop-blur-sm dark:bg-slate-800/40 fixed top-0 left-0 w-screen h-screen text-slate-900 dark:text-slate-200"
+				class="bg-slate-500/40 text-sm lg:text-base backdrop-blur-sm dark:bg-slate-800/40 fixed top-0 left-0 w-screen h-screen text-slate-900 dark:text-slate-200"
 				transition:fade
 				on:click|self={() => {
 					expanded = false;
@@ -87,7 +87,7 @@
 								<a
 									on:click={() => (expanded = false)}
 									href={a.href}
-									class="hover:underline decoration-rose-700 dark:decoration-sky-500 decoration-2 font-light text-lg"
+									class="hover:underline decoration-rose-700 dark:decoration-sky-500 decoration-2 font-light text-sm lg:text-lg"
 									>{a.text}</a
 								>
 							{/each}

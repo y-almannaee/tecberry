@@ -60,10 +60,11 @@ CMD ["/sbin/my_init"]
 # ...put your own build instructions here...
 RUN apt-get update && /sbin/install_clean curl build-essential libpcre3 libpcre3-dev zlib1g zlib1g-dev libssl-dev openssl libgd-dev libxml2 libxml2-dev uuid-dev git python3 python3-pip python3-dev libffi-dev
 RUN curl https://sh.rustup.rs -sSf | bash -s -- -y
+ENV PATH="/root/.cargo/bin:${PATH}"
 RUN mkdir -p /etc/pyserver
 COPY python-src/* /etc/pyserver/
 RUN python3 -m pip install --upgrade pip
-# RUN python3 -m pip install --ignore-installed --upgrade -r /etc/pyserver/requirements.txt
+RUN python3 -m pip install --ignore-installed --upgrade -r /etc/pyserver/requirements.txt
 
 FROM phusion/baseimage:focal-1.1.0
 

@@ -43,5 +43,4 @@ jobs:
       - name: Release
         uses: softprops/action-gh-release@v1
         with:
-          files: build.zip
-        working-directory: ./docker-src/site-src
+          files: ./docker-src/site-src/build.zip

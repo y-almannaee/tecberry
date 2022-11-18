@@ -52,17 +52,18 @@ RUN /bin/bash -c "cd nginx-1.21.6/ && ./configure \
 	--with-cc-opt='-O2 -flto -funsafe-math-optimizations -fstack-protector-strong -fstack-clash-protection -pipe --param=ssp-buffer-size=4 -Wp,-D_FORTIFY_SOURCE=2'"
 RUN /bin/bash -c 'cd /nginx-1.21.6 && make'
 
-# FROM phusion/baseimage:focal-1.1.0 AS builder_py
+FROM phusion/baseimage:focal-1.1.0 AS builder_py
 
-# # Use baseimage-docker's init system.
-# CMD ["/sbin/my_init"]
+# Use baseimage-docker's init system.
+CMD ["/sbin/my_init"]
 
-# # ...put your own build instructions here...
-# RUN apt-get update && /sbin/install_clean curl build-essential libpcre3 libpcre3-dev zlib1g zlib1g-dev libssl-dev openssl libgd-dev libxml2 libxml2-dev uuid-dev git python3 python3-pip python3-dev libffi-dev
-# RUN mkdir -p /etc/pyserver
-# COPY python-src/* /etc/pyserver/
-# RUN python3 -m pip install --upgrade pip
-# RUN python3 -m pip install --ignore-installed --upgrade -r /etc/pyserver/requirements.txt
+# ...put your own build instructions here...
+RUN apt-get update && /sbin/install_clean curl build-essential libpcre3 libpcre3-dev zlib1g zlib1g-dev libssl-dev openssl libgd-dev libxml2 libxml2-dev uuid-dev git python3 python3-pip python3-dev libffi-dev
+RUN curl https://sh.rustup.rs -sSf | bash -s -- -y
+RUN mkdir -p /etc/pyserver
+COPY python-src/* /etc/pyserver/
+RUN python3 -m pip install --upgrade pip
+RUN python3 -m pip install --ignore-installed --upgrade -r /etc/pyserver/requirements.txt
 
 FROM phusion/baseimage:focal-1.1.0
 
@@ -70,9 +71,9 @@ FROM phusion/baseimage:focal-1.1.0
 CMD ["/sbin/my_init"]
 
 # ...put your own build instructions here...
-RUN apt-get update && /sbin/install_clean curl
+RUN apt-get update && /sbin/install_clean curl build-essential python3 python3-pip python3-dev
 COPY --from=builder_nginx /nginx-1.21.6 /nginx
-# COPY --from=builder_py /etc/pyserver /etc/pyserver
+COPY --from=builder_py /etc/pyserver /etc/pyserver
 RUN /bin/bash -c 'cd /nginx && make install \
 	&& mkdir -p /etc/nginx/sites-enabled && mkdir -p /etc/nginx/certs && mkdir -p /var/cache/nginx \
 	&& rm -r /etc/nginx/sites-enabled || :  && mkdir -p /etc/nginx/sites-enabled && mkdir -p /etc/nginx/default-site-conf'
@@ -96,7 +97,7 @@ RUN chmod +x /etc/my_init.d/setup_nginx.sh
 RUN mkdir -p /etc/service/pyserver/run
 COPY run-py.sh /etc/service/pyserver/run
 RUN chmod +x /etc/service/pyserver/run
-# RUN /bin/bash -c "crontab -l > cronjobs && echo '*/15 * * * * /usr/bin/python3 /etc/pyserver/duckdns_handler' >> cronjobs && crontab cronjobs && rm cronjobs"
+RUN /bin/bash -c "echo '*/15 * * * * /usr/bin/python3 /etc/pyserver/duckdns_handler' >> /etc/crontabs/root"
 
 # RUN apt-get update && /sbin/install_clean redis-server
 # RUN git clone --depth 1 --recursive https://github.com/RedisTimeSeries/RedisTimeSeries.git

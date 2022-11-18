@@ -63,7 +63,7 @@ RUN curl https://sh.rustup.rs -sSf | bash -s -- -y
 RUN mkdir -p /etc/pyserver
 COPY python-src/* /etc/pyserver/
 RUN python3 -m pip install --upgrade pip
-RUN python3 -m pip install --ignore-installed --upgrade -r /etc/pyserver/requirements.txt
+# RUN python3 -m pip install --ignore-installed --upgrade -r /etc/pyserver/requirements.txt
 
 FROM phusion/baseimage:focal-1.1.0
 

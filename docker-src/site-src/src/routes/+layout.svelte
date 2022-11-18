@@ -1,5 +1,7 @@
 <script lang="ts">
 	export const prerender = true;
+	import '../theme.postcss';
+	import '@brainandbones/skeleton/styles/all.css';
 	import '../app.css';
 	import Logotype from '$lib/logotype.svelte';
 	import Dropdown from '$lib/dropdown.svelte';
@@ -41,7 +43,7 @@
 		{/each}
 		<a
 			href="/documentation"
-			class="hover:underline decoration-rose-700 dark:decoration-sky-500 decoration-2">Docs</a
+			class="hover:underline decoration-rose-700 dark:decoration-sky-500 decoration-2 font-sans">Docs</a
 		>
 		<a href="/settings/account" class="ml-auto"
 			><Settings class="h-6 transition-colors duration-300 hover:text-[#f36] rounded" /></a

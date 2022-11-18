@@ -1,7 +1,7 @@
 <script>
 	import { browser } from "$app/environment";
 </script>
-<div class="title">
+<div class="title font-['Work_Sans']">
 	<h1 {...$$restProps} style="color:transparent !important">
 		TECBERRY{(() => {
 			if (browser && location.hostname === "tecberry.ml" || browser && location.hostname === "demo.tecberry.ml")

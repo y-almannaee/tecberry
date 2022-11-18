@@ -186,7 +186,7 @@
 				>{document.name}</a>
 		{/each}
 		{#if directories.length == 0 && documents.length == 0}
-			<p class="text-xs italic text-slate-400">There is no documentation here...</p>
+			<p class="font-sans pt-2 !text-xs italic !text-slate-400">There is no documentation here...</p>
 		{/if}
 	</svelte:fragment>
 	<svelte:fragment slot="main">

@@ -13,7 +13,7 @@
 	<div class="mb-28 min-w-[80%]">
 		<span class="flex"
 			><HeartCrack class="relative animate-bounce top-0.5 h-6 w-6" />
-			<h1 class="text-2xl pl-1 font-semibold">Error {$page.status}</h1>
+			<h1 class="text-2xl pl-1 font-sans font-semibold">Error {$page.status}</h1>
 		</span>
 		<span class="text-lg">
 			Unfortunately, we encountered an error: {$page.error ? $page.error.message:"Unknown error!" }

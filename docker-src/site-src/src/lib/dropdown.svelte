@@ -6,7 +6,7 @@
 <span class="relative">
 	<div class="peer z-10 relative mx-2 cursor-default">
 		<span
-			class="font-medium select-none leading-3
+			class="font-sans font-medium select-none leading-3
 		hover:underline decoration-rose-700 dark:decoration-sky-500 decoration-2">
 			<slot name="title" />
 		</span>
@@ -17,7 +17,7 @@ shadow-lg rounded w-full pb-4 bg-white dark:bg-slate-800 font-light {links_class
 		{#each links as link}
 			<a
 				href={link.href}
-				class="px-4 py-1.5 transition-colors duration-300 hover:bg-slate-200 dark:hover:bg-slate-600"
+				class="px-4 py-1.5 transition-colors hover:text-rose-700 font-sans duration-300 hover:bg-slate-200 dark:hover:bg-slate-600"
 				>{link.text}</a>
 		{/each}
 	</span>

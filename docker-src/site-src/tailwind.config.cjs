@@ -1,17 +1,23 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-    content: ['./src/**/*.{html,js,svelte,ts}'],
+    content: [
+        require('path').join(require.resolve('@brainandbones/skeleton'), '../**/*.{.html,js,svelte,ts}'),
+        './src/**/*.{html,js,svelte,ts}'
+    ],
     safelist: [{
         pattern: /(bg|text|hover:bg)-./,
     }],
     darkMode: 'class',
     theme: {
         fontFamily: {
-            'sans': ['Ubuntu', 'sans-serif']
+            'sans': ['Ubuntu', 'sans-serif'],
+            'serif': ['Times New Roman', 'serif'],
+            'mono': ['Fira Mono', 'mono'],
         },
         extend: {},
     },
     plugins: [
+        require('@brainandbones/skeleton/tailwind/theme.cjs'),
         require('@tailwindcss/typography'),
         require('@tailwindcss/forms'),
         function({ addBase, theme }) {

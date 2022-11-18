@@ -32,9 +32,9 @@ jobs:
           node-version: '16'
       
       - run: npm ci
-        working-directory: ./docker-src/demo-sveltekit-src
+        working-directory: ./docker-src/site-src
       - run: npm run build
-        working-directory: ./docker-src/demo-sveltekit-src
+        working-directory: ./docker-src/site-src
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1

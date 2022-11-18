@@ -4,7 +4,7 @@
 # sure you lock down to a specific version, not to `latest`!
 # See https://github.com/phusion/baseimage-docker/blob/master/Changelog.md for
 # a list of version numbers.
-FROM phusion/baseimage:focal-1.1.0 AS builder_nginx
+FROM phusion/baseimage:focal-1.1.0
 
 # Use baseimage-docker's init system.
 CMD ["/sbin/my_init"]
@@ -50,33 +50,10 @@ RUN /bin/bash -c "cd nginx-1.21.6/ && ./configure \
 	--add-module=/nginx-rtmp-module \
 	--add-module=/ngx-fancyindex \
 	--with-cc-opt='-O2 -flto -funsafe-math-optimizations -fstack-protector-strong -fstack-clash-protection -pipe --param=ssp-buffer-size=4 -Wp,-D_FORTIFY_SOURCE=2'"
-RUN /bin/bash -c 'cd /nginx-1.21.6 && make'
-
-# FROM phusion/baseimage:focal-1.1.0 AS builder_py
-
-# # Use baseimage-docker's init system.
-# CMD ["/sbin/my_init"]
-
-# # ...put your own build instructions here...
-# RUN apt-get update && /sbin/install_clean curl build-essential libpcre3 libpcre3-dev zlib1g zlib1g-dev libssl-dev openssl libgd-dev libxml2 libxml2-dev uuid-dev git python3 python3-pip python3-dev libffi-dev
-# RUN mkdir -p /etc/pyserver
-# COPY python-src/* /etc/pyserver/
-# RUN python3 -m pip install --upgrade pip
-# RUN python3 -m pip install --ignore-installed --upgrade -r /etc/pyserver/requirements.txt
-
-FROM phusion/baseimage:focal-1.1.0
-
-# Use baseimage-docker's init system.
-CMD ["/sbin/my_init"]
-
-# ...put your own build instructions here...
-RUN apt-get update && /sbin/install_clean curl
-COPY --from=builder_nginx /nginx-1.21.6 /nginx
-# COPY --from=builder_py /etc/pyserver /etc/pyserver
-RUN /bin/bash -c 'cd /nginx && make install \
+RUN /bin/bash -c 'cd /nginx-1.21.6 && make && make install \
 	&& mkdir -p /etc/nginx/sites-enabled && mkdir -p /etc/nginx/certs && mkdir -p /var/cache/nginx \
 	&& rm -r /etc/nginx/sites-enabled || :  && mkdir -p /etc/nginx/sites-enabled && mkdir -p /etc/nginx/default-site-conf'
-RUN /bin/bash -c 'rm -r /nginx'
+RUN /bin/bash -c 'rm -r /nginx-1.21.6 || : && rm -r /nginx-rtmp-module || : && rm -r /ngx-fancyindex || : && rm -r /nginx-1.21.6.tar.gz || : '
 
 COPY nginx-conf/nginx.conf /etc/nginx/nginx.conf
 COPY nginx-conf/main_server /etc/nginx/default-site-conf/main_server
@@ -93,7 +70,12 @@ RUN mkdir -p /etc/my_init.d
 COPY setup_nginx.sh /etc/my_init.d/setup_nginx.sh
 RUN chmod +x /etc/my_init.d/setup_nginx.sh
 
-RUN mkdir -p /etc/service/pyserver/run
+RUN mkdir -p /etc/pyserver
+COPY python-src/* /etc/pyserver/
+RUN apt-get update && /sbin/install_clean python3 python3-pip python3-dev libffi-dev
+RUN python3 -m pip install --upgrade pip
+RUN python3 -m pip install --ignore-installed --upgrade -r /etc/pyserver/requirements.txt
+RUN mkdir -p /etc/service/pyserver
 COPY run-py.sh /etc/service/pyserver/run
 RUN chmod +x /etc/service/pyserver/run
 RUN /bin/bash -c "crontab -l > cronjobs && echo '*/15 * * * * /usr/bin/python3 /etc/pyserver/duckdns_handler' >> cronjobs && crontab cronjobs && rm cronjobs"
@@ -105,7 +87,7 @@ RUN /bin/bash -c "crontab -l > cronjobs && echo '*/15 * * * * /usr/bin/python3 /
 # COPY run-redis.sh /etc/service/redis/run
 # RUN chmod +x /etc/service/redis/run
 
-# RUN /bin/bash -c 'rm -r /etc/nginx/html || : && mkdir -p /etc/nginx/html'
+RUN /bin/bash -c 'rm -r /etc/nginx/html || : && mkdir -p /etc/nginx/html'
 
 # Clean up APT when done.
 RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*

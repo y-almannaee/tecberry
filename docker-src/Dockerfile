@@ -88,7 +88,6 @@ RUN /bin/bash -c "crontab -l > cronjobs && echo '*/15 * * * * /usr/bin/python3 /
 # RUN chmod +x /etc/service/redis/run
 
 RUN /bin/bash -c 'rm -r /etc/nginx/html || : && mkdir -p /etc/nginx/html'
-COPY demo-sveltekit-src/build /etc/nginx/html
 
 # Clean up APT when done.
 RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*

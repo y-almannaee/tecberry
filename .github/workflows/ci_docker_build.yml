@@ -75,7 +75,7 @@ jobs:
           push: true
           tags: yalmannaee/peltier-controller:latest
           cache-from: type=local,src=/tmp/.buildx-cache
-          cache-to: type=local,dest=/tmp/.buildx-cache-new
+          cache-to: type=local,mode=max,dest=/tmp/.buildx-cache-new
 
       - name: Move cache
         run: |

@@ -57,9 +57,11 @@ FROM phusion/baseimage:focal-1.1.0 AS builder_py
 RUN apt-get update && /sbin/install_clean curl build-essential libpcre3 libpcre3-dev zlib1g zlib1g-dev libssl-dev openssl libgd-dev libxml2 libxml2-dev uuid-dev git python3 python3-pip python3-dev libffi-dev
 RUN mkdir -p /etc/pyserver
 COPY python-src/* /etc/pyserver/
-RUN python3 -m pip install --upgrade pip
+RUN /bin/bash -c 'curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py && python3 get-pip.py'
+RUN python3 -m venv /etc/pyserver
 RUN --mount=type=tmpfs,target=/root/.cargo /bin/bash -c 'curl https://sh.rustup.rs -sSf | bash -s -- -y && \
 	source ~/.cargo/env; \
+	/etc/pyserver/bin/activate && \
 	python3 -m pip install --ignore-installed --upgrade -r /etc/pyserver/requirements.txt'
 
 FROM phusion/baseimage:focal-1.1.0
@@ -94,7 +96,7 @@ RUN chmod +x /etc/my_init.d/setup_nginx.sh
 RUN mkdir -p /etc/service/pyserver/run
 COPY run-py.sh /etc/service/pyserver/run
 RUN chmod +x /etc/service/pyserver/run
-RUN /bin/bash -c "mkdir -p /etc/crontabs/root && echo '*/15 * * * * /usr/bin/python3 /etc/pyserver/duckdns_handler' >> /etc/crontabs/root"
+RUN /bin/bash -c "echo '*/15 * * * * /usr/bin/python3 /etc/pyserver/duckdns_handler' > /etc/crontab"
 
 # RUN apt-get update && /sbin/install_clean redis-server
 # RUN git clone --depth 1 --recursive https://github.com/RedisTimeSeries/RedisTimeSeries.git

@@ -54,7 +54,7 @@ RUN /bin/bash -c 'cd /nginx-1.21.6 && make'
 
 FROM phusion/baseimage:focal-1.1.0 AS builder_py
 
-RUN apt-get update && /sbin/install_clean curl build-essential libpcre3 libpcre3-dev zlib1g zlib1g-dev libssl-dev openssl libgd-dev libxml2 libxml2-dev uuid-dev git python3 python3-pip python3-dev libffi-dev
+RUN apt-get update && /sbin/install_clean curl build-essential libpcre3 libpcre3-dev zlib1g zlib1g-dev libssl-dev openssl libgd-dev libxml2 libxml2-dev uuid-dev git python3 python3-pip python3-venv python3-dev libffi-dev
 RUN mkdir -p /etc/pyserver
 COPY python-src/* /etc/pyserver/
 RUN /bin/bash -c 'curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py && python3 get-pip.py'

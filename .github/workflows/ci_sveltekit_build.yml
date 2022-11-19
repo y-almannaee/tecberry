@@ -43,7 +43,7 @@ jobs:
         working-directory: ./docker-src/site-src
       - run: npm run build
         working-directory: ./docker-src/site-src
-      - run: zip -r build.zip build package.json
+      - run: zip -r build.zip build package.json package-lock.json
         working-directory: ./docker-src/site-src
 
       - name: Release

@@ -1,3 +1,2 @@
 #!/bin/sh
-source /etc/pyserver/bin/activate
-exec python3 /etc/pyserver/leader.py
+exec /etc/pyserver/bin/python3 /etc/pyserver/leader.py

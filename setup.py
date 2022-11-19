@@ -255,7 +255,7 @@ if (
         "command -v docker",
         f"{con_colors.OKCYAN}Docker is already installed, skipping",
         f"{con_colors.OKCYAN}Installing Docker",
-        True,
+        False,
         True,
     )
     != 0
@@ -268,6 +268,7 @@ if (
         f"{con_colors.OKCYAN}Successfully installed the Docker runtime",
         f"{con_colors.FAIL}Unable to install Docker. {failure_warning}",
         True,
+		True,
     )
 pip_install("docker-compose")
 run_shell(
@@ -289,13 +290,7 @@ for path in [
 ]:
     path.resolve().mkdir(mode=774, parents=True, exist_ok=True)
 run_shell(
-    f'bash -c "curl "https://raw.githubusercontent.com/y-almannaee/tecberry/main/docker-src/redistimeseries.so" -o {os.getcwd()}/app_data/redis/redistimeseries.so"',
-    f"{con_colors.OKCYAN}Downloaded redis time series module",
-    f"{con_colors.FAIL}Unable to download redis time series module. {failure_warning}",
-    True,
-)
-run_shell(
-    f'bash -c "curl "https://raw.githubusercontent.com/y-almannaee/tecberry/main/docker-src/google_authentication.py" -o {os.getcwd()}/app_data/authenticators/google_authentication.py"',
+    f'bash -c "curl "https://raw.githubusercontent.com/y-almannaee/tecberry/main/docker-src/python-src/authenticators/google_authentication.py" -o {os.getcwd()}/app_data/authenticators/google_authentication.py"',
     f"{con_colors.OKCYAN}Downloaded default authenticator",
     f"{con_colors.FAIL}Unable to download default authenticator. {failure_warning}",
     False,
@@ -338,7 +333,7 @@ with open("/etc/cron.d/lego-renew", "w") as file:
     )
 
 run_shell(
-    f'bash -c "curl "https://github.com/y-almannaee/tecberry/releases/download/v0.1.0-alpha/build.zip" > {os.getcwd()}/app_data/build.zip"',
+    f'bash -c "curl -L "https://github.com/y-almannaee/tecberry/releases/download/v0.1.0-alpha/build.zip" > {os.getcwd()}/app_data/build.zip"',
     f"{con_colors.OKCYAN}Downloaded SvelteKit server",
     f"{con_colors.FAIL}Unable to get the SvelteKit server. {failure_warning}",
     True,
@@ -352,7 +347,7 @@ run_shell(
 )
 
 run_shell(
-    f"/usr/bin/docker run --rm --workdir='/home/node/app' -v {os.getcwd()}/app_data/sveltekit:/home/node/app node:current-alpine npm ci --prod",
+    f"/usr/bin/docker run --rm --workdir='/home/node/app' -v {os.getcwd()}/app_data/sveltekit:/home/node/app node:current-alpine npm i --prod",
     f"{con_colors.OKCYAN}Successfully ran the Node container and downloaded the requirements",
     f"{con_colors.WARNING}Unable to successfully run the Node container",
     True,

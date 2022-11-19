@@ -70,13 +70,15 @@ FROM phusion/baseimage:focal-1.1.0
 CMD ["/sbin/my_init"]
 
 # ...put your own build instructions here...
-RUN apt-get update && /sbin/install_clean curl build-essential python3 python3-pip python3-dev
+RUN apt-get update && /sbin/install_clean curl build-essential python3 python3-pip python3-venv python3-dev
 COPY --from=builder_nginx /nginx-1.21.6 /nginx
+COPY --from=builder_nginx /nginx-rtmp-module /nginx-rtmp-module
+COPY --from=builder_nginx /ngx-fancyindex /ngx-fancyindex
 COPY --from=builder_py /etc/pyserver /etc/pyserver
 RUN /bin/bash -c 'cd /nginx && make install \
 	&& mkdir -p /etc/nginx/sites-enabled && mkdir -p /etc/nginx/certs && mkdir -p /var/cache/nginx \
 	&& rm -r /etc/nginx/sites-enabled || :  && mkdir -p /etc/nginx/sites-enabled && mkdir -p /etc/nginx/default-site-conf'
-RUN /bin/bash -c 'rm -r /nginx'
+RUN /bin/bash -c 'rm -r /nginx /ngx-fancyindex nginx-rtmp-module'
 
 COPY nginx-conf/nginx.conf /etc/nginx/nginx.conf
 COPY nginx-conf/main_server /etc/nginx/default-site-conf/main_server
@@ -93,17 +95,10 @@ RUN mkdir -p /etc/my_init.d
 COPY setup_nginx.sh /etc/my_init.d/setup_nginx.sh
 RUN chmod +x /etc/my_init.d/setup_nginx.sh
 
-RUN mkdir -p /etc/service/pyserver/run
+RUN mkdir -p /etc/service/pyserver
 COPY run-py.sh /etc/service/pyserver/run
 RUN chmod +x /etc/service/pyserver/run
-RUN /bin/bash -c "touch /etc/crontab && echo '*/15 * * * * /usr/bin/python3 /etc/pyserver/duckdns_handler' > /etc/crontab"
-
-# RUN apt-get update && /sbin/install_clean redis-server
-# RUN git clone --depth 1 --recursive https://github.com/RedisTimeSeries/RedisTimeSeries.git
-# RUN /bin/bash -c "cd RedisTimeSeries && make setup && make build"
-# RUN mkdir -p /etc/service/redis
-# COPY run-redis.sh /etc/service/redis/run
-# RUN chmod +x /etc/service/redis/run
+RUN /bin/bash -c "touch /etc/cron.d/ddns_handler && echo '*/15 * * * * root /usr/bin/python3 /etc/pyserver/duckdns_handler' > /etc/cron.d/ddns_handler"
 
 # RUN /bin/bash -c 'rm -r /etc/nginx/html || : && mkdir -p /etc/nginx/html'
 

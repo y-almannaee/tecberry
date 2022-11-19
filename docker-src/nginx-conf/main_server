@@ -2,7 +2,7 @@
 # https://ssl-config.mozilla.org/#server=nginx&version=1.21.6&config=intermediate&openssl=1.1.1f&ocsp=false&guideline=5.6
 
 server {
-	listen 127.0.0.1 80;
+	listen 127.0.0.1:80;
 	location /nginx_alive {
 		default_type text/plain;
 		return 200 'Internal';
@@ -10,8 +10,8 @@ server {
 
 	location / {
 		auth_request /auth;
-		index index.html;
-		try_files $uri $uri/ $uri.html =404;
+		proxy_pass http://127.0.0.1:8081/;
+		proxy_redirect off;
 	}
 
 	location /docs {
@@ -73,8 +73,8 @@ server {
 
 	location / {
 		auth_request /auth;
-		index index.html;
-		try_files $uri $uri/ $uri.html =404;
+		proxy_pass http://127.0.0.1:8081/;
+		proxy_redirect off;
 	}
 
 	location /docs {

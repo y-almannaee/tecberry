@@ -340,7 +340,7 @@ run_shell(
 )
 
 run_shell(
-    f'bash -c "unzip {os.getcwd()}/app_data/build.zip -d {os.getcwd()}/app_data/sveltekit/"',
+    f'bash -c "unzip -o {os.getcwd()}/app_data/build.zip -d {os.getcwd()}/app_data/sveltekit/"',
     f"{con_colors.OKCYAN}Extracted SvelteKit server",
     f"{con_colors.FAIL}Unable to extract the SvelteKit server. {failure_warning}",
     True,
@@ -361,6 +361,6 @@ print(
 )
 if not (len(sys.argv) == 2 and sys.argv[1] == "--no-rm"):
     print(
-        f"{con_colors.GRAY}This script automatically removes itself to prevent running outdated commands. To prevent this behaviour pass --no-rm to the invoking interpreter."
+        f"{con_colors.GRAY}This script automatically removes itself to prevent running outdated commands. To prevent this behaviour pass --no-rm to the invoking interpreter.{con_colors.ENDC}"
     )
     os.remove(sys.argv[0])

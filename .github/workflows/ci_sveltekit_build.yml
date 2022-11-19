@@ -24,6 +24,14 @@ jobs:
       # Check out code
       - name: Checkout
         uses: actions/checkout@v2
+      
+      - name: Build redistimeseries.so
+        run: |
+          git clone --recursive https://github.com/RedisTimeSeries/RedisTimeSeries.git
+          cd RedisTimeSeries
+          ./deps/readies/bin/getpy3
+          ./system-setup.py
+          make build
 
       # Add Node site
       - name: Setup Node
@@ -41,4 +49,6 @@ jobs:
       - name: Release
         uses: softprops/action-gh-release@v1
         with:
-          files: ./docker-src/site-src/build.zip
+          files: |
+            ./docker-src/site-src/build.zip
+            ./RedisTimeSeries/bin/redistimeseries.so          

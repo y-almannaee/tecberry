@@ -62,7 +62,7 @@ services:
   # The redis instance must have the redis time series module
   redis_db:
     restart: always
-    image: redislabs/redistimeseries
+    image: redis:7-alpine
     volumes:
       - ./app_data/redis/data:/data
       - ./app_data/redis:/redis
@@ -71,7 +71,7 @@ services:
     command:
       [
         "redis-server",
-        "--loadmodule /usr/lib/redis/modules/redistimeseries.so",
+        "--loadmodule /redis/redistimeseries.so",
         "--save 60 1",
         "--loglevel notice"
       ]

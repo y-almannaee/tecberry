@@ -7,6 +7,8 @@ export function load({ params }) {
     return {
       name: 'Example Device',
 	  id: parseInt(params.slug),
-      desc: 'Example description of the device, its position, pins etc'
+      desc: 'Example description of the device, its position, pins etc',
+	  public: [],
+	  private: [],
     }
 }

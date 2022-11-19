@@ -33,7 +33,7 @@
 
 <div class="flex flex-col h-screen justify-between" data-sveltekit-prefetch>
 	<header
-		class="text-lg py-2 sticky top-0 z-20 gap-2 items-center px-2 bg-white dark:bg-slate-800 shadow-md hidden md:flex text-slate-900 dark:text-slate-200"
+		class="text-lg py-2 fixed w-screen top-0 z-20 gap-2 items-center px-2 bg-white dark:bg-slate-800 shadow-md hidden md:flex text-slate-900 dark:text-slate-200"
 	>
 		<Logotype class="text-lg" />
 		{#each links as link (link.id)}
@@ -53,14 +53,14 @@
 		>
 	</header>
 	<header
-		class="text-lg will-change-transform sticky top-0 z-20 flex gap-8 items-center lg:p-2 p-0.5 bg-white dark:bg-slate-800 shadow-md md:hidden text-slate-900"
+		class="text-lg will-change-transform fixed w-screen top-0 z-20 flex gap-8 items-center lg:p-2 p-0.5 bg-white dark:bg-slate-800 shadow-md md:hidden text-slate-900"
 	>
-		<Logotype class="lg:text-3xl text-lg" />
+		<Logotype class="lg:text-3xl text-lg ml-2" />
 		<button
 			class="ml-auto"
 			on:click={() => {
 				expanded = !expanded;
-			}}><Menu class="h-8 transition-colors duration-300 hover:text-[#f36] rounded" /></button
+			}}><Menu class="h-8 mr-2 transition-colors duration-300 hover:text-[#f36] rounded" /></button
 		>
 		{#if expanded}
 			<div
@@ -72,7 +72,7 @@
 			>
 				<div
 					transition:fly={{ easing: backOut, duration: 400, y: 50, opacity: 0 }}
-					class="mx-auto max-w-xs p-4 rounded will-change-transform bg-white shadow-xl dark:bg-slate-800 mt-16"
+					class="mx-auto max-w-xs p-4 rounded will-change-transform bg-white shadow-xl dark:bg-slate-800 mt-4 lg:mt-16"
 				>
 					<button
 						class="absolute top-5 right-4"

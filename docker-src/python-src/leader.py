@@ -60,7 +60,7 @@ async def set_scheduler(request):
 
 @routes.get("/devices")
 async def get_devices(request):
-	pass
+	return web.json_response([])
 
 @routes.post("/devices")
 async def set_devices(request):

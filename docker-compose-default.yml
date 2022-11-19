@@ -75,3 +75,15 @@ services:
         "--save 60 1",
         "--loglevel notice"
       ]
+
+  node_server:
+    restart: always
+    image: node:current-alpine
+    working_dir: /home/node/app
+    environment:
+      - NODE_ENV=production
+    volumes:
+      - ./app_data/sveltekit:/home/node/app
+    expose:
+      - "8081"
+    command: "node build"

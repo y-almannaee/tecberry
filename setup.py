@@ -333,14 +333,14 @@ with open("/etc/cron.d/lego-renew", "w") as file:
     )
 
 run_shell(
-    f'bash -c "curl -L "https://github.com/y-almannaee/tecberry/releases/download/v0.1.2-alpha/build.zip" > {os.getcwd()}/app_data/build.zip"',
+    f'bash -c "curl -L "https://github.com/y-almannaee/tecberry/releases/download/v0.1.2a-alpha/build.zip" > {os.getcwd()}/app_data/build.zip"',
     f"{con_colors.OKCYAN}Downloaded SvelteKit server",
     f"{con_colors.FAIL}Unable to get the SvelteKit server. {failure_warning}",
     True,
 )
 
 run_shell(
-    f'bash -c "curl -L "https://github.com/y-almannaee/tecberry/releases/download/v0.1.2-alpha/redistimeseries.so" > {os.getcwd()}/app_data/redis/redistimeseries.so"',
+    f'bash -c "curl -L "https://github.com/y-almannaee/tecberry/releases/download/v0.1.2a-alpha/redistimeseries.so" > {os.getcwd()}/app_data/redis/redistimeseries.so"',
     f"{con_colors.OKCYAN}Downloaded redistimeseries.so",
     f"{con_colors.FAIL}Unable to get the redistimeseries.so file. {failure_warning}",
     True,

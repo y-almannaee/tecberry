@@ -61,7 +61,7 @@ RUN /bin/bash -c 'curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py && pyt
 RUN python3 -m venv /etc/pyserver
 RUN --mount=type=tmpfs,target=/root/.cargo /bin/bash -c 'curl https://sh.rustup.rs -sSf | bash -s -- -y && \
 	source ~/.cargo/env; \
-	/etc/pyserver/bin/activate && \
+	source /etc/pyserver/bin/activate && \
 	python3 -m pip install --ignore-installed --upgrade -r /etc/pyserver/requirements.txt'
 
 FROM phusion/baseimage:focal-1.1.0

@@ -44,17 +44,17 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       # And make it available for the builds
-      # - name: Build Nginx
-      #   uses: docker/build-push-action@v2
-      #   with:
-      #     context: ./docker-src
-      #     #platforms: linux/amd64,linux/arm64,linux/arm/v7
-      #     platforms: linux/arm/v7
-      #     push: false
-      #     tags: yalmannaee/peltier-controller:nginx-latest
-      #     target: builder_nginx
-      #     cache-from: type=local,src=/tmp/.buildx-cache
-      #     cache-to: type=local,dest=/tmp/.buildx-cache-new
+      - name: Build Nginx
+        uses: docker/build-push-action@v2
+        with:
+          context: ./docker-src
+          #platforms: linux/amd64,linux/arm64,linux/arm/v7
+          platforms: linux/arm/v7
+          push: false
+          tags: yalmannaee/peltier-controller:nginx-latest
+          target: builder_nginx
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache-new
       - name: Build Python
         uses: docker/build-push-action@v2
         with:
@@ -66,16 +66,16 @@ jobs:
           target: builder_py
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache-new
-      # - name: Build and push
-      #   uses: docker/build-push-action@v2
-      #   with:
-      #     context: ./docker-src
-      #     #platforms: linux/amd64,linux/arm64,linux/arm/v7
-      #     platforms: linux/arm/v7
-      #     push: true
-      #     tags: yalmannaee/peltier-controller:latest
-      #     cache-from: type=local,src=/tmp/.buildx-cache
-      #     cache-to: type=local,mode=max,dest=/tmp/.buildx-cache-new
+      - name: Build and push
+        uses: docker/build-push-action@v2
+        with:
+          context: ./docker-src
+          #platforms: linux/amd64,linux/arm64,linux/arm/v7
+          platforms: linux/arm/v7
+          push: true
+          tags: yalmannaee/peltier-controller:latest
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,mode=max,dest=/tmp/.buildx-cache-new
 
       - name: Move cache
         run: |

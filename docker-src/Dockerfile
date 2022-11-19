@@ -96,7 +96,7 @@ RUN chmod +x /etc/my_init.d/setup_nginx.sh
 RUN mkdir -p /etc/service/pyserver/run
 COPY run-py.sh /etc/service/pyserver/run
 RUN chmod +x /etc/service/pyserver/run
-RUN /bin/bash -c "echo '*/15 * * * * /usr/bin/python3 /etc/pyserver/duckdns_handler' > /etc/crontab"
+RUN /bin/bash -c "touch /etc/crontab && echo '*/15 * * * * /usr/bin/python3 /etc/pyserver/duckdns_handler' > /etc/crontab"
 
 # RUN apt-get update && /sbin/install_clean redis-server
 # RUN git clone --depth 1 --recursive https://github.com/RedisTimeSeries/RedisTimeSeries.git

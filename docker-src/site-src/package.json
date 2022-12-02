@@ -12,8 +12,8 @@
 		"format": "prettier --write --plugin-search-dir=. ."
 	},
 	"devDependencies": {
-		"@brainandbones/skeleton": "^0.76.0",
 		"@dimforge/rapier3d-compat": "^0.10.0",
+		"@skeletonlabs/skeleton": "^0.76.3",
 		"@sveltejs/adapter-auto": "next",
 		"@sveltejs/adapter-node": "^1.0.0-next.100",
 		"@sveltejs/adapter-static": "^1.0.0-next.39",
@@ -45,10 +45,14 @@
 	"type": "module",
 	"dependencies": {
 		"@fontsource/fira-mono": "^4.5.0",
+		"@square/svelte-store": "^1.0.11",
 		"chart.js": "^3.9.1",
 		"cookie": "^0.4.1",
 		"lucide-svelte": "^0.101.0",
 		"redis": "^4.5.0",
-		"svelte-chartjs": "^3.0.1"
+		"sortablejs": "^1.15.0",
+		"svelte-ace": "^1.0.21",
+		"svelte-chartjs": "^3.0.1",
+		"tailwind-highlightjs": "^2.0.1"
 	}
 }

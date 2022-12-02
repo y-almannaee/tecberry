@@ -84,6 +84,6 @@ services:
       - NODE_ENV=production
     volumes:
       - ./app_data/sveltekit:/home/node/app
-    expose:
-      - "8081"
+    ports:
+      - "8081:3000"
     command: "node build"

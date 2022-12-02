@@ -1,7 +1,7 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
     content: [
-        require('path').join(require.resolve('@brainandbones/skeleton'), '../**/*.{.html,js,svelte,ts}'),
+        require('path').join(require.resolve('@skeletonlabs/skeleton'), '../**/*.{.html,js,svelte,ts}'),
         './src/**/*.{html,js,svelte,ts}'
     ],
     safelist: [{
@@ -17,7 +17,7 @@ module.exports = {
         extend: {},
     },
     plugins: [
-        require('@brainandbones/skeleton/tailwind/theme.cjs'),
+        require('@skeletonlabs/skeleton/tailwind/theme.cjs'),
         require('@tailwindcss/typography'),
         require('@tailwindcss/forms'),
         function({ addBase, theme }) {

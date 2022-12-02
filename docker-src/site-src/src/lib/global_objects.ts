@@ -1,14 +1,34 @@
 import { writable } from "svelte/store";
-import { localStorageStore } from "@brainandbones/skeleton";
+import { browser, dev } from '$app/environment';
+import { asyncReadable } from '@square/svelte-store';
 
-export const definitions = writable({});
-export const instances = writable({});
+export function backend_url(path) {
+	if (dev) {
+		if (browser)
+			return `${window.location.protocol}//${window.location.hostname}:3636${path}`;
+		else
+			return `http://localhost:3636${path}`;
+	} else if (browser) {
+		return `${window.location.protocol}//${window.location.origin}/api${path}`
+	} else {
+		return `http://controller:3636${path}`
+	}
+}
 
-export const user = localStorageStore('user', { name: 'Unknown User', pfp: null, rank: 0 });
-
-// import { createClient } from 'redis';
-// const client = createClient();
-
-// client.on('error', (err) => console.log("Redis client error", err));
-// await client.connect();
-// export const redis_client = client;
+export const configuration = asyncReadable({}, async () => {
+	let backend_conf = backend_url('/configuration');
+	let conf_ok = false;
+	while (!conf_ok) {
+		try {
+			const res = await fetch(backend_conf);
+			if (res && res.ok) {
+				let conf_data = await res.json()
+				conf_ok = true;
+				return conf_data
+			}
+		} catch (e) {
+			conf_ok = false;
+			await new Promise((r,e)=>setTimeout(r,1500))
+		}
+	}
+});

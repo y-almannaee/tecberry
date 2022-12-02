@@ -1,13 +1,9 @@
 <script>
-	import { browser } from "$app/environment";
+	import { configuration } from "$lib/global_objects";
 </script>
 <div class="title font-['Work_Sans']">
 	<h1 {...$$restProps} style="color:transparent !important">
-		TECBERRY{(() => {
-			if (browser && location.hostname === "tecberry.ml" || browser && location.hostname === "demo.tecberry.ml")
-				return ".ml";
-			else return "";
-		})()}
+		{$configuration.name ? $configuration.name : "TECBERRY"}
 	</h1>
 </div>
 

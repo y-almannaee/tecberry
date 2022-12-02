@@ -1,5 +1,5 @@
 <script>
-	import { Stepper, Step } from '@brainandbones/skeleton';
+	import { Stepper, Step } from '@skeletonlabs/skeleton';
 	import { writable } from 'svelte/store';
 	const active = writable(0);
 	function onComplete() {

@@ -1,15 +1,21 @@
 <script lang="ts">
-	export const prerender = true;
 	import '../theme.postcss';
-	import '@brainandbones/skeleton/styles/all.css';
+	import '@skeletonlabs/skeleton/styles/all.css';
 	import '../app.css';
 	import Logotype from '$lib/logotype.svelte';
 	import Dropdown from '$lib/dropdown.svelte';
 	import { fade, fly } from 'svelte/transition';
 	import { backOut } from 'svelte/easing';
-	import { LogIn, Settings, Menu, X, FileText } from 'lucide-svelte';
+	import { Settings, Menu, X, FileText } from 'lucide-svelte';
+	import { navigating, page } from '$app/stores';
+	import { goto } from '$app/navigation';
+	import { browser } from '$app/environment';
+	import { configuration } from '$lib/global_objects';
+	import Avatar from '$lib/avatar.svelte';
 
 	let expanded: boolean;
+
+	export let data;
 
 	const links = [
 		{
@@ -29,7 +35,31 @@
 			]
 		}
 	];
+
+	$: if ($navigating) expanded = false;
+	$: if (browser && data && data.backend_error && $page.route.id !== '/') goto('/');
+	else if (
+		browser &&
+		data &&
+		data.loggedIn !== undefined &&
+		!data.loggedIn &&
+		$page.route.id !== '/login'
+	)
+		goto('/login');
 </script>
+
+{#if $configuration && $configuration.dnt!== undefined && !$configuration.dnt}
+	<noscript>
+		<img
+			src="https://shnt.yaseen.ae/ingress/473beb52-2a5e-458a-aa20-dc0b07e9441d/pixel.gif"
+			alt="shnt"
+		/>
+	</noscript>
+	<script
+		defer
+		src="https://shnt.yaseen.ae/ingress/473beb52-2a5e-458a-aa20-dc0b07e9441d/script.js"
+	></script>
+{/if}
 
 <div class="flex flex-col h-screen justify-between" data-sveltekit-prefetch>
 	<header
@@ -37,20 +67,37 @@
 	>
 		<Logotype class="text-lg" />
 		{#each links as link (link.id)}
-			<Dropdown links={link.to} links_class={'text-base top-10 -mt-10 pt-10'}>
+			<Dropdown
+				links={link.to}
+				disabled={!(data && data.loggedIn)}
+				links_class={'text-base top-10 -mt-10 pt-10'}
+			>
 				<svelte:fragment slot="title">{link.text}</svelte:fragment>
 			</Dropdown>
 		{/each}
 		<a
+			on:click={(e) => {
+				if (data && !data.loggedIn) {
+					e.preventDefault();
+				}
+			}}
+			class:cursor-not-allowed={!(data && data.loggedIn)}
 			href="/documentation"
-			class="hover:underline decoration-rose-700 dark:decoration-sky-500 decoration-2 font-sans">Docs</a
+			class="transition-colors duration-300 decoration-rose-700 dark:decoration-sky-500 font-sans"
+			>Docs</a
 		>
-		<a href="/settings/account" class="ml-auto"
+		<a
+			on:click={(e) => {
+				if (data && !data.loggedIn) {
+					e.preventDefault();
+				}
+			}}
+			class:cursor-not-allowed={!(data && data.loggedIn)}
+			href="/settings/account"
+			class="ml-auto"
 			><Settings class="h-6 transition-colors duration-300 hover:text-[#f36] rounded" /></a
 		>
-		<a href="/login" class="mr-4"
-			><LogIn class="h-6 transition-colors duration-300 hover:text-[#f36] rounded" /></a
-		>
+		<Avatar userdata={data} classes="mr-2" classes_icon="h-6" />
 	</header>
 	<header
 		class="text-lg will-change-transform fixed w-screen top-0 z-20 flex gap-8 items-center lg:p-2 p-0.5 bg-white dark:bg-slate-800 shadow-md md:hidden text-slate-900"
@@ -69,6 +116,9 @@
 				on:click|self={() => {
 					expanded = false;
 				}}
+				on:keypress|self={() => {
+					expanded = false;
+				}}
 			>
 				<div
 					transition:fly={{ easing: backOut, duration: 400, y: 50, opacity: 0 }}
@@ -79,6 +129,9 @@
 						on:click={() => {
 							expanded = false;
 						}}
+						on:keypress|self={() => {
+							expanded = false;
+						}}
 					>
 						<X class="h-5 transition-colors duration-300 hover:text-[#f36] rounded" />
 					</button>
@@ -87,7 +140,12 @@
 						<div class="flex-col flex pl-4 pb-2 mb-2 border-b rounded">
 							{#each link.to as a}
 								<a
-									on:click={() => (expanded = false)}
+									on:click={(e) => {
+										if (data && !data.loggedIn) {
+											e.preventDefault();
+										}
+									}}
+									class:cursor-not-allowed={!(data && data.loggedIn)}
 									href={a.href}
 									class="hover:underline decoration-rose-700 dark:decoration-sky-500 decoration-2 font-light text-sm lg:text-lg"
 									>{a.text}</a
@@ -95,16 +153,29 @@
 							{/each}
 						</div>
 					{/each}
-					<div class="p-1 flex space-x-2">
-						<a on:click={() => (expanded = false)} href="/documentation" class="mr-auto"
+					<div class="p-1 flex space-x-2 justify-center items-center">
+						<a
+							on:click={(e) => {
+								if (data && !data.loggedIn) {
+									e.preventDefault();
+								}
+							}}
+							class:cursor-not-allowed={!(data && data.loggedIn)}
+							href="/documentation"
+							class="mr-auto"
 							><FileText class="h-8 transition-colors duration-300 hover:text-[#f36] rounded" /></a
 						>
-						<a on:click={() => (expanded = false)} href="/settings/account"
+						<a
+							on:click={(e) => {
+								if (data && !data.loggedIn) {
+									e.preventDefault();
+								}
+							}}
+							class:cursor-not-allowed={!(data && data.loggedIn)}
+							href="/settings/account"
 							><Settings class="h-8 transition-colors duration-300 hover:text-[#f36] rounded" /></a
 						>
-						<a on:click={() => (expanded = false)} href="/login"
-							><LogIn class="h-8 transition-colors duration-300 hover:text-[#f36] rounded" /></a
-						>
+						<Avatar userdata={data} classes_icon="h-7 m-auto" />
 					</div>
 				</div>
 			</div>

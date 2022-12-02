@@ -10,12 +10,12 @@
 		<a
 			href="/config/devices"
 			class:font-semibold={(path_arr.length == 3 && path_arr[2]=="devices") || (path_arr.length>3 && path_arr[3]!="definitions")}
-			class="hover:underline decoration-rose-700 dark:decoration-sky-500 decoration-2">Instances</a
+			class="hover:underline decoration-rose-700 dark:decoration-sky-500 transition-colors duration-300 hover:decoration-2">Instances</a
 		>
 		<a
 			href="/config/devices/definitions"
 			class:font-semibold={path_arr.length>3 && path_arr[3]=="definitions"}
-			class="hover:underline decoration-rose-700 dark:decoration-sky-500 decoration-2"
+			class="hover:underline decoration-rose-700 dark:decoration-sky-500 transition-colors duration-300 hover:decoration-2"
 			>Definitions</a
 		>
 	</svelte:fragment>

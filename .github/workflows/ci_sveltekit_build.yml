@@ -25,12 +25,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
       
-      - name: Build redistimeseries.so
-        run: |
-          git clone --recursive https://github.com/RedisTimeSeries/RedisTimeSeries.git
-          cd RedisTimeSeries
-          make setup
-          make build
+      # - name: Build redistimeseries.so
+      #   run: |
+      #     git clone --recursive https://github.com/RedisTimeSeries/RedisTimeSeries.git
+      #     cd RedisTimeSeries
+      #     make setup
+      #     make build
 
       # Add Node site
       - name: Setup Node
@@ -50,4 +50,5 @@ jobs:
         with:
           files: |
             ./docker-src/site-src/build.zip
-            ./RedisTimeSeries/bin/redistimeseries.so          
+            
+      # ./RedisTimeSeries/bin/redistimeseries.so          

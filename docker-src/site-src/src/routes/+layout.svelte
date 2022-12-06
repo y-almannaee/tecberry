@@ -48,6 +48,20 @@
 		goto('/login');
 </script>
 
+<svelte:head>
+	<meta name="description" value="All about the thermal fatigue testing platform, TECBERRY" />
+	<link rel="canonical" href="https://tecberry.ml" />
+	<meta property="og:title" content="TECBERRY.ml" />
+	<meta property="og:site_name" content="TECBERRY.ml" />
+	<meta property="og:url" content="https://tecberry.ml" />
+	<meta
+		property="og:description"
+		content="All about the thermal fatigue testing platform, TECBERRY"
+	/>
+	<meta property="og:type" content="website" />
+	<meta property="og:image" content="https://tecberry.ml/logos/android-chrome-512x512.png" />
+</svelte:head>
+
 {#if $configuration && $configuration.dnt!== undefined && !$configuration.dnt}
 	<noscript>
 		<img

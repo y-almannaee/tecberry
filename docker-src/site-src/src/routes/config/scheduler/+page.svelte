@@ -55,11 +55,10 @@
 		Legend,
 		LineElement,
 		LinearScale,
-		PointElement,
-		CategoryScale
+		PointElement
 	} from 'chart.js';
 
-	ChartJS.register(Title, Tooltip, Legend, LineElement, LinearScale, PointElement, CategoryScale);
+	ChartJS.register(Title, Tooltip, Legend, LineElement, LinearScale, PointElement);
 	let sinusoidal_data;
 	let lineData,
 		lineOptions = {
@@ -174,6 +173,10 @@
 		};
 	}
 </script>
+
+<svelte:head> 
+	<title>Scheduler | TECBERRY.ml</title>
+</svelte:head>
 
 <div class="px-4 mt-12 md:mt-16 md:px-28">
 	<h1 class="font-sans font-semibold inline mr-2">Scheduler</h1>

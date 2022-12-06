@@ -23,6 +23,10 @@
 	}
 </script>
 
+<svelte:head> 
+	<title>Devices | TECBERRY.ml</title>
+</svelte:head>
+
 <Modal
 	regionBackdrop="bg-backdrop-token backdrop-blur-sm"
 	on:keydown={(e) => {
@@ -37,9 +41,10 @@
 		use:tooltip={{
 			content: 'Create a new instance',
 			position: 'bottom',
-			background: '!bg-active-token',regionTooltip: 'text-sm',
-				padding: 'px-2',
-				width: 'max-w-max',
+			background: '!bg-active-token',
+			regionTooltip: 'text-sm',
+			padding: 'px-2',
+			width: 'max-w-max',
 			color: 'text-slate-100'
 		}}
 		on:click={modal}
@@ -52,14 +57,20 @@
 {#each data.devices as device (device.id)}
 	<div transition:slide class="my-4 bg-white rounded-md shadow-md px-4 py-2">
 		<div class="inline-block">
-			<a href="devices/{device.id}" class="font-semibold cursor-pointer transition-colors duration-300 hover:decoration-2"
+			<a
+				href="devices/{device.id}"
+				class="font-semibold cursor-pointer transition-colors duration-300 hover:decoration-2"
 				>{device.name}
 				<h2 class="font-sans font-normal text-xs inline text-slate-600">#{device.id}</h2></a
 			>
 			<p class="text-sm">{device.desc ? device.desc : 'No description'}</p>
 		</div>
 		<div class="float-right my-4 text-xs">
-			Using definition: <span class="text-slate-600">{device.definition && device.definition!="NOT_AN_ITEM" ? `#${device.definition}`:"No definition"}</span>
+			Using definition: <span class="text-slate-600"
+				>{device.definition && device.definition != 'NOT_AN_ITEM'
+					? `#${device.definition}`
+					: 'No definition'}</span
+			>
 		</div>
 	</div>
 {:else}

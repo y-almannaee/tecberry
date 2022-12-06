@@ -21,7 +21,6 @@ def log_special_messages(message):
 
 exposed_functions_and_vars = {
     "sleep": asyncio.sleep,
-    "math": math,
     "print": logger.bind(special=True).opt(depth=1).info,
     "mail": None,  # NOT IMPLEMENTED
     "string_to_addr": helpers.convert_str_to_addr,
@@ -72,7 +71,11 @@ async def start_execution(state: dict, database) -> None:
                 state["settings"].get("on_start_code", ""),
                 "<start code>",
                 {
-                    "__builtins__": {**safe_builtins, **limited_builtins, "__import__": helpers.safe_import},
+                    "__builtins__": {
+                        **safe_builtins,
+                        **limited_builtins,
+                        "__import__": helpers.safe_import,
+                    },
                     **exposed_functions_and_vars,
                     "Devices": devices_exposed,
                 },
@@ -96,24 +99,41 @@ async def start_execution(state: dict, database) -> None:
             logger.bind(special=True).opt(depth=1).info(
                 f"Currently executing device #{id} for desired temperature of {td:.2f} celsius"
             )
-            if dev["definition"]:
+            if dev["definition"] and dev["definition"]["code"] and dev["definition"]["code"].strip():
                 devices_exposed_local = copy.deepcopy(state["devices"])
                 devices_exposed_local.pop(f"{id}")
-                for key,value in devices_exposed_local.items():
+                for key, value in devices_exposed_local.items():
                     devices_exposed_local[key].pop("private")
                 broad_definition_vars = helpers.create_dot_dict({})
-                for device,device_dict in devices_exposed_local.items():
-                    if device_dict.get("definition_id","") and device_dict.get("definition_id","") not in broad_definition_vars:
-                        broad_definition_vars[device_dict.get("definition_id")] = helpers.create_dot_dict(
-                            {}
-                        )
-                    for key, value in device_dict.get("public",{}).items():
-                        if key not in broad_definition_vars[device_dict.get("definition_id")]:
-                            broad_definition_vars[device_dict.get("definition_id")][key] = [value]
+                for device, device_dict in devices_exposed_local.items():
+                    if (
+                        device_dict.get("definition_id", "")
+                        and device_dict.get("definition_id", "")
+                        not in broad_definition_vars
+                    ):
+                        broad_definition_vars[
+                            device_dict.get("definition_id")
+                        ] = helpers.create_dot_dict({})
+                    for key, value in device_dict.get("public", {}).items():
+                        if (
+                            key
+                            not in broad_definition_vars[
+                                device_dict.get("definition_id")
+                            ]
+                        ):
+                            broad_definition_vars[device_dict.get("definition_id")][
+                                key
+                            ] = [value]
                         else:
-                            broad_definition_vars[device_dict.get("definition_id")][key].append(value)
+                            broad_definition_vars[device_dict.get("definition_id")][
+                                key
+                            ].append(value)
                 provided_globals = {
-                    "__builtins__": {**safe_builtins, **limited_builtins, "__import__": helpers.safe_import},
+                    "__builtins__": {
+                        **safe_builtins,
+                        **limited_builtins,
+                        "__import__": helpers.safe_import,
+                    },
                     **exposed_functions_and_vars,
                     "secret_c0f6g9": f"<device {dev['name']}#{dev['id']}>",
                     "Devices": devices_exposed_local,
@@ -151,7 +171,9 @@ async def start_execution(state: dict, database) -> None:
                     mapping={"public": public_vars, "private": private_vars},
                 )
             else:
-                logger.bind(special=True).opt(depth=1).info(f"Device {id} doesn't export definition")
+                logger.bind(special=True).opt(depth=1).info(
+                    f"Device {id} doesn't export definition"
+                )
         await asyncio.sleep(5)
         logger.debug(state["devices"])
     else:
@@ -162,7 +184,11 @@ async def start_execution(state: dict, database) -> None:
                 state["settings"].get("on_end_code", ""),
                 "<end code>",
                 {
-                    "__builtins__": {**safe_builtins, **limited_builtins, "__import__": helpers.safe_import},
+                    "__builtins__": {
+                        **safe_builtins,
+                        **limited_builtins,
+                        "__import__": helpers.safe_import,
+                    },
                     **exposed_functions_and_vars,
                     "Devices": devices_exposed,
                 },
@@ -186,7 +212,10 @@ async def aexec(code, filename, globals_dict):
         )
     except SyntaxError:
         result = "No result"
-        logger.bind(special=True).opt(depth=1).exception(f"Syntax error in user written code <{filename}>")
+        logger.bind(special=True).opt(depth=1).exception(
+            f"Syntax error in user written code <{filename}>"
+        )
+        return result, []
     try:
         exec(bytecode, globals_dict, locs)
         # Don't expect it to return from the coro.
@@ -194,7 +223,9 @@ async def aexec(code, filename, globals_dict):
         logger.debug(f"Function {filename} returned with result {result}")
     except BaseException:
         result = "No result"
-        logger.bind(special=True).opt(depth=1).exception(f"General error in user executed code <{filename}>")
+        logger.bind(special=True).opt(depth=1).exception(
+            f"General error in user executed code <{filename}>"
+        )
     try:
         globals().clear()
         # Inconsistent state

@@ -10,6 +10,21 @@
 	});
 </script>
 
+<svelte:head>
+	<title>Error {$page.error} | TECBERRY.ml</title>
+	<meta name="description" value="All about the thermal fatigue testing platform, TECBERRY" />
+	<link rel="canonical" href="https://tecberry.ml" />
+	<meta property="og:title" content="TECBERRY.ml" />
+	<meta property="og:site_name" content="TECBERRY.ml" />
+	<meta property="og:url" content="https://tecberry.ml" />
+	<meta
+		property="og:description"
+		content="All about the thermal fatigue testing platform, TECBERRY"
+	/>
+	<meta property="og:type" content="website" />
+	<meta property="og:image" content="https://tecberry.ml/logos/android-chrome-512x512.png" />
+</svelte:head>
+
 {#if ready}
 	<div class="grid place-items-center h-full" in:fade={{ delay: 230, duration: 900 }}>
 		<div class="mb-28 min-w-[80%]">

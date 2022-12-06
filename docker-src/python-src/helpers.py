@@ -48,11 +48,11 @@ def calculate_list_average(l: list) -> float:
 
 
 _SAFE_MODULES = frozenset(
-    ("board", "busio", "aesio", "analogio", "digitalio", "microcontroller", "pulseio"),
+    ("board", "busio", "aesio", "analogio", "digitalio", "microcontroller", "pulseio", "random", "math", "secrets"),
 )
 
 
 def safe_import(name, *args, **kwargs):
-    if name not in _SAFE_MODULES or not name.startswith("adafruit"):
-        raise Exception(f"Disallowed module")
-    return __import__(name, *args, **kwargs)
+    if name in _SAFE_MODULES or  name.startswith("adafruit"):
+        return __import__(name, *args, **kwargs)
+    raise Exception(f"Disallowed module")

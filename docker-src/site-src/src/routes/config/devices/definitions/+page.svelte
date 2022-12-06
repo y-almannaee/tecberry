@@ -24,6 +24,10 @@
 	}
 </script>
 
+<svelte:head> 
+	<title>Definitions | TECBERRY.ml</title>
+</svelte:head>
+
 <Modal
 	regionBackdrop="bg-backdrop-token backdrop-blur-sm"
 	on:keydown={(e) => {

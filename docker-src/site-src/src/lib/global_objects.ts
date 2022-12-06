@@ -9,7 +9,7 @@ export function backend_url(path) {
 		else
 			return `http://localhost:3636${path}`;
 	} else if (browser) {
-		return `${window.location.protocol}//${window.location.origin}/api${path}`
+		return `${window.location.origin}/api${path}`
 	} else {
 		return `http://controller:3636${path}`
 	}

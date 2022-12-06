@@ -17,13 +17,22 @@ services:
       # adjacent to this docker-compose file (in the same folder)
       # This variable is set in the .env, for example
       HOSTNAME: "${USER_HOSTNAME}"
+      # OPT_OUT_TELEMETRY: "Yes"
 
       # Needed for DuckDNS to get latest ip, remove if you're not using DuckDNS
       DUCKDNS_HOSTNAME: ${USER_DUCKDNS_HOSTNAME}
       DUCKDNS_TOKEN: ${USER_DUCKDNS_TOKEN}
 
+      # Shows in the top left
+      # NAME: "My Tecberry"
+
       # Comment out to run redirects to insecure schema (http)
       SECURE: "Yes"
+
+      # Create logfile at the following location (in container)
+      # LOGGING_FILE: "/var/lib/peltier_controller/logs"
+      # Show debug and traceback with lower levels
+      # LOGGING_DEBUG: 10
 
       # AUTH_LOCATIONS: "/var/lib/peltier_controller/authenticators"
       # REDIS_HOST: "redis_db"
@@ -84,6 +93,4 @@ services:
       - NODE_ENV=production
     volumes:
       - ./app_data/sveltekit:/home/node/app
-    ports:
-      - "8081:3000"
     command: "node build"

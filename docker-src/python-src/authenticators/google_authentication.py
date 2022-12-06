@@ -58,7 +58,7 @@ async def start_registration(request):
     flow = google_auth_oauthlib.flow.Flow.from_client_secrets_file(
         CLIENT_SECRETS_FILE, scopes=auth_scopes
     )
-    flow.redirect_uri = f"{schema}://{hostname}/google/ingest"
+    flow.redirect_uri = f"{schema}://{hostname}/api/google/ingest"
 
     auth_url, state = flow.authorization_url(
         access_type="offline", include_granted_scopes="true"
@@ -81,7 +81,7 @@ async def handle_credentials(request):
     flow = google_auth_oauthlib.flow.Flow.from_client_secrets_file(
         CLIENT_SECRETS_FILE, scopes=scopes_granted, state=state
     )
-    flow.redirect_uri = f"{schema}://{hostname}/google/ingest"
+    flow.redirect_uri = f"{schema}://{hostname}/api/google/ingest"
     flow.fetch_token(authorization_response=str(request.url))
     credentials = flow.credentials
 
@@ -134,7 +134,7 @@ async def google_drive_transfer(request):
         flow = google_auth_oauthlib.flow.Flow.from_client_secrets_file(
             CLIENT_SECRETS_FILE, scopes=(auth_scopes + candy_scopes)
         )
-        flow.redirect_uri = f"{schema}://{hostname}/google/ingest"
+        flow.redirect_uri = f"{schema}://{hostname}/api/google/ingest"
 
         auth_url, state = flow.authorization_url(
             access_type="offline", include_granted_scopes="true"

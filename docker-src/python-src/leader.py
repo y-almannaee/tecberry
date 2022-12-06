@@ -3,8 +3,8 @@ import socketio, json
 from redis import asyncio as aioredis
 from loguru import logger
 import gpio_interface
-import logging
-from redis import DataError
+from redis import DataError, ConnectionError
+from functools import partial
 from aiohttp import web
 import aiohttp_cors
 import secrets
@@ -38,6 +38,8 @@ routes = web.RouteTableDef()
 @routes.get("/")
 @logger.catch
 async def hello(request):
+    if os.environ.get("ENABLE_DEMO",""):
+        return web.Response(text="Demo")
     return web.Response(text="OK")
 
 
@@ -106,11 +108,29 @@ async def get_config(request):
 async def monitor_progress(request):
     return web.json_response({"message": "OK", "running": request.app["running"]})
 
+
 @routes.post("/monitor")
 @logger.catch
 async def start_progress(request):
-    asyncio.create_task(gpio_interface.start_execution(request.app["running"],request.app["db"]))
+    if not request.app["running"]["running"]:
+        asyncio.create_task(
+            gpio_interface.start_execution(request.app["running"], request.app["db"])
+        )
+        return web.json_response({"message": "OK", "running": request.app["running"]})
+    else:
+        return web.json_response(
+            {"message": "NOT OK", "running": request.app["running"]}, status=400
+        )
+
+
+@routes.delete("/monitor")
+@logger.catch
+async def stop_progress(request):
+    request.app["running"]["time_elapsed"] = 1+60*request.app["running"]["settings"][
+        "duration"
+    ]
     return web.json_response({"message": "OK", "running": request.app["running"]})
+
 
 @routes.get("/logs")
 @logger.catch
@@ -122,7 +142,7 @@ async def get_logs(request):
 @logger.catch
 async def get_scheduler(request):
     try:
-        execution_settings = await request.app["db"].hgetall('settings')
+        execution_settings = await request.app["db"].hgetall("settings")
         return web.json_response(execution_settings)
     finally:
         pass
@@ -133,7 +153,7 @@ async def get_scheduler(request):
 async def set_scheduler(request):
     try:
         data = await request.json()
-        settings = data.get('settings')
+        settings = data.get("settings")
         safe_data = {
             "device_exec_order": data.get("enabled", ""),
             "on_start_code": data.get("on_start_code", ""),
@@ -145,17 +165,17 @@ async def set_scheduler(request):
             "period": int(settings.get("period")),
         }
         request.app["running"]["settings"] = {
-            "duration":safe_data["duration"],
+            "duration": safe_data["duration"],
             "offset": safe_data["offset"],
             "amplitude": safe_data["amplitude"],
             "phase_shift": safe_data["phase_shift"],
             "period": safe_data["period"],
-            "on_start_code": safe_data.get("on_start_code",''),
-            "on_end_code": safe_data.get("on_end_code",''),
-            "device_exec_order": safe_data.get("device_exec_order",''),
+            "on_start_code": safe_data.get("on_start_code", ""),
+            "on_end_code": safe_data.get("on_end_code", ""),
+            "device_exec_order": safe_data.get("device_exec_order", ""),
         }
-        ok = await request.app["db"].hset("settings",mapping=safe_data)
-        return web.json_response({"message":"OK"})
+        ok = await request.app["db"].hset("settings", mapping=safe_data)
+        return web.json_response({"message": "OK"})
     except json.JSONDecodeError:
         return web.json_response({"message": "Malformed request"}, status=400)
     except KeyError:
@@ -185,7 +205,7 @@ async def get_devices(request):
 async def set_device(request):
     try:
         data = await request.json()
-        name = data["name"].replace(" ","_")
+        name = data["name"].replace(" ", "_")
         generated_id = secrets.token_hex(ID_BYTES)
         id_exists = True
         while id_exists:
@@ -280,7 +300,7 @@ async def get_definitions(request):
 async def set_definition(request):
     try:
         data = await request.json()
-        name = data["name"].strip().replace(" ","_")
+        name = data["name"].strip().replace(" ", "_")
         generated_id = secrets.token_hex(ID_BYTES)
         id_exists = True
         while id_exists:
@@ -322,7 +342,7 @@ async def delete_definition(request):
 async def update_definition(request):
     try:
         id = request.match_info["id"]
-        data = await request.json()
+        data = await request.json(loads=partial(json.loads,strict=False))
         sanitize_list = lambda a: ",".join(
             set([x.strip().replace(" ", "_") for x in a.split(",")])
         )
@@ -332,6 +352,7 @@ async def update_definition(request):
             "code": data.get("code", ""),
             "desc": data.get("desc", "No description"),
         }
+        print(safe_data["code"])
         ok = await request.app["db"].hset(f"defs:{id}", mapping=safe_data)
         return web.json_response({"message": "OK"}, status=200)
     except KeyError:
@@ -341,22 +362,42 @@ async def update_definition(request):
     except DataError:
         return web.json_response({"message": "ID does not exist"}, status=400)
 
+
 @logger.catch
 async def make():
     logger.remove()
     if os.environ.get("LOGGING_DEBUG", ""):
         severity = int(os.environ.get("LOGGING_DEBUG", ""))
         if severity < 10:
-            logger.add(stdout,filter=lambda record: "special" not in record["extra"], level=severity, backtrace=True, diagnose=True)
+            logger.add(
+                stdout,
+                filter=lambda record: "special" not in record["extra"],
+                level=severity,
+                backtrace=True,
+                diagnose=True,
+            )
         else:
-            logger.add(stdout,filter=lambda record: "special" not in record["extra"], level=severity)
+            logger.add(
+                stdout,
+                filter=lambda record: "special" not in record["extra"],
+                level=severity,
+            )
     else:
-        logger.add(stdout,filter=lambda record: "special" not in record["extra"])
-    logger.add(gpio_interface.log_special_messages, backtrace=True, filter=lambda record: "special" in record["extra"], format="{time:YYYY-MM-DD HH:mm:ss.SSS} ;|#| {file}:{line} ;|#| {message}")
+        logger.add(stdout, filter=lambda record: "special" not in record["extra"])
+    logger.add(
+        gpio_interface.log_special_messages,
+        backtrace=False,
+        diagnose=True,
+        filter=lambda record: "special" in record["extra"],
+        format="{time:YYYY-MM-DD HH:mm:ss.SSS} ;|#| {file}:{line} ;|#| {message}",
+    )
     logger.info("Initialized logger")
     if os.environ.get("LOGGING_FILE", ""):
         logger.add(
-            os.environ.get("LOGGING_FILE", ""), retention="3 days", rotation="500 KB",filter=lambda record: "special" not in record["extra"]
+            os.environ.get("LOGGING_FILE", ""),
+            retention="3 days",
+            rotation="500 KB",
+            filter=lambda record: "special" not in record["extra"],
         )
     app = web.Application(logger=logger)
 
@@ -401,9 +442,16 @@ async def make():
         port=int(os.environ.get("REDIS_PORT", 6379)),
         decode_responses=True,
     )
-    await redis.ping()
+    try:
+        await redis.ping()
+    except ConnectionError:
+        logger.critical(
+            f"Can't connect to redis on {os.environ.get('REDIS_HOST', 'redis_db')}:{int(os.environ.get('REDIS_PORT', 6379))}, exiting in 10["
+        )
+        await asyncio.sleep(10)
+        raise SystemExit()
     app["db"] = redis
-    execution_settings = await redis.hgetall('settings')
+    execution_settings = await redis.hgetall("settings")
     app["running"] = {
         "running": False,
         "time_elapsed": 0,
@@ -411,15 +459,15 @@ async def make():
         "settings": {},
     }
     app["running"]["settings"] = {
-            "duration":int(execution_settings.get("duration",300)),
-            "offset": int(execution_settings.get("offset",25)),
-            "amplitude": int(execution_settings.get("amplitude",55)),
-            "phase_shift": int(execution_settings.get("phase_shift",0)),
-            "period": int(execution_settings.get("period",150)),
-            "on_start_code": execution_settings.get("on_start_code",''),
-            "on_end_code": execution_settings.get("on_end_code",''),
-            "device_exec_order": execution_settings.get("device_exec_order",''),
-        }
+        "duration": int(execution_settings.get("duration", 300)),
+        "offset": int(execution_settings.get("offset", 25)),
+        "amplitude": int(execution_settings.get("amplitude", 55)),
+        "phase_shift": int(execution_settings.get("phase_shift", 0)),
+        "period": int(execution_settings.get("period", 150)),
+        "on_start_code": execution_settings.get("on_start_code", ""),
+        "on_end_code": execution_settings.get("on_end_code", ""),
+        "device_exec_order": execution_settings.get("device_exec_order", ""),
+    }
     return app
 
 

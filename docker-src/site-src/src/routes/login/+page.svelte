@@ -18,6 +18,10 @@
 	$: console.log($configuration)
 </script>
 
+<svelte:head>
+	<title>Log-in | TECBERRY.ml</title>
+</svelte:head>
+
 <div class="w-full flex items-center h-full bg-gray-50">
 	<div
 		class="bg-white dark:bg-slate-800 min-h-2/4 w-3/4 sm:w-3/5 2xl:w-1/4 rounded p-8 shadow-xl mx-auto

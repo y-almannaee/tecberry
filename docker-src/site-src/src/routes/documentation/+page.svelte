@@ -98,6 +98,8 @@
 </script>
 
 <svelte:head>
+	<title>Documentation | TECBERRY.ml</title>
+
 	<script
 		bind:this={scripts[scripts.length]}
 		src="https://cdnjs.cloudflare.com/ajax/libs/showdown/2.0.3/showdown.min.js"

@@ -1,6 +1,6 @@
 // from https://kit.svelte.dev/docs/routing#page
 import { error } from '@sveltejs/kit';
-import { devices, definitions, backend_url } from '$lib/global_objects';
+import { backend_url } from '$lib/global_objects';
 
 /** @type {import('./$types').PageLoad} */
 export async function load({ fetch, params, url }) {

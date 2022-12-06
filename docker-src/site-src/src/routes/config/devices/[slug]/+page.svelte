@@ -6,7 +6,7 @@
 	import { expoIn } from 'svelte/easing';
 	import { Save, Trash2 } from 'lucide-svelte';
 	import { tooltip, Modal, modalStore, ListBox, ListBoxItem } from '@skeletonlabs/skeleton';
-	import { backend_url, definitions } from '$lib/global_objects';
+	import { backend_url } from '$lib/global_objects';
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
 	import { writable } from 'svelte/store';
@@ -46,7 +46,7 @@
 	$: {
 		if ($current_def_sel && $current_def_sel!="NOT_AN_ITEM") {
 			data.self.definition = $current_def_sel
-			current_def = $definitions.find((v, i) => v.id == $current_def_sel);
+			current_def = data.definitions.find((v, i) => v.id == $current_def_sel);
 			if (current_def && current_def.public) {
 				current_def.public.split(',').some((e) => {
 					if (!data.self.public) {
@@ -83,6 +83,10 @@
 
 	$: console.log($current_def_sel)
 </script>
+
+<svelte:head> 
+	<title>Viewing device {data.self.name}#{data.self.id} | TECBERRY.ml</title>
+</svelte:head>
 
 <Modal regionBackdrop="bg-backdrop-token backdrop-blur-sm" />
 {#if ready}

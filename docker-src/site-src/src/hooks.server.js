@@ -22,6 +22,11 @@ export async function handle({ event, resolve }) {
             if (res.ok) {
                 console.log("Backend on")
                 console.log('nocookie')
+                if (await res.text() == "Demo") {
+                    event.locals.userdata = { loggedIn: true, name: 'test', pfp: 'https://i.imgur.com/3Jj0Tm8.png', rank: 1 };
+                    const response = await resolve(event);
+                    return response;
+                }
                 event.locals.userdata = { loggedIn: false };
             } else {
                 console.log('Backend off')

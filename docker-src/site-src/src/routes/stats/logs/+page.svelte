@@ -19,6 +19,10 @@
 	const border_color_d = 'border-slate-200';
 </script>
 
+<svelte:head>
+	<title>Logs | TECBERRY.ml</title>
+</svelte:head>
+
 <div class="m-8 mt-16">
 	<table class="text-xs p-1 border-spacing-y-1 border-spacing-x-4 bg-white shadow-md">
 		<thead

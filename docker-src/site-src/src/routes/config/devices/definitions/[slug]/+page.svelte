@@ -9,7 +9,7 @@
 	import { backend_url } from '$lib/global_objects';
 	import { goto } from '$app/navigation';
 
-	let ready = false;
+	let ready = false, textarea;
 	onMount(() => (ready = true));
 
 	function modal() {
@@ -32,10 +32,15 @@
 		let mutableData = structuredClone(data);
 		delete mutableData.id;
 		delete mutableData.name;
+		mutableData.code = textarea.value;
 		const res = await fetch(backend, { method: 'POST', body: JSON.stringify(mutableData) });
 		goto('/config/devices/definitions');
 	}
 </script>
+
+<svelte:head> 
+	<title>Viewing definition {data.name}#{data.id} | TECBERRY.ml</title>
+</svelte:head>
 
 <Modal regionBackdrop="bg-backdrop-token backdrop-blur-sm" />
 {#if ready}
@@ -119,6 +124,7 @@
 					class="mt-2 rounded-md -z-10 h-36 duration-75 overflow-hidden"
 					class:font-mono={data.code}
 					type="hidden"
+					bind:this={textarea}
 					bind:value={data.code}
 					on:keyup={(e) => {
 						e.target.style.height =

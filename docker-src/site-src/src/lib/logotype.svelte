@@ -16,7 +16,6 @@
 		width: fit-content;
 		height: fit-content;
 		user-select: none;
-		cursor: pointer;
 
 		color: transparent;
 		transition: background-position 0.2s ease-out;

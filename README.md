@@ -1,24 +1,16 @@
-![](/sveltekit-src/static/logos/android-chrome-192x192.png)
+![](/landing-src/static/logos/android-chrome-192x192.png)
 
-# Raspberry Pi - Dockerized Peltier Controller
+# TECBERRY - Dockerized Thermal Fatigue Testing Implementation
 
 ## About the project
 
-Control and automate Peltier modules for thermal fatigue testing from a Raspberry Pi. Built for reliability, using hardware redundancy.
+Control and automate Peltier modules for thermal fatigue testing from a Raspberry Pi
 
-## Required items (incomplete)
+## Required items
 
-- 2x Raspberry Pi device
-  - This project was built using the Raspberry Pi 3 Model A+
-  - Other single-board computers will work provided that
-    - you will modify the software to adjust for the differences
-    - they are able to run the Debian-based Linux distribution
-    - they can interface using the GPIO pins
-    - they have internet connectivity
-- ?x Peltier Module
+- 1x Raspberry Pi device
+- 6x Peltier Module
   - This project was built using the TEC1-12715
-- 1x Dual Full-Bridge Driver
-  - This project was built using the L298N
 
 ## Setup instructions
 
@@ -41,10 +33,8 @@ pi@RaspberryPiLeader:~$ sudo docker-compose pull && sudo docker-compose up -d
 
 - [x] Create basic dockerfile
 - [x] Create easy setup script
-- [ ] Architect the leader-follower application in Python
-- [ ] Create Nginx configurations for leader & follower
-- [ ] Create remote administration logic
-- [ ] Create configurable GPIO logic
+- [x] Create remote administration logic
+- [x] Create configurable GPIO logic
 
 ## Want to modify the project?
 
@@ -57,9 +47,3 @@ If you would like to contribute to the project or simply modify the code to your
     2.  press Actions &#8594; CI &#8594; Run Workflow (Enable the workflow if it isn't already enabled)
     3.  once the workflow has finished running (usually takes ~20 mins) your Docker containers will be available on Dockerhub, you may follow the setup instructions above to set them up
 4. If you would like to contribute back to this project feel free to open a Pull Request with your modifications, we will get to it in a timely manner
-
-## Useful resources
-
-![](https://www.raspberrypi-spy.co.uk/wp-content/uploads/2012/06/Raspberry-Pi-GPIO-Header-with-Photo.png)
-
-Raspberry Pi 3/4 GPIO Pin Headers, courtesy of www.raspberrypi-spy.co.uk

@@ -20,7 +20,7 @@ class con_colors:
     BOLD = "\033[1m"
     UNDERLINE = "\033[4m"
 
-latest_tag = 'v0.5.0-alpha'
+latest_tag = 'v1.0.0'
 
 failure_warning = "Make sure you are connected to the internet, there is enough space on the SD card, and that this script is running with Sudo permissions (sudo python3 ./setup.py)"
 
@@ -337,20 +337,6 @@ run_shell(
     f'bash -c "curl -L "https://github.com/y-almannaee/tecberry/releases/download/{latest_tag}/build.zip" > {os.getcwd()}/app_data/build.zip"',
     f"{con_colors.OKCYAN}Downloaded SvelteKit server",
     f"{con_colors.FAIL}Unable to get the SvelteKit server. {failure_warning}",
-    True,
-)
-
-run_shell(
-    f'bash -c "curl -L "https://github.com/y-almannaee/tecberry/releases/download/{latest_tag}/redistimeseries.so" > {os.getcwd()}/app_data/redis/redistimeseries.so"',
-    f"{con_colors.OKCYAN}Downloaded redistimeseries.so",
-    f"{con_colors.FAIL}Unable to get the redistimeseries.so file. {failure_warning}",
-    True,
-)
-
-run_shell(
-    f'bash -c "chmod +x {os.getcwd()}/app_data/redis/redistimeseries.so"',
-    f"{con_colors.OKCYAN}Allowed execution on redistimeseries.so",
-    f"{con_colors.FAIL}Could not allow execution rights on redistimeseries.so. {failure_warning}",
     True,
 )
 

@@ -2,7 +2,7 @@
 	import '../app.css';
 	import { onMount } from 'svelte';
 	import { fly } from 'svelte/transition';
-	import { Icon, AtSymbol, DocumentText, Film, Beaker } from 'svelte-hero-icons';
+	import { Icon, AtSymbol, DocumentText, Film, Beaker, Code } from 'svelte-hero-icons';
 	export const prerender = true;
 	let ready = 0;
 	let description = '';
@@ -95,6 +95,18 @@
 					class="hover:text-[#f36] hover:scale-110 will-change-transform duration-300 transition-all"
 				>
 					<Icon src={DocumentText} class="w-10 h-10" />
+				</a>
+				<a
+					target="_blank"
+					rel="noreferrer"
+					href="https://github.com/y-almannaee/tecberry"
+					on:mouseover={() => setdesc('Contribute to the code')}
+					on:focus={() => setdesc('Contribute to the code')}
+					on:mouseleave={() => leavedesc()}
+					on:focusout={() => leavedesc()}
+					class="hover:text-[#f36] hover:scale-110 will-change-transform duration-300 transition-all"
+				>
+					<Icon src={Code} class="w-10 h-10" />
 				</a>
 				<button
 					on:mouseover={() => setdesc('Get in contact')}
